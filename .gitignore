@@ -1,0 +1,42 @@
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+.pgpass
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+
+# JavaScript and build outputs
+node_modules/
+dist/
+build/
+.next/
+coverage/
+playwright-report/
+test-results/
+
+# Local runtime state and evidence
+*.log
+*.sqlite3
+*.sqlite3-journal
+.paperclip-runtime/
+.paperclip-worktrees/
+scratch/
+artifacts/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
