@@ -84,6 +84,11 @@ class SourceVersionKernel:
         history = self._versions[source_id]
         return history[max(history)]
 
+    def history(self, source_id: str) -> tuple[SourceVersion, ...]:
+        """Return an ordered, immutable snapshot of a Source's history."""
+        history = self._versions[source_id]
+        return tuple(history[version] for version in sorted(history))
+
     @staticmethod
     def _validate_record(record: SourceVersion) -> None:
         if record.synthetic is not True:
@@ -92,5 +97,7 @@ class SourceVersionKernel:
             )
         if not isinstance(record.source_id, str) or not record.source_id:
             raise SourceVersionError("source_id must be a non-empty string")
+        if type(record.content) is not bytes:
+            raise SourceVersionError("content must be immutable bytes")
         if not isinstance(record.version, int) or isinstance(record.version, bool):
             raise SourceVersionError("version must be an integer")
