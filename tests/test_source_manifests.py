@@ -189,4 +189,3 @@ class SourceManifestTests(unittest.TestCase):
             verify_source_manifest(
                 manifest, source_manifest_digest(manifest), self.versions
             )
-

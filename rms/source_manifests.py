@@ -186,4 +186,3 @@ def _canonical_json_bytes(value: object) -> bytes:
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
-
