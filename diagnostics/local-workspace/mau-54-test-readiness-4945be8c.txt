@@ -1,0 +1,5 @@
+MAU-54 Test Local workspace persistence diagnostic
+role=Test Engineer
+run_id=4945be8c-b320-4fa6-acd6-f39734354b29
+marker=test-local-persistence-4945be8c
+scope=workspace-readiness-only; no RMS or investment logic
