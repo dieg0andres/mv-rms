@@ -1,4 +1,4 @@
-"""The six frozen RMS-VS-1 API routes."""
+"""The frozen RMS-VS-1 API routes and read-only history page."""
 
 from django.urls import path
 
