@@ -32,6 +32,15 @@ class FrozenRouteAndDatabaseContractTests(TransactionTestCase):
                 "source_id": "contract-source",
                 "synthetic": True,
                 "content_base64": base64.b64encode(b"invented contract bytes").decode(),
+                "title": "Invented contract Source",
+                "source_type": "other",
+                "citation": "Fictional contract citation",
+                "observed_available_at": "2026-09-22T00:00:00Z",
+                "authors": None,
+                "publisher": None,
+                "published_at": None,
+                "canonical_url": None,
+                "rights_note": None,
             },
             content_type="application/json",
             HTTP_IDEMPOTENCY_KEY="contract-create",
@@ -44,17 +53,31 @@ class FrozenRouteAndDatabaseContractTests(TransactionTestCase):
 
         self.assertEqual(
             set(created.json()),
-            {"source_id", "synthetic", "latest_version", "created_at", "latest"},
+            {"source_id", "synthetic", "latest_version", "latest_source_version_id", "created_at", "latest"},
         )
         self.assertEqual(
             set(created.json()["latest"]),
             {
+                "source_version_id",
                 "version",
+                "corrects_source_version_id",
                 "corrects_version",
+                "correction_reason",
+                "changed_fields",
+                "title",
+                "source_type",
+                "citation",
+                "observed_available_at",
+                "authors",
+                "publisher",
+                "published_at",
+                "canonical_url",
+                "rights_note",
                 "synthetic",
                 "byte_length",
                 "content_sha256",
                 "created_at",
+                "created_by",
             },
         )
         self.assertEqual(missing.status_code, 404)

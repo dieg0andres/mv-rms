@@ -28,5 +28,21 @@ urlpatterns = [
         api.SourceManifestView.as_view(),
         name="source-manifest",
     ),
+    path("api/v1/ideas", api.IdeaCreateView.as_view(), name="idea-create"),
+    path(
+        "api/v1/ideas/<str:idea_id>/corrections",
+        api.IdeaCorrectionView.as_view(),
+        name="idea-correction",
+    ),
+    path(
+        "api/v1/ideas/<str:idea_id>",
+        api.IdeaDetailView.as_view(),
+        name="idea-detail",
+    ),
+    path(
+        "api/v1/ideas/<str:idea_id>/versions",
+        api.IdeaHistoryView.as_view(),
+        name="idea-history",
+    ),
     path("api/v1/readiness", api.ReadinessView.as_view(), name="readiness"),
 ]

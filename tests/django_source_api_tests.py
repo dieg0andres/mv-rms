@@ -18,6 +18,20 @@ def encoded(content: bytes) -> str:
     return base64.b64encode(content).decode("ascii")
 
 
+def source_fields():
+    return {
+        "title": "Invented API Source",
+        "source_type": "working_paper",
+        "citation": "Fictional citation",
+        "observed_available_at": "2026-09-01T16:00:00+02:00",
+        "authors": ["Fictional Author"],
+        "publisher": None,
+        "published_at": "2026-08-31T12:00:00Z",
+        "canonical_url": "https://example.invalid/source",
+        "rights_note": None,
+    }
+
+
 class SourceApiTests(TransactionTestCase):
     reset_sequences = True
 
@@ -52,6 +66,7 @@ class SourceApiTests(TransactionTestCase):
                 "source_id": source_id,
                 "synthetic": True,
                 "content_base64": encoded(V1),
+                **source_fields(),
             },
             content_type="application/json",
             HTTP_IDEMPOTENCY_KEY=key,
@@ -64,6 +79,8 @@ class SourceApiTests(TransactionTestCase):
                 "synthetic": True,
                 "expected_latest_version": expected,
                 "content_base64": encoded(content),
+                "correction_reason": "Correct the invented Source.",
+                **source_fields(),
             },
             content_type="application/json",
             HTTP_IDEMPOTENCY_KEY=key,
@@ -111,6 +128,7 @@ class SourceApiTests(TransactionTestCase):
                 "source_id": "different-source",
                 "synthetic": True,
                 "content_base64": encoded(V1),
+                **source_fields(),
             },
             content_type="application/json",
             HTTP_IDEMPOTENCY_KEY="create-1",
@@ -137,6 +155,8 @@ class SourceApiTests(TransactionTestCase):
                 "synthetic": True,
                 "expected_latest_version": 1,
                 "content_base64": encoded(V2),
+                "correction_reason": "Viewer must not write.",
+                **source_fields(),
             },
             content_type="application/json",
             HTTP_IDEMPOTENCY_KEY="viewer-write",

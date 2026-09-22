@@ -1,4 +1,5 @@
 import base64
+from datetime import UTC, datetime
 from django.contrib.auth.models import Group, User
 from django.test import Client, TransactionTestCase
 from rms.models import SourceManifest
@@ -12,8 +13,19 @@ class SourceHistoryPageTests(TransactionTestCase):
         viewer_group, _ = Group.objects.get_or_create(name="founder_viewer")
         self.viewer = User.objects.create_user("page-viewer", password="invented-page-pass")
         self.viewer.groups.add(viewer_group)
-        create_source(source_id=self.source_id, content=self.v1, idempotency_key="page-create", request_path="/api/v1/sources")
-        correct_source(source_id=self.source_id, content=self.v2, expected_latest_version=1, idempotency_key="page-correct", request_path=f"/api/v1/sources/{self.source_id}/corrections")
+        fields = {
+            "title": "Invented page Source",
+            "source_type": "other",
+            "citation": "Fictional page citation",
+            "observed_available_at": datetime(2026, 9, 1, tzinfo=UTC),
+            "authors": None,
+            "publisher": None,
+            "published_at": None,
+            "canonical_url": None,
+            "rights_note": None,
+        }
+        create_source(source_id=self.source_id, content=self.v1, fields=fields, actor="page-editor", idempotency_key="page-create", request_path="/api/v1/sources")
+        correct_source(source_id=self.source_id, content=self.v2, fields=fields, actor="page-editor", expected_latest_version=1, correction_reason="Correct invented page bytes.", idempotency_key="page-correct", request_path=f"/api/v1/sources/{self.source_id}/corrections")
     def client_as_viewer(self):
         token = base64.b64encode(b"page-viewer:invented-page-pass").decode()
         client = Client(); client.defaults["HTTP_AUTHORIZATION"] = f"Basic {token}"; return client

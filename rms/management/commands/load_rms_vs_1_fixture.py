@@ -17,11 +17,26 @@ V2_UUID = uuid.UUID("33333333-3333-4333-8333-333333333333")
 M1_UUID = uuid.UUID("44444444-4444-4444-8444-444444444444")
 M2_UUID = uuid.UUID("55555555-5555-4555-8555-555555555555")
 SOURCE_ID = "synthetic-source-001"
+V1_PUBLIC_ID = "SRCV-22222222-2222-4222-8222-222222222222"
+V2_PUBLIC_ID = "SRCV-33333333-3333-4333-8333-333333333333"
 V1_BYTES = b"invented Source version one"
 V2_BYTES = b"invented Source version two correction"
 SOURCE_CREATED = datetime(2026, 9, 22, 0, 0, 0, tzinfo=timezone.utc)
 V1_CREATED = datetime(2026, 9, 22, 0, 0, 1, tzinfo=timezone.utc)
 V2_CREATED = datetime(2026, 9, 22, 0, 0, 2, tzinfo=timezone.utc)
+def _descriptive_fields(created_at):
+    return {
+        "title": f"Synthetic Source {SOURCE_ID}",
+        "source_type": "other",
+        "citation": f"Synthetic Source {SOURCE_ID}",
+        "observed_available_at": created_at,
+        "authors": None,
+        "publisher": None,
+        "published_at": None,
+        "canonical_url": None,
+        "rights_note": None,
+        "created_by": "migration",
+    }
 
 
 class Command(BaseCommand):
@@ -46,11 +61,15 @@ class Command(BaseCommand):
             v1 = SourceVersion.objects.create(
                 id=V1_UUID,
                 source=source,
+                source_version_id=V1_PUBLIC_ID,
                 version=1,
                 corrects_version=None,
+                correction_reason=None,
+                changed_fields=[],
                 content=V1_BYTES,
                 synthetic=True,
                 created_at=V1_CREATED,
+                **_descriptive_fields(SOURCE_CREATED),
             )
             source.refresh_from_db()
             SourceManifest.objects.create(
@@ -65,11 +84,15 @@ class Command(BaseCommand):
             v2 = SourceVersion.objects.create(
                 id=V2_UUID,
                 source=source,
+                source_version_id=V2_PUBLIC_ID,
                 version=2,
                 corrects_version=1,
+                correction_reason="Imported from the RMS-VS-1 append-only history.",
+                changed_fields=["content_sha256"],
                 content=V2_BYTES,
                 synthetic=True,
                 created_at=V2_CREATED,
+                **_descriptive_fields(SOURCE_CREATED),
             )
             source.refresh_from_db()
             SourceManifest.objects.create(
@@ -86,14 +109,26 @@ class Command(BaseCommand):
     def _verify_existing(self, source: Source) -> None:
         versions = tuple(source.versions.order_by("version"))
         expected = (
-            (V1_UUID, 1, None, V1_BYTES, V1_CREATED),
-            (V2_UUID, 2, 1, V2_BYTES, V2_CREATED),
+            (V1_UUID, V1_PUBLIC_ID, 1, None, None, [], V1_BYTES, V1_CREATED),
+            (
+                V2_UUID,
+                V2_PUBLIC_ID,
+                2,
+                1,
+                "Imported from the RMS-VS-1 append-only history.",
+                ["content_sha256"],
+                V2_BYTES,
+                V2_CREATED,
+            ),
         )
         actual = tuple(
             (
                 version.id,
+                version.source_version_id,
                 version.version,
                 version.corrects_version,
+                version.correction_reason,
+                version.changed_fields,
                 bytes(version.content),
                 version.created_at,
             )
