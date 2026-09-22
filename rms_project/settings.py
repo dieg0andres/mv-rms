@@ -17,7 +17,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = []
 ROOT_URLCONF = "rms_project.urls"
-TEMPLATES = []
+TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [BASE_DIR / "templates"], "APP_DIRS": True, "OPTIONS": {"context_processors": []}}]
 WSGI_APPLICATION = "rms_project.wsgi.application"
 
 DATABASES = {

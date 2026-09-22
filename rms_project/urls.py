@@ -2,10 +2,11 @@
 
 from django.urls import path
 
-from rms import api
+from rms import api, views
 
 
 urlpatterns = [
+    path("sources/<str:source_id>/history", views.SourceHistoryPage.as_view(), name="source-history-page"),
     path("api/v1/sources", api.SourceCreateView.as_view(), name="source-create"),
     path(
         "api/v1/sources/<str:source_id>/corrections",
