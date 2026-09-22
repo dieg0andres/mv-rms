@@ -6,7 +6,25 @@ from rms import api, views
 
 
 urlpatterns = [
+    path("sources/new", views.SourceCreatePage.as_view(), name="source-create-page"),
+    path(
+        "sources/<str:source_id>/correct",
+        views.SourceCorrectionPage.as_view(),
+        name="source-correction-page",
+    ),
     path("sources/<str:source_id>/history", views.SourceHistoryPage.as_view(), name="source-history-page"),
+    path("ideas/new", views.IdeaCreatePage.as_view(), name="idea-create-page"),
+    path(
+        "ideas/<str:idea_id>/correct",
+        views.IdeaCorrectionPage.as_view(),
+        name="idea-correction-page",
+    ),
+    path("ideas/<str:idea_id>", views.IdeaDetailPage.as_view(), name="idea-detail-page"),
+    path(
+        "ideas/<str:idea_id>/history",
+        views.IdeaHistoryPage.as_view(),
+        name="idea-history-page",
+    ),
     path("api/v1/sources", api.SourceCreateView.as_view(), name="source-create"),
     path(
         "api/v1/sources/<str:source_id>/corrections",
