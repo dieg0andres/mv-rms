@@ -1,8 +1,7 @@
 import { chromium } from 'playwright';
+import { stagingTarget } from './staging-origin.mjs';
 
-const origin = process.env.RMS_STAGING_ORIGIN;
-if (!origin || !/^https:\/\/[^/]+$/.test(origin)) throw new Error('Set the approved RMS_STAGING_ORIGIN without a trailing slash');
-const target = `${origin}/`;
+const target = stagingTarget(process.env.RMS_STAGING_ORIGIN);
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage();

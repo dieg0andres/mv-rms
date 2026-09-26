@@ -15,7 +15,7 @@ printf '{"commit":"%s","tree":"%s","static_sha256":"%s","summary":"Initial Sourc
   "$commit" "$tree" "$static_sha256" > "$output/metadata.json"
 cp staging/{Dockerfile,compose.yaml,entrypoint.sh,requirements-staging.lock,runtime.py,request_policy.py,create-principals.py,README.md} "$output/"
 mkdir -p "$output/browser"
-cp staging/browser/{package.json,package-lock.json,open-staging.mjs,preflight-headless.mjs,HEADLESS.md} "$output/browser/"
+cp staging/browser/{package.json,package-lock.json,staging-origin.mjs,preflight-headless.mjs,HEADLESS.md} "$output/browser/"
 cp tests/browser/test-ui01.mjs "$output/browser/"
 printf '%s\n' 'secrets/' 'backups/' > "$output/.gitignore"
 printf 'Candidate %s; tree %s; static SHA-256 %s\n' "$commit" "$tree" "$static_sha256"
