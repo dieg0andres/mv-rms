@@ -17,7 +17,7 @@ class StagingOriginPolicyTests(unittest.TestCase):
                 }, HOST))
                 for invalid in (None, 'null', 'http://' + HOST,
                                 ORIGIN + '/', 'https://other.example.invalid:4443',
-                                'https://untrusted.tailce579f.ts.net:4443'):
+                                'https://untrusted.example.invalid:4443'):
                     with self.subTest(method=method, invalid=invalid):
                         self.assertFalse(unsafe_request_allowed({
                             'REQUEST_METHOD': method, 'HTTP_ORIGIN': invalid,
