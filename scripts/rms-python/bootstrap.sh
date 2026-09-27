@@ -28,7 +28,11 @@ test "$("$tool_root/bin/uv" --version)" = 'uv 0.12.19 (x86_64-unknown-linux-gnu)
 }
 export UV_CACHE_DIR="$tool_root/cache" UV_PYTHON_INSTALL_DIR="$tool_root/python"
 "$tool_root/bin/uv" --no-config python install --no-bin 3.13.15
-managed_python=$("$tool_root/bin/uv" --no-config python find --managed-python --no-project 3.13.15)
+managed_python="$tool_root/python/cpython-3.13.15-linux-x86_64-gnu/bin/python3.13"
+if [ ! -x "$managed_python" ] || [ "$(realpath -e -- "$managed_python")" != "$managed_python" ]; then
+  echo 'Managed Python must be a persistent executable in the pinned tool root; preserve and investigate.' >&2
+  exit 1
+fi
 printf '%s  %s\n' 20a5569a1bac8de02122347777b6cf2ae12ec1eafd42db990c6a0c5407f96b8e "$managed_python" | sha256sum --check --status || {
   echo 'Existing Python binary is not the reviewed artifact; preserve and investigate.' >&2; exit 1;
 }
@@ -51,6 +55,9 @@ mv -fT "$stage/python3" "$tool_root/bin/python3"
 mv -fT "$stage/python" "$tool_root/bin/python"
 mv -fT "$stage/provision-workspace.sh" "$tool_root/provision-workspace.sh"
 mv -fT "$stage/shell-env.sh" "$tool_root/shell-env.sh"
+test "$(readlink -- "$tool_root/bin/python3.13")" = "$managed_python" || {
+  echo 'Installed Python helper does not target the persistent managed interpreter; restore the saved backup.' >&2; exit 1;
+}
 manifest="$tool_root/bootstrap/manifest-$(date -u +%Y%m%dT%H%M%S%N).sha256"
 {
   printf 'OS: '; cat /etc/os-release | sed -n 's/^PRETTY_NAME=//p' | head -1
