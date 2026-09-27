@@ -2,7 +2,8 @@
 set -eu
 tool_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 workspace=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-if [ -x "$workspace/.venv/bin/python" ]; then
-  exec "$workspace/.venv/bin/python" "$@"
+if [ -f "$workspace/requirements.lock" ]; then
+  (cd "$workspace" && "$tool_root/provision-workspace.sh" --verify) >&2 || exit 1
+  exec flock -s "$tool_root/bootstrap.lock" "$workspace/.venv/bin/python" "$@"
 fi
-exec "$tool_root/bin/python3.13" "$@"
+exec flock -s "$tool_root/bootstrap.lock" "$tool_root/bin/python3.13" "$@"
