@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import { stagingTarget } from './staging-origin.mjs';
 
-const origin = 'https://srv1986614.tailce579f.ts.net:58097';
+const origin = stagingTarget(process.env.RMS_STAGING_ORIGIN).slice(0, -1);
 const candidate = '0fd772a54bbb1bea7962feb77db21a6c7a6c6dd0';
 const tree = 'c1219ad5bd24bbb43b11f74938c7b2b4c8e08f77';
 const staticDigest = 'da5ead4cf42ccf22845fe39dc9e1e4d0561a93c61db4da58e7bbbcde53b403e8';

@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { stagingTarget } from '../../staging/browser/staging-origin.mjs';
+import { stagingTarget as sourceRunnerTarget } from './staging-origin.mjs';
+
+test('source runner resolves the canonical preflight validator', () => {
+  assert.strictEqual(sourceRunnerTarget, stagingTarget);
+});
 
 test('requires a literal HTTPS origin with an explicit valid port', () => {
   for (const origin of ['https://example.invalid:8443', 'https://example.invalid:443', 'https://127.0.0.1:8443', 'https://[::1]:8443']) {
