@@ -1,1 +1,1 @@
-export { stagingTarget } from '../../staging/browser/staging-origin.mjs';
+export { sameOriginRequest, stagingTarget } from '../../staging/browser/staging-origin.mjs';

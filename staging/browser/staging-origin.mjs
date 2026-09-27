@@ -17,3 +17,7 @@ export function stagingTarget(origin) {
   }
   return `${origin}/`;
 }
+
+export function sameOriginRequest(requestUrl, origin) {
+  return new URL(requestUrl).origin === new URL(origin).origin;
+}

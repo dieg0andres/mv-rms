@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
-import { stagingTarget } from '../../staging/browser/staging-origin.mjs';
-import { stagingTarget as sourceRunnerTarget } from './staging-origin.mjs';
+import { promisify } from 'node:util';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { sameOriginRequest, stagingTarget } from '../../staging/browser/staging-origin.mjs';
+import { sameOriginRequest as sourceRunnerSameOrigin, stagingTarget as sourceRunnerTarget } from './staging-origin.mjs';
+
+const execFileAsync = promisify(execFile);
 
 test('source runner resolves the canonical preflight validator', () => {
   assert.strictEqual(sourceRunnerTarget, stagingTarget);
+  assert.strictEqual(sourceRunnerSameOrigin, sameOriginRequest);
 });
 
 test('requires a literal HTTPS origin with an explicit valid port', () => {
@@ -24,6 +32,36 @@ test('requires a literal HTTPS origin with an explicit valid port', () => {
       assert.doesNotMatch(error.message, /user|secret|example\.invalid|elsewhere\.invalid/);
       return true;
     });
+  }
+});
+
+test('source and rebuilt package allow normalized same-origin requests only', async () => {
+  const temporary = await mkdtemp(join(process.env.PAPERCLIP_RUN_SCRATCH_DIR || tmpdir(), 'rms-ui01-'));
+  try {
+    const packageDir = join(temporary, 'package');
+    await execFileAsync('bash', ['staging/build-package.sh', packageDir], {
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
+    });
+    const packageModule = await import(pathToFileURL(join(packageDir, 'browser/staging-origin.mjs')).href);
+    const sourceRunner = await readFile(new URL('./test-ui01.mjs', import.meta.url), 'utf8');
+    const packageRunner = await readFile(join(packageDir, 'browser/test-ui01.mjs'), 'utf8');
+    assert.equal(packageRunner, sourceRunner);
+    assert.match(sourceRunner, /page\.route\('\*\*\/\*', route => sameOriginRequest\(route\.request\(\)\.url\(\), origin\)/);
+    assert.equal(await readFile(join(packageDir, 'browser/staging-origin.mjs'), 'utf8'),
+      await readFile(new URL('../../staging/browser/staging-origin.mjs', import.meta.url), 'utf8'));
+
+    for (const implementation of [sourceRunnerSameOrigin, packageModule.sameOriginRequest]) {
+      for (const origin of ['https://example.invalid:443', 'https://EXAMPLE.invalid:8443',
+        'https://example.invalid:08443', 'https://example.invalid:8443', 'https://[::1]:8443']) {
+        const accepted = stagingTarget(origin).slice(0, -1);
+        const sameOriginUrl = new URL('/sources/new', accepted).href;
+        assert.equal(implementation(sameOriginUrl, accepted), true, origin);
+        assert.equal(implementation('https://elsewhere.invalid/sources/new', accepted), false, origin);
+        assert.equal(implementation('http://example.invalid/sources/new', accepted), false, origin);
+      }
+    }
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
   }
 });
 

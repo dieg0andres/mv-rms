@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { stagingTarget } from './staging-origin.mjs';
+import { sameOriginRequest, stagingTarget } from './staging-origin.mjs';
 
 const origin = stagingTarget(process.env.RMS_STAGING_ORIGIN).slice(0, -1);
 const candidate = '0fd772a54bbb1bea7962feb77db21a6c7a6c6dd0';
@@ -134,7 +134,7 @@ try {
   evidence.browser_version = browser.version();
   const context = await browser.newContext({ httpCredentials: { username: 'test_editor', password } });
   const page = await context.newPage();
-  await page.route('**/*', route => new URL(route.request().url()).origin === origin ?
+  await page.route('**/*', route => sameOriginRequest(route.request().url(), origin) ?
     route.continue() : route.abort());
   await pageGet(page, '/__staging/version');
   check((await page.locator('body').innerText()).includes(candidate), 'preflight:wrong_candidate');
