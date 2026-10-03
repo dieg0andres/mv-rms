@@ -1,0 +1,14 @@
+{
+  "started_at": "2026-10-03T21:38:48.520824+00:00",
+  "run_id": "63e82628-1fe6-434a-a44b-ac371d77c142",
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "checker_sha256": "6c2e791d09c6301df7ee3a9bd6d2becc8c3aee2b4ec0f66b2f9b05df57ad842f",
+  "owned_record": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+  "original_v1": "HYPV-2ce72c93-f095-4a69-b515-dfc0e8b3de1a",
+  "max_posts": 4,
+  "intended_writes": "Append owned v2 and v3; stale409 and missing404 must not commit; no duplicate create or cleanup",
+  "operator_review": "Exact diff reviewed: unchanged fields/pin/history/escaping assertions; strict same-origin and owned query-free revision guards; preflight requires exactv1 latest/history; known fragments accepted on exact resource only; diagnostic outputs sanitized",
+  "authorization": "Delegated focused synthetic test approval; same existing target/runtime/editor binding",
+  "viewer": "WAIVED_NOT_EXECUTED"
+}

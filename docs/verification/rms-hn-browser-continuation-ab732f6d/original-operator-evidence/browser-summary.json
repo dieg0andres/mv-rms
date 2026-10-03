@@ -1,0 +1,118 @@
+{
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "origin_sha256": "180c15a36c1ad001f27b7f6b4ebd6d397283344936a45ff64bd5260165aa6bf0",
+  "run_id": "1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3",
+  "started_at": "2026-10-03T21:31:59.829Z",
+  "node": "v22.20.0",
+  "result": "FAIL",
+  "assertions": [
+    {
+      "name": "installed_build",
+      "result": "PASS"
+    },
+    {
+      "name": "inline_context_return_preserves_input",
+      "result": "PASS"
+    },
+    {
+      "name": "inline_context_snapshot_preserved",
+      "result": "PASS"
+    },
+    {
+      "name": "home_idea_create",
+      "result": "FAIL"
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "status": 200,
+      "body_sha256": "c1586c1a6206e374b30eafa00be5aa3ad2e65fbc74cb7aff7318a7a067a6f14b"
+    },
+    {
+      "method": "POST",
+      "path": "/hypotheses/new",
+      "status": 303
+    }
+  ],
+  "screenshots": [],
+  "committed": [],
+  "preservation": [
+    {
+      "name": "inline_context_snapshot_preserved",
+      "changed_paths": [],
+      "before_sha256": "549151dde1d3a29c4d061a7f762a76aa722780e93251a7f3cfb81326dd474391",
+      "after_sha256": "549151dde1d3a29c4d061a7f762a76aa722780e93251a7f3cfb81326dd474391"
+    }
+  ],
+  "viewer_checks": "WAIVED BY FOUNDER / NOT EXECUTED",
+  "full_H01_H20": "INCOMPLETE",
+  "limitations": [
+    "Focused editor browser smoke only",
+    "No ordinary SQL-role H14 proof",
+    "No DB transaction-overlap claim",
+    "No merge, Stage 1 or Risk acceptance"
+  ],
+  "checker_sha256": "ae8856c7fade4705a0b048b53a002831a9b62dc110578a99836e88103204e19a",
+  "playwright": "1.56.1",
+  "browser": "141.0.7390.37",
+  "build_response_sha256": "d165e5bfeb8ef3ee1e59b9b62feaabed818331470acc8c4909117f43ee093bc7",
+  "pins": {
+    "idea": "IDEV-0eb786a3-b9c4-49be-b273-9cb55f25bd99",
+    "case": "INVV-8a7e3cf8-a61a-4d81-879e-40c63df95a5c",
+    "binding": "IFAV-ac0055ea-88bc-4286-9fa1-26e0032267d3"
+  },
+  "expected_complete_fields": {
+    "title": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 complete <img src=x onerror=alert(1)>",
+    "claim": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 fictional gross return above matched cash; <img src=x onerror=alert(1)>",
+    "claim_basis": "gross_return",
+    "economic_rationale": "Invented temporary selling pressure; no finding.",
+    "expected_opportunity": "Fictional reversal; costs may erase it.",
+    "persistence_argument": "Episodic liquidity needs may recur.",
+    "competing_explanations": "Market rebound, risk and invented fixture construction.",
+    "falsification_condition": "A valid later test without predicted advantage would undermine the claim; missing data is inconclusive.",
+    "market": "etfs",
+    "universe": "Fixed fictional SYNTH-A and SYNTH-B, selected before the fictional window.",
+    "direction": "long",
+    "signal": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 SIGNAL: prior fictional close return at or below -2%.",
+    "information_availability": "Fictional close plus five-minute availability delay; no data used.",
+    "decision_schedule": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 DECISION: five minutes after each fictional UTC close.",
+    "entry_conditions": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 ENTRY: enter only while flat; alphabetic tie break; ignore repeat signals while invested.",
+    "execution_timing": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 EXECUTION: next fictional open after information delay; fills await a Test Plan.",
+    "exit_conditions": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 EXIT: close at fictional entry-session close; no stop or target.",
+    "exit_precedence": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 PRECEDENCE: scheduled exit before holding limit; intrabar ordering remains unknown.",
+    "effect_horizon": {
+      "kind": "fixed",
+      "quantity": "0.125",
+      "unit": "hours",
+      "start_anchor": "Fictional publication",
+      "counting_convention": "Elapsed UTC hours"
+    },
+    "maximum_holding_period": {
+      "kind": "fixed",
+      "quantity": "2",
+      "unit": "bars",
+      "start_anchor": "Intended entry",
+      "counting_convention": "Entry bar counts as one",
+      "bar_definition": "Invented five-minute UTC bars, 09:00 through 09:10; no market calendar claim."
+    },
+    "sizing_method": "equity_fraction",
+    "sizing_basis": "10% of fictional pre-entry USD equity.",
+    "sizing_rule": "Round down to whole units using pre-submission price; no additions.",
+    "exposure_limits": "One position, at most 10% gross; no borrowing.",
+    "implementation_assumptions": "No final fee, slippage, liquidity, fill or settlement model.",
+    "intended_benchmark_name": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 intended cash comparison",
+    "intended_benchmark_definition": "Fictional zero-yield USD cash over exactly matching observation windows, no rebalancing.",
+    "intended_benchmark_rationale": "Compares entry with staying in cash; does not control beta.",
+    "research_limitations": "Invented software fixture only; no empirical result, qualification, Test Plan or trading authority."
+  },
+  "failure": {
+    "step": "home_idea_create",
+    "kind": "TimeoutError",
+    "assertion": "assertion_or_transport_failed_details_redacted"
+  },
+  "finished_at": "2026-10-03T21:32:32.755Z",
+  "attempted_posts": 1
+}

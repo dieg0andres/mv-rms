@@ -1,0 +1,11 @@
+--- original
++++ 529e638_reporter_only
+@@ -161,7 +161,7 @@
+         with (args.output / "checks.log").open("w") as log:
+             result = unittest.TextTestRunner(stream=log, verbosity=2).run(
+                 unittest.defaultTestLoader.loadTestsFromTestCase(CsrfBootstrapTests))
+-        summary = {"candidate": "aead8ff52128859fbae8b0f3d8ed2de67aff5131",
++        summary = {"candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+             "run_id": os.environ.get("PAPERCLIP_RUN_ID"), "fixture_version": "hn-csrf-bootstrap-v1",
+             "started_utc": started, "finished_utc": datetime.now(timezone.utc).isoformat(),
+             "django_version": django.get_version(), "middleware": settings.MIDDLEWARE,

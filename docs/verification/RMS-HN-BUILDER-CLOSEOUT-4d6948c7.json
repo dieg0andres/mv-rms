@@ -1,0 +1,32 @@
+{
+  "run_id": "4d6948c7-1455-4c5a-a201-b5072c043126",
+  "children": [
+    {
+      "issue": "MAU-142",
+      "id": "0747dc4b-6059-44d3-a6e1-0a07709ebb81",
+      "observed_status": "done",
+      "decisionId": "2025171a-2fb5-4590-955a-86bab75ab28e",
+      "source_closeout_revision": "8de06e2c-f993-4767-a194-220c8e551559",
+      "history_revision": "5e18374f-a114-4abe-93e7-20699c9a8156",
+      "returnAssignee": {
+        "type": "agent",
+        "userId": null,
+        "agentId": "8026eea0-4dec-4d48-9e2c-fcd93ffad5a8"
+      }
+    },
+    {
+      "issue": "MAU-143",
+      "id": "76aff2b6-fae6-413f-8229-6b99fb38b4cc",
+      "observed_status": "done",
+      "decisionId": "a9d29a3f-e4f4-484c-9ba9-8dfd857a7bb0",
+      "source_closeout_revision": "5bc13e2c-d429-4b71-869e-6f56fd9643ec",
+      "history_revision": "c03d00f9-7e29-4f14-af56-41beff52858c",
+      "returnAssignee": {
+        "type": "agent",
+        "userId": null,
+        "agentId": "e01d0d24-d975-4aa1-99ca-2c34743e7757"
+      }
+    }
+  ],
+  "operations_already_done_no_write": true
+}

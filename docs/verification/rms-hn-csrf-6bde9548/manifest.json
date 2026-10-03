@@ -1,0 +1,97 @@
+[
+  {
+    "path": "django_hypothesis_independent_csrf.py",
+    "bytes": 8985,
+    "sha256": "57d8ae36662321d101e7bfceabc293c30fdb458e215b0dfd80b54f466b6d1da9"
+  },
+  {
+    "path": "exact-source/requirements.lock",
+    "bytes": 622,
+    "sha256": "d21ca3b1acbcd2bbd60637b3870b5498307084173e070a9f78834dc4b4341ea4"
+  },
+  {
+    "path": "exact-source/rms/navigation_views.py",
+    "bytes": 49457,
+    "sha256": "d0e9808ea0211ecfd62e15ad8d6b9fd6ed9cddc516f41222f8797a8764088a71"
+  },
+  {
+    "path": "exact-source/rms/views.py",
+    "bytes": 11824,
+    "sha256": "68ec69d5ae2d6883929183f2f921507c5340730fbcad89174002ece7301978a8"
+  },
+  {
+    "path": "exact-source/rms_project/settings.py",
+    "bytes": 1605,
+    "sha256": "9920f7ad4f44997e4d5ecb26c8e0f7a02a6bbaca990724f0703d368dd0f5d684"
+  },
+  {
+    "path": "exact-source/staging/request_policy.py",
+    "bytes": 404,
+    "sha256": "0fa6a5329d6d4d0efb5b1c255ffef5fac6bbdbf3fe35989c84e97aea24dcc38f"
+  },
+  {
+    "path": "exact-source/staging/requirements-staging.lock",
+    "bytes": 203,
+    "sha256": "ba3535a402d10bee382ae46daf080e71fb68d60a1be885f3f5482341f4c733ba"
+  },
+  {
+    "path": "exact-source/staging/runtime.py",
+    "bytes": 4073,
+    "sha256": "7cb339b7f8fdcadd52395d7789e8d3fff7e368eb43a5d8d9733be75b54aa2fee"
+  },
+  {
+    "path": "exact-source/templates/rms/record_form.html",
+    "bytes": 7125,
+    "sha256": "63a21432bb5f07bb88bdb1fcd54153725b5579f635673a01ebe527ac9e87a111"
+  },
+  {
+    "path": "original-attempt3/console-attempt3.log",
+    "bytes": 48,
+    "sha256": "2501e19c4aac94e0ce17b9869caff7fbeb985f3decd517acb12a5a26600d038a"
+  },
+  {
+    "path": "original-attempt3/launch-attempt3-started.json",
+    "bytes": 621,
+    "sha256": "f52bbc325ba974c4968860ced6262266e5fa3bf109f364eecf08084e46ebb966"
+  },
+  {
+    "path": "original-attempt3/manifest.json",
+    "bytes": 730,
+    "sha256": "7082f069131472448350ec2aa2fb032fe06a1439cdb1acfd8b7777eb64fc5031"
+  },
+  {
+    "path": "original-attempt3/operator-attempt3-receipt.json",
+    "bytes": 736,
+    "sha256": "f251604b6ac99a67f9eda79ae24198e251d2baaeaf1282696d14a0050e404441"
+  },
+  {
+    "path": "original-attempt3/stderr-attempt3.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "original-attempt3/summary.json",
+    "bytes": 5420,
+    "sha256": "ac1cfcc9f27bd89fc38ab15ca15bf4bd8688a66ce5871bf7398ea4cb087c352b"
+  },
+  {
+    "path": "receipt.json",
+    "bytes": 1000,
+    "sha256": "2b9ca53efc86728a3ca3a2a6f7f33ffe16262541bfe85b4a5027fc446060e95f"
+  },
+  {
+    "path": "report.md",
+    "bytes": 4555,
+    "sha256": "00b49864a18ea4057c406d537338d48d36d23e77c626c80bdd71bfe8cc71bc94"
+  },
+  {
+    "path": "reproduction/checks.log",
+    "bytes": 1788,
+    "sha256": "09633576cfecd43e985fad43a5ddd8755ca07220aa26cc31dbf4d9cc55a695da"
+  },
+  {
+    "path": "reproduction/summary.json",
+    "bytes": 1753,
+    "sha256": "ad4e5ed8ad5fd04ee8915e16e56bc0a564429177c34396cdcee81b46c9006f08"
+  }
+]

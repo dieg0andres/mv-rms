@@ -1,0 +1,20 @@
+test_foreign_origin_still_denied_with_matching_cookie_and_token (__main__.CsrfBootstrapTests.test_foreign_origin_still_denied_with_matching_cookie_and_token) ... ok
+test_matching_cookie_control_reaches_mocked_save (__main__.CsrfBootstrapTests.test_matching_cookie_control_reaches_mocked_save) ... ok
+test_missing_token_still_denied_with_matching_cookie_and_origin (__main__.CsrfBootstrapTests.test_missing_token_still_denied_with_matching_cookie_and_origin) ... ok
+test_normal_get_to_native_post_saves_without_manual_cookie (__main__.CsrfBootstrapTests.test_normal_get_to_native_post_saves_without_manual_cookie) ... FAIL
+
+======================================================================
+FAIL: test_normal_get_to_native_post_saves_without_manual_cookie (__main__.CsrfBootstrapTests.test_normal_get_to_native_post_saves_without_manual_cookie)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/paperclip/instances/default/projects/f6bf0bf4-801d-4dd1-8e60-02a58d2052ef/6fa1af9a-2486-44f2-b1c5-f152826cd54e/mv-rms/.paperclip/worktrees/MAU-144-hypothesis-navigation-independent-h01-h20-verification-and-startup/tests/django_hypothesis_independent_csrf.py", line 115, in test_normal_get_to_native_post_saves_without_manual_cookie
+    self.assertEqual(response.status_code, 303,
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        "Valid editor GET-to-POST must save; observe sanitized reason in summary.json")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 403 != 303 : Valid editor GET-to-POST must save; observe sanitized reason in summary.json
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.335s
+
+FAILED (failures=1)

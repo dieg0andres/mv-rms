@@ -1,0 +1,54 @@
+{
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "run_id": "5926dd98-6c23-45e1-b827-e0354c4c6769",
+  "fixture_version": "hn-csrf-bootstrap-v1",
+  "started_utc": "2026-10-03T21:22:25.257296+00:00",
+  "finished_utc": "2026-10-03T21:22:25.993074+00:00",
+  "django_version": "5.2.17",
+  "middleware": [],
+  "tests_run": 4,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "django_connections": 0,
+  "psycopg_connections": 0,
+  "observations": [
+    {
+      "test": "test_foreign_origin_still_denied_with_matching_cookie_and_token",
+      "get_token_present": true,
+      "post_cookie_present": true,
+      "origin_equals_expected": false,
+      "post_status": 403,
+      "rejection_reason_enum": "ORIGIN_REJECTED",
+      "create_calls": 0
+    },
+    {
+      "test": "test_matching_cookie_control_reaches_mocked_save",
+      "get_token_present": true,
+      "post_cookie_present": true,
+      "origin_equals_expected": true,
+      "post_status": 303,
+      "rejection_reason_enum": null,
+      "create_calls": 1
+    },
+    {
+      "test": "test_missing_token_still_denied_with_matching_cookie_and_origin",
+      "get_token_present": true,
+      "post_cookie_present": true,
+      "origin_equals_expected": true,
+      "post_status": 403,
+      "rejection_reason_enum": "CSRF_TOKEN_REJECTED",
+      "create_calls": 0
+    },
+    {
+      "test": "test_normal_get_to_native_post_saves_without_manual_cookie",
+      "get_token_present": true,
+      "post_cookie_present": true,
+      "origin_equals_expected": true,
+      "post_status": 303,
+      "rejection_reason_enum": null,
+      "create_calls": 1
+    }
+  ],
+  "scope": "DB-denied actual Django GET/render/POST with mocked editor/services; not live browser or DB acceptance"
+}

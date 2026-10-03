@@ -1,0 +1,19 @@
+{
+  "source_sha256": "923f08ea3789876f8f5cf39fe39c2035a2c92c67448bf4075f836e6744d419c4",
+  "argv": [
+    "docker",
+    "exec",
+    "-i",
+    "mv-rms-staging-app-1",
+    "/srv/adapter/entrypoint.sh",
+    "/usr/local/bin/python",
+    "-",
+    "--run"
+  ],
+  "started": "2026-10-03T20:53:32.473726+00:00",
+  "ended": "2026-10-03T20:53:33.608240+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "6da5772002f89691ed3ea823cc020286f3c3bf7b95c4171679d4970a8e343748",
+  "stderr_bytes": 0,
+  "review_run": "0cee3641-133d-440a-85b3-410a6e0ce662"
+}

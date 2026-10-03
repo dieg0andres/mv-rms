@@ -1,0 +1,879 @@
+{
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "origin_sha256": "180c15a36c1ad001f27b7f6b4ebd6d397283344936a45ff64bd5260165aa6bf0",
+  "run_id": "63e82628-1fe6-434a-a44b-ac371d77c142",
+  "started_at": "2026-10-03T21:38:48.736Z",
+  "node": "v22.20.0",
+  "result": "FAIL",
+  "assertions": [
+    {
+      "name": "installed_build",
+      "result": "PASS"
+    },
+    {
+      "name": "owned_record_resume",
+      "result": "PASS"
+    },
+    {
+      "name": "refresh_saved_incomplete",
+      "result": "PASS"
+    },
+    {
+      "name": "home_list_reopen",
+      "result": "PASS"
+    },
+    {
+      "name": "complete_reasoned_revision",
+      "result": "PASS"
+    },
+    {
+      "name": "stale_full_input_and_original_key_preserved",
+      "result": "FAIL",
+      "changed_paths": [
+        "idempotency_key"
+      ]
+    },
+    {
+      "name": "stale_owned_input",
+      "result": "PASS"
+    },
+    {
+      "name": "not_found_full_input_and_key_preserved",
+      "result": "PASS"
+    },
+    {
+      "name": "not_found_owned_input",
+      "result": "PASS"
+    },
+    {
+      "name": "history_original_current_parity",
+      "result": "PASS"
+    },
+    {
+      "name": "narrow_readable_escaped_text",
+      "result": "PASS"
+    },
+    {
+      "name": "return_home",
+      "result": "PASS"
+    },
+    {
+      "name": "bounded_transport",
+      "result": "PASS"
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "status": 200,
+      "body_sha256": "c1586c1a6206e374b30eafa00be5aa3ad2e65fbc74cb7aff7318a7a067a6f14b"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "status": 200,
+      "body_sha256": "3c262916c6fd5cd021642298200bf8e6bfbe80d9f844a231c24771dae2a08279"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "status": 200,
+      "body_sha256": "3c262916c6fd5cd021642298200bf8e6bfbe80d9f844a231c24771dae2a08279"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "status": 200,
+      "body_sha256": "6f2ef69f2d30a9e64db8400a8734dee7d27d88f8213b742235029c3adb70cb20"
+    },
+    {
+      "method": "POST",
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "status": 303,
+      "redirect_path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "status": 200,
+      "body_sha256": "0cbde6e31f95a362de613e7fb83a9c4a6a32bceea4743515ae4b5af164761e32"
+    },
+    {
+      "method": "POST",
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "status": 303,
+      "redirect_path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "status": 200,
+      "body_sha256": "11f43e1417ebe8062e5e5a247a45caa79464a509275965c7ebfa82224153cf4c"
+    },
+    {
+      "method": "POST",
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "status": 409
+    },
+    {
+      "method": "POST",
+      "path": "/hypotheses/new",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "status": 200,
+      "body_sha256": "5f1626571ff4affc82d09f5322f70c21215569ca82530130037ba8906a5b5bf8"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "status": 200,
+      "body_sha256": "3c262916c6fd5cd021642298200bf8e6bfbe80d9f844a231c24771dae2a08279"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "status": 200,
+      "body_sha256": "0cbde6e31f95a362de613e7fb83a9c4a6a32bceea4743515ae4b5af164761e32"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "status": 200,
+      "body_sha256": "11f43e1417ebe8062e5e5a247a45caa79464a509275965c7ebfa82224153cf4c"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "status": 200,
+      "body_sha256": "c1586c1a6206e374b30eafa00be5aa3ad2e65fbc74cb7aff7318a7a067a6f14b"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "complete-owned-fields.png",
+      "sha256": "b3df3ccd27f6635309eb04925865cdd7db50a0bc3963a5a07a4c5807bdb812fe"
+    },
+    {
+      "file": "stale-error.png",
+      "sha256": "ff3261732dd98b719ae7336ec9b54b4712807775907ef4c40a7d3e5fd1dcb6e1"
+    },
+    {
+      "file": "stale-owned-title.png",
+      "sha256": "042bbdd53e712bad4773f2a4f2f13c9704a1eec6eef5a21ca10801e6429b49ee"
+    },
+    {
+      "file": "not-found-owned-claim.png",
+      "sha256": "2f25c30a21b37ca030d09e6a645c5fc144f1a485a991004301bbce353a44649b"
+    },
+    {
+      "file": "narrow-owned-title.png",
+      "sha256": "7f59a92f7532d39ba641125b1b0de4a43d91aaad2e84745efa009d39e2dccf87"
+    }
+  ],
+  "committed": [
+    {
+      "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "version": 2,
+      "version_id": "HYPV-fb98cefd-2fc7-4b2f-ac1d-bdfe4927dafb"
+    },
+    {
+      "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "version": 3,
+      "version_id": "HYPV-e7a8287f-f4d7-48b0-8570-299ee860a3d3"
+    }
+  ],
+  "preservation": [
+    {
+      "name": "stale_full_input_and_original_key_preserved",
+      "changed_paths": [
+        "idempotency_key"
+      ],
+      "before_sha256": "4be6075b75fd349c60afc09dcbf7ed6d56eb5675ed8bed50c87710768b450294",
+      "after_sha256": "dc2bf5671906b02b8dec2f62761744066baa1288aa4e4e8e6d9c98b167813edc"
+    },
+    {
+      "name": "not_found_full_input_and_key_preserved",
+      "changed_paths": [],
+      "before_sha256": "d58386a9bd703a3d249410323a13e5aeb7df566fdb7c59db0ae886bb0c088fdc",
+      "after_sha256": "d58386a9bd703a3d249410323a13e5aeb7df566fdb7c59db0ae886bb0c088fdc"
+    }
+  ],
+  "diagnostics": [
+    {
+      "step": "installed_build",
+      "phase": "api_read:/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "navigate",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "displayed_version_1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "displayed_version_1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "click_link",
+      "current_local_url": "/",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "owned_record_resume",
+      "phase": "displayed_version_1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/title",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/claim",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/claim_basis",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/economic_rationale",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/expected_opportunity",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/persistence_argument",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/competing_explanations",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/falsification_condition",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/market",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/universe",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/direction",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/signal",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/information_availability",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/decision_schedule",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/entry_conditions",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/execution_timing",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/exit_conditions",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/exit_precedence",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/effect_horizon/kind",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/effect_horizon/quantity",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/effect_horizon/unit",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/effect_horizon/start_anchor",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/effect_horizon/counting_convention",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/kind",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/quantity",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/unit",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/start_anchor",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/counting_convention",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/maximum_holding_period/bar_definition",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/sizing_method",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/sizing_basis",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/sizing_rule",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/exposure_limits",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/implementation_assumptions",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/intended_benchmark_name",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/intended_benchmark_definition",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/intended_benchmark_rationale",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/fields/research_limitations",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "fill:/correction_reason",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "native_submit",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "native_status",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "redirect_destination",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "redirect_arrived",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "complete_reasoned_revision",
+      "phase": "displayed_version_2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "navigate",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "fill:/fields/title",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "fill:/correction_reason",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "fill:/fields/title",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "fill:/correction_reason",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "native_submit",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "native_status",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "redirect_destination",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "redirect_arrived",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "native_submit",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "native_status",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "error_summary",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "stale_owned_input",
+      "phase": "error_summary_focused",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/revise",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "navigate",
+      "current_local_url": "[other-or-no-origin]",
+      "origin_equals_expected": false
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/fields/title",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/fields/claim",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/originating_idea_version_id",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/origin_rationale",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/investigation_version_id",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/idea_family_binding/mode",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "fill:/idea_family_binding/association_version_id",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "native_submit",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "native_status",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "error_summary",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "not_found_owned_input",
+      "phase": "error_summary_focused",
+      "current_local_url": "/hypotheses/new",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "displayed_version_1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "displayed_version_2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "displayed_version_3",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "api_read:/api/v1/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "api_read:/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/history",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "history_original_current_parity",
+      "phase": "displayed_version_2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "narrow_readable_escaped_text",
+      "phase": "displayed_version_2",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    },
+    {
+      "step": "narrow_readable_escaped_text",
+      "phase": "click_link",
+      "current_local_url": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "origin_equals_expected": true
+    }
+  ],
+  "accepted_redirects": [
+    {
+      "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "version": 2,
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/2",
+      "state": "SERVER_ACCEPTED_API_NOT_YET_VERIFIED"
+    },
+    {
+      "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+      "version": 3,
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/3",
+      "state": "SERVER_ACCEPTED_API_NOT_YET_VERIFIED"
+    }
+  ],
+  "request_failures": [],
+  "continuation_of": "1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3",
+  "preexisting_record": {
+    "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+    "version_id": "HYPV-2ce72c93-f095-4a69-b515-dfc0e8b3de1a",
+    "title": "BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 incomplete keyboard"
+  },
+  "viewer_checks": "WAIVED BY FOUNDER / NOT EXECUTED",
+  "full_H01_H20": "INCOMPLETE",
+  "limitations": [
+    "Focused editor browser smoke only",
+    "No ordinary SQL-role H14 proof",
+    "No DB transaction-overlap claim",
+    "No merge, Stage 1 or Risk acceptance"
+  ],
+  "checker_sha256": "6c2e791d09c6301df7ee3a9bd6d2becc8c3aee2b4ec0f66b2f9b05df57ad842f",
+  "playwright": "1.56.1",
+  "browser": "141.0.7390.37",
+  "build_response_sha256": "d165e5bfeb8ef3ee1e59b9b62feaabed818331470acc8c4909117f43ee093bc7",
+  "pins": {
+    "idea": "IDEV-0eb786a3-b9c4-49be-b273-9cb55f25bd99",
+    "case": "INVV-8a7e3cf8-a61a-4d81-879e-40c63df95a5c",
+    "binding": "IFAV-ac0055ea-88bc-4286-9fa1-26e0032267d3"
+  },
+  "expected_complete_fields": {
+    "title": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 complete <img src=x onerror=alert(1)>",
+    "claim": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 fictional gross return above matched cash; <img src=x onerror=alert(1)>",
+    "claim_basis": "gross_return",
+    "economic_rationale": "Invented temporary selling pressure; no finding.",
+    "expected_opportunity": "Fictional reversal; costs may erase it.",
+    "persistence_argument": "Episodic liquidity needs may recur.",
+    "competing_explanations": "Market rebound, risk and invented fixture construction.",
+    "falsification_condition": "A valid later test without predicted advantage would undermine the claim; missing data is inconclusive.",
+    "market": "etfs",
+    "universe": "Fixed fictional SYNTH-A and SYNTH-B, selected before the fictional window.",
+    "direction": "long",
+    "signal": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 SIGNAL: prior fictional close return at or below -2%.",
+    "information_availability": "Fictional close plus five-minute availability delay; no data used.",
+    "decision_schedule": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 DECISION: five minutes after each fictional UTC close.",
+    "entry_conditions": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 ENTRY: enter only while flat; alphabetic tie break; ignore repeat signals while invested.",
+    "execution_timing": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 EXECUTION: next fictional open after information delay; fills await a Test Plan.",
+    "exit_conditions": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 EXIT: close at fictional entry-session close; no stop or target.",
+    "exit_precedence": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 PRECEDENCE: scheduled exit before holding limit; intrabar ordering remains unknown.",
+    "effect_horizon": {
+      "kind": "fixed",
+      "quantity": "0.125",
+      "unit": "hours",
+      "start_anchor": "Fictional publication",
+      "counting_convention": "Elapsed UTC hours"
+    },
+    "maximum_holding_period": {
+      "kind": "fixed",
+      "quantity": "2",
+      "unit": "bars",
+      "start_anchor": "Intended entry",
+      "counting_convention": "Entry bar counts as one",
+      "bar_definition": "Invented five-minute UTC bars, 09:00 through 09:10; no market calendar claim."
+    },
+    "sizing_method": "equity_fraction",
+    "sizing_basis": "10% of fictional pre-entry USD equity.",
+    "sizing_rule": "Round down to whole units using pre-submission price; no additions.",
+    "exposure_limits": "One position, at most 10% gross; no borrowing.",
+    "implementation_assumptions": "No final fee, slippage, liquidity, fill or settlement model.",
+    "intended_benchmark_name": "BROWSER-63e82628-1fe6-434a-a44b-ac371d77c142 intended cash comparison",
+    "intended_benchmark_definition": "Fictional zero-yield USD cash over exactly matching observation windows, no rebalancing.",
+    "intended_benchmark_rationale": "Compares entry with staying in cash; does not control beta.",
+    "research_limitations": "Invented software fixture only; no empirical result, qualification, Test Plan or trading authority."
+  },
+  "preexisting_verified": {
+    "id": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+    "version": 1,
+    "version_id": "HYPV-2ce72c93-f095-4a69-b515-dfc0e8b3de1a"
+  },
+  "finished_at": "2026-10-03T21:39:31.002Z",
+  "attempted_posts": 4
+}

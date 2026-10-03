@@ -1,0 +1,12 @@
+{
+  "started": "2026-10-03T21:07:13.963529+00:00",
+  "ended": "2026-10-03T21:07:25.760381+00:00",
+  "exit_code": 1,
+  "checker_sha256": "1bdfe1762f0a811fbfbce2e529acd435cd7c6bb025efa5466c3945998eda9e2c",
+  "run_id": "e15b245a-3629-4d5d-839f-e05c950209e6",
+  "container_policy": "UID1000,read-only,cap-dropALL,no-new-privileges,1GiB,1CPU,256pids,tmpfs,readonly source/package/one existing editorsecret,results only writable",
+  "image": "mcr.microsoft.com/playwright@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a",
+  "origin_sha256": "180c15a36c1ad001f27b7f6b4ebd6d397283344936a45ff64bd5260165aa6bf0",
+  "stdout_sha256": "2501e19c4aac94e0ce17b9869caff7fbeb985f3decd517acb12a5a26600d038a",
+  "stderr_bytes": 0
+}
