@@ -4,12 +4,14 @@ from datetime import datetime, timezone
 import hashlib
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from rms.hypothesis_preserving_runner import (
     FORBIDDEN,
     MANIFEST,
     assess_prerequisites,
 )
+from rms.hypothesis_source_identity import compare_source_evidence, observe_source
 
 
 NOW = datetime(2026, 10, 3, 8, tzinfo=timezone.utc)
@@ -69,6 +71,15 @@ class PreservingGuardTests(unittest.TestCase):
                 self.assertIn("target_mismatch", codes)
         manifest.pop("target")
         self.assertIn("invalid_target", self.codes(manifest=manifest))
+
+    def test_null_and_invalid_target_fields_do_not_authenticate_bindings(self):
+        for name in ("database", "environment_id", "binding"):
+            for value in (None, [], {}, 3, False, ""):
+                manifest = deepcopy(MANIFEST)
+                manifest["target"][name] = value
+                with self.subTest(name=name, value=value):
+                    code = "target_binding_missing" if name == "binding" else "target_mismatch"
+                    self.assertIn(code, self.codes(manifest=manifest))
 
     def test_missing_nonobject_or_changed_policies_return_owned_hold(self):
         for name in ("fixture_policy", "sequence_policy", "coordination_policy", "lifecycle_policy", "source_identity", "stop_policy"):
@@ -145,7 +156,9 @@ class PreservingGuardTests(unittest.TestCase):
 
     def test_exact_local_source_metadata_still_cannot_release_execution(self):
         codes = self.codes({"runtime_identity": self.invented_identity()})
-        self.assertNotIn("source_identity_unavailable", codes)
+        self.assertIn("source_identity_unavailable", codes)
+        self.assertIn("candidate_commit_mismatch", codes)
+        self.assertIn("executable_source_mismatch", codes)
         self.assertIn("runtime_identity_unverified", codes)
         self.assertIn("source_only_execution_hold", codes)
 
@@ -235,15 +248,142 @@ class PreservingGuardTests(unittest.TestCase):
         self.assertTrue(all(finding.action and finding.owner for finding in report.findings))
         self.assertIn("invalid_receipts", self.codes(receipts=[]))
 
-    def test_source_is_inert_and_tests_never_invoke_runner(self):
+    def test_execution_gate_precedes_harness_and_tests_never_invoke_runner(self):
         source = ast.parse(Path("rms/hypothesis_preserving_runner.py").read_text())
         imports = [node.module for node in ast.walk(source) if isinstance(node, ast.ImportFrom)]
         imports.extend(alias.name for node in ast.walk(source) if isinstance(node, ast.Import) for alias in node.names)
         self.assertFalse(any(name.startswith(("django", "psycopg", "subprocess", "socket")) for name in imports))
         runner = next(node for node in ast.walk(source) if isinstance(node, ast.ClassDef) and node.name == "PreservingRunner")
         run = next(node for node in runner.body if isinstance(node, ast.FunctionDef) and node.name == "run")
-        self.assertEqual(len(run.body), 1)
-        self.assertIsInstance(run.body[0], ast.Raise)
+        gate = next(node for node in run.body if isinstance(node, ast.If))
+        self.assertTrue(any(isinstance(node, ast.Raise) for node in ast.walk(gate)))
+        harness_import = next(node for node in run.body if isinstance(node, ast.ImportFrom) and node.module == "rms.hypothesis_preserving_harness")
+        self.assertLess(run.body.index(gate), run.body.index(harness_import))
+
+
+class SourceEvidenceComparisonTests(unittest.TestCase):
+    def setUp(self):
+        self.actual = observe_source()
+        self.receipts = {
+            "runtime_identity": {
+                "candidate_commit": self.actual["candidate_commit"],
+                "runtime_candidate_commit": self.actual["candidate_commit"],
+                "candidate_tree": self.actual["candidate_tree"],
+                "file_sha256": deepcopy(self.actual["file_sha256"]),
+            },
+            "schema": {
+                "installed": True, "candidate_commit": self.actual["candidate_commit"],
+                "schema_signature": self.actual["schema_signature"],
+                "required_schema": deepcopy(self.actual["schema"]),
+                "migration_sha256": deepcopy(self.actual["schema"]["migration_sha256"]),
+            },
+            "dependency": {
+                "candidate_commit": self.actual["candidate_commit"],
+                "approved_lock_sha256": self.actual["requirements_sha256"],
+                "runtime_lock_sha256": self.actual["requirements_sha256"],
+                "requirements_bytes": self.actual["requirements_bytes"],
+            },
+        }
+
+    def codes(self):
+        return set(compare_source_evidence(self.receipts, self.actual))
+
+    def test_matching_claims_are_not_authentication_or_installed_additive_schema(self):
+        codes = self.codes()
+        self.assertIn("candidate_additive_schema_unavailable", codes)
+        self.assertNotIn("candidate_commit_mismatch", codes)
+        self.assertNotIn("installed_schema_signature_mismatch", codes)
+        self.assertNotIn("approved_lock_sha256_mismatch", codes)
+        report = assess_prerequisites(self.receipts, now=NOW)
+        self.assertIs(report.db_access_permitted, False)
+        self.assertIn("runtime_identity_unverified", {finding.code for finding in report.findings})
+
+    def test_self_consistent_external_candidates_do_not_match_actual_executable(self):
+        for key in ("candidate_commit", "runtime_candidate_commit"):
+            with self.subTest(key=key):
+                original = self.receipts["runtime_identity"][key]
+                self.receipts["runtime_identity"][key] = "0" * 40
+                self.assertIn(f"{key}_mismatch", self.codes())
+                self.receipts["runtime_identity"][key] = original
+
+    def test_nonobject_missing_and_malformed_independent_evidence_is_held(self):
+        for name, code in (("runtime_identity", "runtime_candidate_missing"), ("schema", "installed_schema_missing"), ("dependency", "dependency_evidence_missing")):
+            for value in (None, [], "invented", 3, False):
+                with self.subTest(name=name, value=value):
+                    receipts = deepcopy(self.receipts)
+                    receipts[name] = value
+                    self.assertIn(code, compare_source_evidence(receipts, self.actual))
+            receipts.pop(name)
+            self.assertIn(code, compare_source_evidence(receipts, self.actual))
+        for value in (None, [], "invented", 3, False):
+            self.assertIn("invalid_receipts", compare_source_evidence(value, self.actual))
+
+    def test_schema_candidate_signature_and_migrations_are_real_comparisons(self):
+        for key, value, code in (
+            ("candidate_commit", "0" * 40, "installed_schema_candidate_mismatch"),
+            ("schema_signature", "0" * 64, "installed_schema_signature_mismatch"),
+            ("required_schema", {}, "candidate_required_schema_mismatch"),
+            ("migration_sha256", {}, "installed_migration_signature_mismatch"),
+        ):
+            with self.subTest(key=key):
+                original = self.receipts["schema"][key]
+                self.receipts["schema"][key] = value
+                self.assertIn(code, self.codes())
+                self.receipts["schema"][key] = original
+
+    def test_null_invalid_candidate_schema_and_lock_values_are_diagnosed(self):
+        for value in (None, [], {}, 3, False, "", "invented", "G" * 64):
+            receipts = deepcopy(self.receipts)
+            receipts["runtime_identity"]["candidate_commit"] = value
+            receipts["runtime_identity"]["runtime_candidate_commit"] = value
+            receipts["schema"]["schema_signature"] = value
+            receipts["dependency"]["approved_lock_sha256"] = value
+            receipts["dependency"]["runtime_lock_sha256"] = value
+            codes = compare_source_evidence(receipts, self.actual)
+            self.assertIn("candidate_commit_invalid", codes)
+            self.assertIn("runtime_candidate_commit_invalid", codes)
+            self.assertIn("installed_schema_signature_invalid", codes)
+            self.assertIn("approved_lock_sha256_invalid", codes)
+            self.assertIn("runtime_lock_sha256_invalid", codes)
+
+    def test_independent_approved_and_runtime_locks_each_match_actual_bytes(self):
+        for key in ("approved_lock_sha256", "runtime_lock_sha256"):
+            with self.subTest(key=key):
+                original = self.receipts["dependency"][key]
+                self.receipts["dependency"][key] = "0" * 64
+                self.assertIn(f"{key}_mismatch", self.codes())
+                self.receipts["dependency"][key] = original
+
+    def test_changed_actual_lock_bytes_not_just_manifest_values_are_diagnosed(self):
+        read_bytes = Path.read_bytes
+
+        def invented_lock_bytes(path):
+            return b"invented divergent lock bytes" if path.name == "requirements.lock" else read_bytes(path)
+
+        with patch.object(Path, "read_bytes", invented_lock_bytes):
+            changed = observe_source()
+        codes = compare_source_evidence(self.receipts, changed)
+        self.assertIn("approved_lock_sha256_mismatch", codes)
+        self.assertIn("runtime_lock_sha256_mismatch", codes)
+        self.assertIn("dependency_lock_size_mismatch", codes)
+
+    def test_changed_actual_migration_bytes_change_required_source_signature(self):
+        read_bytes = Path.read_bytes
+
+        def invented_migration_bytes(path):
+            return b"invented divergent migration source" if path.name == "0003_source_idea_contract.py" else read_bytes(path)
+
+        with patch.object(Path, "read_bytes", invented_migration_bytes):
+            changed = observe_source()
+        codes = compare_source_evidence(self.receipts, changed)
+        self.assertIn("installed_schema_signature_mismatch", codes)
+        self.assertIn("installed_migration_signature_mismatch", codes)
+
+    def test_git_observation_failure_is_owned_hold_not_exception(self):
+        with patch("rms.hypothesis_preserving_runner.observe_source", side_effect=ValueError("invented failure")):
+            report = assess_prerequisites(self.receipts, now=NOW)
+        self.assertIn("local_source_identity_unavailable", {finding.code for finding in report.findings})
+        self.assertIs(report.db_access_permitted, False)
 
 
 if __name__ == "__main__":

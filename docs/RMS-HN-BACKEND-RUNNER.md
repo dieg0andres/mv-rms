@@ -273,3 +273,163 @@ reset, cleanup or existing-work removal is needed. Actual later additive migrati
 and failure/recovery procedures remain separately reviewed, unexecuted work.
 Independent Test INCONCLUSIVE, Risk INCONCLUSIVE / NOT ACCEPTED (HIGH), H01–H20
 unexecuted, 34 unexecuted Stage 1 cases and the restricted OPEN incident stay unchanged.
+
+## October 3 executable-test source successor — revision 1.2
+
+This appendix supersedes only the inert-source stopping point above. Preserve the
+accepted predecessor `1a306f24b030da1e3ee2df7d6e439849959ca616`, native APPROVED
+decision `29b2a559-56aa-4f4f-8fa1-6c5a3189e20b`, packet
+`392d302d-1dc4-46cc-8c48-21bc14d7ca3d` and addendum
+`ae2ceaba-2bc5-4565-bd51-0a5fe0f527a5`. Human delegation MAU-140 comment
+`506673c1-71c4-4ed4-8962-4451a445bdb0`, and continuation revision
+`7484c1e9-e359-4b38-8286-312ab9ec9635`, authorize source and focused DB-free tests,
+not harness invocation or database access. No original finding is independently
+closed by this successor. Target remains the historical proposal, not a live
+binding: Operations MAU-141 must reconcile `rms_synthetic` with instructed reuse
+of `mv-rms-staging` / `mv-rms-staging-db-1`, existing volume and private route.
+
+### P02 implemented comparisons and trusted boundary
+
+`rms/hypothesis_source_identity.py` observes Git HEAD/tree, dirty tracked source,
+actual allowlisted executable/validator/schema/model/service/migration bytes and
+actual `requirements.lock` bytes/length. Git commands are fixed local read-only
+`rev-parse` and `status` operations with a five-second timeout; no fetch or DB
+probe is part of assessment. Missing local evidence produces an owned HOLD.
+
+External receipt object shapes (no credentials or research contents):
+
+- `runtime_identity`: independent reviewed `candidate_commit`, observed installed
+  `runtime_candidate_commit`, `candidate_tree`, complete `file_sha256` map from
+  the observer, proposal ID/revision and the existing exact lifecycle fields.
+  Both commits must equal actual local HEAD, and all executable byte hashes must
+  equal actual files. A matching manifest/revision alone cannot mask a stale
+  non-null candidate. Dirty tracked source stays HOLD.
+- `schema`: independently observed `installed=true`, `candidate_commit`,
+  `schema_signature`, `required_schema` descriptor, exact `migration_sha256`,
+  API `schema_sha256` and `migration_versions`. The descriptor contains actual
+  API, migration, model/service hashes and required additive model/service names;
+  its signature is canonical sorted compact JSON SHA-256. Installed migration
+  hashes and descriptor/signature must match actual source. A matching API JSON
+  hash is not proof that additive tables or enforcement exist. Missing required
+  symbols separately reports `candidate_additive_schema_unavailable`.
+- `dependency`: independently approved `approved_lock_sha256`, independently
+  observed `runtime_lock_sha256`, exact `candidate_commit`, `requirements_bytes`.
+  Each digest and byte count is compared to actual candidate lock bytes; a stale
+  static manifest pair cannot pass. Null/nonhex/non-object/divergent evidence
+  gets distinct missing/invalid/mismatch findings. The manifest's dependency
+  pin is also checked against actual bytes.
+
+These inputs are **claims**, including `synthetic=false`/evidence references.
+Caller-provided text, local Git identity, synthetic matching examples and checksum
+equality do not authenticate a deployed target, receipt signer, reviewer, rights
+or current execution authority. Assessment always yields HOLD/DB-access-false in
+this source-only candidate. There is no secret binding, installed-target reader,
+authenticated authority verifier or adopted execution adapter here. Do not turn
+any invented test dictionary into dispatch. No `PASS` is emitted for P02/H cases.
+
+### Inspectable executable portions and phases
+
+`rms/hypothesis_preserving_harness.py` supplies actual assertion and orchestration
+source, rather than descriptive HOLD lists alone:
+
+1. Preflight checks source stability, exact release scope/candidate/manifest/run,
+   effective ordinary target binding, capacity/limits and durable receipt sink
+   before transport use. The entry point and the harness both refuse current
+   source-only assessment. A later execution-capable candidate/manifest, exact
+   independent review, authenticated verifier and transport binding are required;
+   there is no CLI switch or metadata flag to bypass this.
+2. A run UUID determines invented fixture identities through UUIDv5; names and
+   prefixes are in `fixture_ids`. These are proposed server-side sequence-free
+   fixture-factory identities, **not** client-writable API metadata. A reviewed
+   deterministic factory does not exist now. No fixture loader is used or called.
+   Source/Idea, family, truthful manual assessment, proposed case and explicit
+   Idea-family context are required before the Hypothesis scenario.
+3. `snapshot_tables` executes full authorized mapped-row SELECT/hash accounting
+   with an explicit row-capacity refusal, not counts/sampling. Original rows,
+   history, associations, FK inventories, accounts, roles, sequences, volume,
+   private route and evidence watermarks must remain identical; only exact
+   inventoried append-only additions and reviewed derived projections may differ.
+   SQL identifiers are restricted to reviewed simple identifiers. Actual physical
+   mappings, authorized baseline capacity and external volume/route evidence are
+   unavailable; no names, target credentials or evidence contents are invented.
+4. `probe_immutable_row` attempts real UPDATE and DELETE in an owned savepoint.
+   Only actual `23000` immutable-trigger or `42501` permission rejection counts
+   as the proposed expected outcome. Missing rows, unrelated FK/SQL errors or
+   successful forbidden statements fail, even after savepoint rollback. All
+   immutable row kinds must be mapped, including original identity columns and
+   introduced associations; no owner/superuser test or final checksum substitutes.
+5. `coordinated_requests` uses two independently bound physical sessions and
+   separate transactions. A's before-commit hook requires server-observed B
+   blocking on **this** transaction before A commits. Distinct backend/transaction
+   IDs, timing, committed outcomes and cross-session visibility are asserted.
+   Waiting/blocked hooks and cancellation must be implemented by an independently
+   reviewed adapter; a repeated connection, serialized mock or local event alone
+   cannot satisfy the assertion. Thread/session deadlines do not prove host CPU/
+   memory enforcement; the bound adapter must provide those enforceable limits.
+6. Shared-service scenarios assert exact create replay bytes/status, changed-key
+   409 with no research additions, A-v2/B-stale correction with losing input
+   retained in restricted receipts, no-change 200/no-v3, viewer write denial,
+   exact v1/v2 history, unchanged original endpoints/digest, draft states, and
+   exact FK/association/addition accounting. Failure cancels only the owned pair,
+   retains every committed addition and records FAIL/unknown; never cleanup/retry.
+
+Current concrete capabilities still absent: additive models/migrations and shared
+Hypothesis/context writers (MAU-142 remains blocked), installed ordinary-role and
+editor/viewer bindings, sequence-free fixtures (existing identity/auth paths may
+consume sequences), full mapping/projection/trigger/FK inventories, two-session
+transaction hooks/server lock observations, authenticated live authority/reviews,
+enforceable resource/cancel transport and durable restricted receipt destination.
+Baseline/account/volume/private-route and per-session bindings come from observed
+Operations evidence, not this source. Permission and preservation probes and
+H14/H18 remain NOT RUN; no migration behavior is claimed tested. No new service,
+role, privilege, access, schema migration or target default is proposed.
+
+### Exact command proposal — not invoked or adopted
+
+After independently pinning the successor, Operations supplies the existing tool
+root and an approved external receipt-file path, without changing settings or
+binding secrets. Proposed commands, from the unchanged receiving branch:
+
+```bash
+BASH_ENV="$TOOLS/shell-env.sh" bash -lc 'python3 -B -m rms.hypothesis_preserving_runner --phase preflight --receipts "$RMS_HN_REVIEWED_RECEIPTS"'
+BASH_ENV="$TOOLS/shell-env.sh" bash -lc 'python3 -B -m rms.hypothesis_preserving_runner --phase run --receipts "$RMS_HN_REVIEWED_RECEIPTS"'
+```
+
+Both currently refuse with exit 2 before DB/fixture transport. The receipt path
+variable is a proposed input, not an observed installed binding. This assignment
+invokes neither command nor `PreservingRunner.run`. No default Django runner,
+`--keepdb`, provisioner loop, migration, `loaddata`, reset, create/drop, flush,
+cleanup, role change or browser/API integration is embedded in the commands.
+Independent Test MAU-144 reviews these exact command bytes and executable source
+after native Director review; MAU-140 owns any subsequent concrete execution
+proposal using Operations prerequisites. This is not an execution-adoption packet.
+
+Expected later effects are explicitly bounded to the invented fixture bundle,
+one Hypothesis with two immutable versions and versioned associations, original
+create/A-correction/no-change idempotency receipts, allowed latest projections,
+and append-only restricted test receipts. Replay, changed-key, stale and viewer
+attempts create no research rows. No existing original/account/role/sequence,
+evidence watermark, volume or private route changes are allowed. At most 100
+appended records; exact physical counts and full schema are unavailable and must
+be independently reviewed rather than fabricated. An unexpected effect, forbidden
+DML success or unknown commit stops the invocation and remains independently open.
+
+### Defect and requirements map
+
+| Item | Executable source / builder negatives | Unexecuted or missing capability |
+| --- | --- | --- |
+| P02-CAND runtime | actual HEAD/tree/files vs both independent candidate claims; stale/non-object/dirty diagnostics | installed-target authentication, independent SE-HN-G01 retest |
+| P02-CAND schema | actual migration/model/service/API descriptor + signature vs installed evidence; mismatch diagnostics | additive source/schema absent, no migration/schema inspection |
+| P02-DEP | actual lock bytes/length vs approved and runtime lock evidence; malformed/divergent negatives | authenticated runtime evidence, independent retest |
+| SE-HN-G01 original failure shapes | missing/non-object manifests/receipts; null/invalid targets and fields preserved in focused guard tests | original MEDIUM/open finding not closed by builder results |
+| P01/P03/P04, H08/H13/H14/H18 | full snapshot/account/sequence/FK/association assertions; real denial-probe source | actual target, physical mapping, rights, migration/recovery and external preservation proof unavailable |
+| P05 | bounded checkpoints, exact owned-pair cancellation/retention and receipt calls | enforceable resources/cancel/receipt sink and interrupted-run observations unavailable |
+| P06, H10/H11 | two-session overlap and replay/stale/no-change assertions | committed real separate-session evidence and browser losing-input proof unavailable |
+| H02/H08/H12/H19/H20 portions | exact context/history endpoints, draft state and viewer-denial assertions | installed shared services, actual permission principals and full context corrections unavailable |
+| H01/H03–H07/H09/H12 remaining/H15–H17/H18 release | frozen validation/schema retained; no integration claims | browser/navigation/accessibility, full fields, impacts, metadata-forgery/anonymous channels, regressions, staging/rollback NOT RUN |
+
+Builder guard results are pure invented comparisons; they are not independent
+Test retests, observed P01–P06/H01–H20 passes, preservation certification or Risk
+acceptance. Review may reject this executable candidate/command without changing
+the earlier APPROVED source-only decision. Repository rollback is decline/revert
+through Director review only; no database rollback/reset or cleanup is involved.

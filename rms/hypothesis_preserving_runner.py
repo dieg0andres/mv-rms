@@ -1,4 +1,4 @@
-"""Inert preserving-runner proposal and database-free prerequisite assessment."""
+"""DB-free prerequisite assessment and gated preserving-harness entry point."""
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from rms.hypothesis_validation import SCHEMA_SHA256
+from rms.hypothesis_source_identity import compare_source_evidence, observe_source
 
 
 MANIFEST_PATH = Path(__file__).with_name("hypothesis_runner_manifest.json")
@@ -95,13 +96,18 @@ def assess_prerequisites(receipts=None, *, now=None, manifest=_DEFAULT_MANIFEST)
         return value
 
     identity = receipt("runtime_identity")
-    expected_files = {
-        "rms/hypothesis_runner_manifest.json": MANIFEST_SHA256,
-        "rms/hypothesis_preserving_runner.py": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "docs/RMS-HN-BACKEND-RUNNER.md": hashlib.sha256((MANIFEST_PATH.parent.parent / "docs/RMS-HN-BACKEND-RUNNER.md").read_bytes()).hexdigest(),
-    }
+    try:
+        actual = observe_source()
+        comparison_codes = compare_source_evidence(receipts, actual)
+    except (OSError, ValueError, RuntimeError, SyntaxError):
+        comparison_codes = ("local_source_identity_unavailable",)
+    for code in comparison_codes:
+        hold(code, "Operations" if code.startswith("installed_") else "Backend", "Reconcile independent reviewed evidence with actual candidate bytes; no target authentication is inferred.")
+    if "local_source_identity_unavailable" not in comparison_codes and actual["requirements_sha256"] != MANIFEST["requirements_sha256"]:
+        hold("requirements_pin_mismatch", "Backend", "Actual requirements.lock bytes differ from the candidate's pinned dependency contract.")
     candidate = identity.get("candidate_commit")
-    if not isinstance(candidate, str) or len(candidate) != 40 or any(character not in "0123456789abcdef" for character in candidate) or identity.get("proposal_id") != MANIFEST["proposal_id"] or identity.get("revision") != MANIFEST["revision"] or identity.get("file_sha256") != expected_files:
+    runtime_codes = {"local_source_identity_unavailable", "runtime_candidate_missing", "candidate_commit_invalid", "candidate_commit_mismatch", "runtime_candidate_commit_invalid", "runtime_candidate_commit_mismatch", "candidate_tree_mismatch", "executable_source_mismatch", "executable_source_dirty"}
+    if runtime_codes.intersection(comparison_codes) or not isinstance(candidate, str) or len(candidate) != 40 or any(character not in "0123456789abcdef" for character in candidate) or identity.get("proposal_id") != MANIFEST["proposal_id"] or identity.get("revision") != MANIFEST["revision"]:
         hold("source_identity_unavailable", "Director", "Match the external exact candidate/path/hash receipt; local bytes are not independent adoption.")
     lifecycle = MANIFEST["lifecycle_policy"]
     for name in ("execution_command", "settings_binding", "aliases", "routers", "connections", "requested_operations", "imports", "setup", "teardown", "callbacks"):
@@ -125,6 +131,7 @@ def assess_prerequisites(receipts=None, *, now=None, manifest=_DEFAULT_MANIFEST)
     schema = receipt("schema")
     if schema.get("installed") is not True or schema.get("candidate_commit") is None or not schema.get("migration_versions") or schema.get("schema_sha256") != SCHEMA_SHA256:
         hold("schema_unavailable", "Operations", "Identify an existing reviewed installed schema, candidate and migrations; no migration in this assignment.")
+    receipt("dependency")
     ordinary_role = receipt("ordinary_role")
     if ordinary_role.get("authorized") is not True or ordinary_role.get("is_owner") is not False or ordinary_role.get("is_superuser") is not False or not ordinary_role.get("binding_ref"):
         hold("ordinary_application_role_unavailable", "Operations", "Report an existing authorized distinct ordinary application-role binding; never create/grant/borrow owner credentials.")
@@ -153,7 +160,45 @@ def assess_prerequisites(receipts=None, *, now=None, manifest=_DEFAULT_MANIFEST)
 
 
 class PreservingRunner:
-    """Proposal only: deliberately no DB lifecycle or execution implementation."""
+    """Execution gate precedes every transport or fixture operation."""
 
-    def run(self, *args, **kwargs):
-        raise RunnerHeld("HOLD: source-only proposal; no runner invocation or DB execution authorized.")
+    def preflight(self, receipts=None):
+        return assess_prerequisites(receipts)
+
+    def run(self, *, receipts=None, verifier=None, transport=None, run_id=None):
+        report = self.preflight(receipts)
+        if not report.db_access_permitted or verifier is None or transport is None:
+            raise RunnerHeld("HOLD: independently authenticated execution release, installed additive schema and reviewed transport unavailable.")
+        from rms.hypothesis_preserving_harness import execute_preserving_cases
+        return execute_preserving_cases(
+            receipts=receipts, verifier=verifier, transport=transport, run_id=run_id,
+            actual=observe_source(),
+        )
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Preserving harness; currently source-only/HOLD.")
+    parser.add_argument("--phase", choices=("preflight", "run"), required=True)
+    parser.add_argument("--receipts", type=Path, required=True)
+    arguments = parser.parse_args()
+    try:
+        receipts = json.loads(arguments.receipts.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        print(json.dumps({"disposition": "HOLD", "findings": ["receipts_unreadable"]}))
+        return 2
+    runner = PreservingRunner()
+    if arguments.phase == "run":
+        try:
+            runner.run(receipts=receipts)
+        except RunnerHeld:
+            print(json.dumps({"disposition": "HOLD", "findings": ["execution_release_or_transport_unavailable"]}))
+            return 2
+    else:
+        report = runner.preflight(receipts)
+        print(json.dumps({"disposition": report.disposition, "findings": [finding.code for finding in report.findings]}))
+        return 2 if report.findings else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
