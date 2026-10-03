@@ -52,12 +52,22 @@ SHA-256 and service signatures; Frontend explicitly receipts them on MAU-140.
 No competing schema, payload inference, completeness calculation, record
 mutation, migration, fixture write, browser storage, or live integration is added.
 
+The generic draft presentation helper consumes frontend control descriptors,
+not a transport payload/schema. It echoes submitted values without trimming,
+replacing unknown selections or mutating the caller, and renders supplied field
+errors/conflict text. Error summaries receive focus; context links stay in the
+same document, keeping controls alive. No context selection or save is confirmed.
+No reload persistence is claimed; no local/session storage or network transport
+is used. Save remains disabled. Backend-derived descriptors remain gated.
+
 ## Reproduce database-free checks
 
 Use the approved existing toolchain shell-env.sh as BASH_ENV, then:
 
 ```bash
 python3 -B manage.py test tests.django_hypothesis_frontend_shell_tests tests.django_rms_si_frontend_template_tests -v 2
+python3 -B manage.py test tests.django_hypothesis_frontend_draft_tests -v 2
+node --test tests/django_hypothesis_frontend_draft.test.js
 ```
 
 SimpleTestCase denies database access. Role tests use invented in-memory
@@ -66,6 +76,26 @@ are local checks, not actual browser observations or independent H01–H20 passe
 First navigation validation: 8 new shell checks plus 3 existing template
 regressions, 11/11 PASS, exit 0; unused default DB skipped. git diff --check
 PASS. Rendered HTML was inspected through exact content/escaping/link assertions.
+First navigation commit: 7e9e6a2ba2807cc2d9ffb6f0fc54137af870938c, published
+on the existing feature branch; remote SHA readback matched. An initial git
+push had no HTTPS helper; the existing authorized gh account supplied a
+process-local helper, with no saved credential/configuration changes.
+
+Combined component validation: 18 Django checks (8 shell, 7 generic draft,
+3 existing regressions) PASS, exit 0, unused default database skipped;
+2 Node VM interaction checks PASS, exit 0. Node checks execute the actual focus
+and preview-submit script against minimal invented document objects: they do
+not establish real-browser keyboard, history, reload or narrow-viewport behavior.
+git diff --check PASS. No real API call, database access, migration, fixture
+runner, deployed screen or browser acceptance was exercised.
+
+Remaining first-class dependency: Backend MAU-145 must publish
+rms/hypothesis_schema.json and docs/RMS-HN-API-1.md with exact commit/path/hash.
+Frontend then reads and explicitly receipts those identities on MAU-140 before
+mapping descriptors and supporting-context/exact-version/conflict components.
+The current source is reviewable but is not the complete schema-dependent
+assignment. Director reviews the later complete bounded source through this
+issue native gate. Do not remove original DB/integration blockers.
 Research review is bounded to labels and uncertainty language; native Director
 review is source-only. Test INCONCLUSIVE, Risk INCONCLUSIVE / NOT ACCEPTED
 (HIGH), 34 unexecuted Stage 1 cases and restricted OPEN incident are unchanged.

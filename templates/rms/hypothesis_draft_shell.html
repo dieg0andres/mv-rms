@@ -1,0 +1,30 @@
+{% extends "rms/base.html" %}
+{% block title %}Hypothesis draft preparation — RMS{% endblock %}
+{% block content %}
+<h1>Hypothesis draft preparation</h1>
+<p class="warning">Unsaved source-only preview. No research record has been created. Save is unavailable; keep secrets out of descriptions.</p>
+{% if errors or conflict %}
+  <section class="error error-summary" id="draft-errors" tabindex="-1" data-error-summary aria-labelledby="draft-errors-heading">
+    <h2 id="draft-errors-heading">Input not saved</h2>
+    {% if conflict %}<p>Another revision changed the latest record. Your input remains below. Do not overwrite or automatically retry; compare the authorized latest version before an explicit revision.</p>{% endif %}
+    {% if errors %}<ul>{% for error in errors %}<li>{% if error.target %}<a href="#{{ error.target }}" data-focus-target="{{ error.target }}">{{ error.message }}</a>{% else %}{{ error.message }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+  </section>
+{% endif %}
+<form data-draft-preview autocomplete="off">
+  <section id="hypothesis-fields" tabindex="-1" aria-labelledby="draft-fields-heading">
+    <h2 id="draft-fields-heading">Unfinished draft input</h2>
+    {% for group in field_groups %}<fieldset><legend>{{ group.label }}</legend>{% for control in group.controls %}{% include "rms/includes/draft_control.html" %}{% endfor %}</fieldset>{% empty %}<p>Field controls await the exact published Backend schema. No payload or field choices are inferred.</p>{% endfor %}
+    <p><a href="#research-context" data-focus-target="research-context">Review Research context without leaving this draft</a></p>
+  </section>
+  <section id="research-context" tabindex="-1" aria-labelledby="context-heading">
+    <h2 id="context-heading">Research context</h2>
+    <p>Research family and Research case must be explicitly selected. Case state: proposed. No assessment, family grouping or case is automatically created.</p>
+    <p>This inline context shell keeps draft controls in the same document. No selection is persisted or confirmed in this preview.</p>
+    <a href="#hypothesis-fields" data-focus-target="hypothesis-fields">Return to unfinished draft with input intact</a>
+  </section>
+  <p>Save is unavailable until schema receipt and separately authorized service integration. Reload persistence is not available in this source-only preview.</p>
+  <button type="button" disabled>Save draft (not connected)</button>
+  <p class="status" role="status" aria-live="polite">No save attempted.</p>
+</form>
+{% endblock %}
+{% block scripts %}<script src="/static/rms/draft_shell.js" defer></script>{% endblock %}

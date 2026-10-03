@@ -1,5 +1,7 @@
 """Repository-only navigation preparation; no record or API queries."""
 
+from copy import deepcopy
+
 from django.template.response import TemplateResponse
 
 from .views import RmsPage
@@ -27,6 +29,31 @@ def navigation_context(*, section="home", role=None, build=None):
         "build_label": build or "Not supplied — not a deployed release",
         "repository_preview": True,
     }
+
+
+def draft_presentation(groups, *, submitted=None, issues=(), conflict=False):
+    bound_groups = deepcopy(groups)
+    submitted = submitted if submitted is not None else {}
+    controls = {}
+    for group in bound_groups:
+        for control in group["controls"]:
+            path = control["path"]
+            control["value"] = submitted.get(path, control.get("value", ""))
+            control["errors"] = []
+            control["submitted_choice"] = bool(
+                control.get("kind") == "select"
+                and control["value"]
+                and control["value"] not in [choice[0] for choice in control["choices"]]
+            )
+            controls[path] = control
+    errors = []
+    for issue in issues:
+        control = controls.get(issue.get("path"))
+        message = issue["message"]
+        if control is not None:
+            control["errors"].append(message)
+        errors.append({"target": control["id"] if control else None, "message": message})
+    return {"field_groups": bound_groups, "errors": errors, "conflict": conflict}
 
 
 class NavigationPage(RmsPage):

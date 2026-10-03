@@ -1,0 +1,16 @@
+<div class="field">
+  <label for="{{ control.id }}">{{ control.label }}{% if control.required %} (required to save){% endif %}</label>
+  {% if control.kind == "select" %}
+    <select id="{{ control.id }}" name="{{ control.path }}" aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>
+      <option value=""{% if not control.value %} selected{% endif %}>Choose explicitly — no default</option>
+      {% if control.submitted_choice %}<option value="{{ control.value }}" selected>Submitted input: {{ control.value }}</option>{% endif %}
+      {% for value, label in control.choices %}<option value="{{ value }}"{% if value == control.value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  {% elif control.kind == "text" %}
+    <input id="{{ control.id }}" name="{{ control.path }}" type="text" value="{{ control.value|default_if_none:"" }}" aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>
+  {% else %}
+    <textarea id="{{ control.id }}" name="{{ control.path }}" aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>{{ control.value|default_if_none:"" }}</textarea>
+  {% endif %}
+  <p id="{{ control.id }}-help" class="muted">{{ control.help }}</p>
+  {% if control.errors %}<div id="{{ control.id }}-errors" class="field-error">{% for message in control.errors %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+</div>
