@@ -1,0 +1,53 @@
+name: mv-rms-staging
+services:
+  db:
+    image: postgres:17.11-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rms_staging
+      POSTGRES_USER: rms_staging
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - rms_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rms_staging -d rms_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  app:
+    build: .
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      RMS_DB_HOST: db
+      RMS_DB_NAME: rms_staging
+      RMS_DB_USER: rms_staging
+      RMS_STAGING_HOST: ${RMS_STAGING_HOST:?Set the approved private hostname and port}
+    secrets:
+      - db_password
+      - django_key
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:18743:18743'
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18743/__staging/health', timeout=3).read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+volumes:
+  rms_data:
+secrets:
+  db_password:
+    file: ${RMS_STAGING_SECRETS_DIR:?Set the approved absolute secrets directory}/db_password
+  django_key:
+    file: ${RMS_STAGING_SECRETS_DIR:?Set the approved absolute secrets directory}/django_key

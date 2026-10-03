@@ -36,6 +36,7 @@ test-results/
 .paperclip-worktrees/
 scratch/
 artifacts/
+staging/legacy/
 
 # Editor and operating-system files
 .DS_Store

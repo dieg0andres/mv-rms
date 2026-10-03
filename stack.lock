@@ -1,0 +1,33 @@
+format=RMS-VS-1-task-local-stack-lock-v1
+platform=debian-13-amd64
+
+[cpython]
+version=3.13.15
+release=python-build-standalone-20260901
+source_asset=cpython-3.13.15+20260901-x86_64-unknown-linux-gnu-install_only.tar.gz
+source_asset_bytes=119758082
+source_asset_sha256=0651dd7157d3debf769e15a52c1de9de7fbcdc36ba72faf79fde3c44f14d9461
+interpreter_sha256=efa50401c78479344950d2967f1d44631efc609d9a0e1fde61afd8cfa5debb76
+normalized_file_tree_sha256=ec838e7c3deb2773e3ecccab37a7f561f836025fe87769440676d8c861e4d1bf
+file_count=3557
+file_bytes=392629420
+
+[python-wheels]
+asgiref-3.12.1-py3-none-any.whl bytes=25478 sha256=fe386d1c2bff7259ea95929266d12a8cf9a8b5a1c2598402967d8792e7a7c094
+django-5.2.17-py3-none-any.whl bytes=8315563 sha256=f04fb3b36ee119e1af4fa1d397d5fd6cf12700f49321e84d4f4c642c5b1973db
+djangorestframework-3.18.1-py3-none-any.whl bytes=901373 sha256=f1409d698967aaf82d5d98d76b549c8fba8bd92ebd0d83d24454508f72168dc2
+psycopg-3.3.6-py3-none-any.whl bytes=215490 sha256=a1db9f7148b06a28606767efaca51fa6f9398c5c0a3810519be69d7000bdb631
+psycopg_binary-3.3.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl bytes=5237855 sha256=cec5ea900390897d0b46130f60bc2883bf19c314f9044235217c8be88b0ef269
+sqlparse-0.6.0-py3-none-any.whl bytes=50070 sha256=b861c0288ce2fa56209a9a6412d2e066ac664b3873b89c26c9d8415e8e32996f
+requirements.lock sha256=d21ca3b1acbcd2bbd60637b3870b5498307084173e070a9f78834dc4b4341ea4
+
+[postgresql-17.11]
+postgresql-17_17.11-0+deb13u1_amd64.deb bytes=16678028 sha256=d2ce1ddffafa783f9acda4c92c86fc21e8288bff3782d739294f14fa797d7886
+postgresql-client-17_17.11-0+deb13u1_amd64.deb bytes=2071508 sha256=9d8558f8dd57c8e92e218a20698383575d53742ca3f9e7c2b7fe5f246d5216ae
+postgresql-server-dev-17_17.11-0+deb13u1_amd64.deb bytes=1332720 sha256=59cb25f0a1def045aa334a9c025befc4a72dfc72d4a370f97d7d3f7342803d7e
+
+[postgresql-runtime-dependencies]
+libicu76_76.1-4_amd64.deb bytes=9722072 sha256=c1bf762996de9ecba9b9d871e4928a8090f023a3e9e7fa3240b3d90f892a01dc
+libpq5_17.11-0+deb13u1_amd64.deb bytes=237376 sha256=20a4c9ef58b4baf90deda67cfb2cc062871c062830dddc234d28f5ac7931b86b
+libreadline8t64_8.2-6_amd64.deb bytes=168832 sha256=eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967
+libxml2_2.12.7+dfsg+really2.9.14-2.1+deb13u3_amd64.deb bytes=699724 sha256=e0c6b63ce4602a036a526f60fe5e6c1586710688058d98fc1001b9b3147b7efd
