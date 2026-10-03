@@ -666,16 +666,19 @@ class RecordEditorPage(ConnectedPage):
         except ServiceError as error:
             return service_failure(self, request, error)
 
-    def render_form(self, request, schema, submitted, *, record_id=None, idea=None, issues=(), status=200, conflict=False, notice=None, request_key=None, classification=None):
+    def render_form(self, request, schema, submitted, *, record_id=None, idea=None, issues=(), status=200, conflict=False, notice=None, request_key=None, classification=None, read_references=True):
         correction = record_id is not None
         context_groups = research_context_groups(schema)[:2] if self.kind == "hypothesis" else []
         groups = form_groups(schema, self.kind, correction)
-        try:
-            families = shared_service("family", "list", actor=request.user, query={})["results"]
-            cases = shared_service("case", "list", actor=request.user, query={})["results"] if self.kind == "hypothesis" else []
-            selection_unavailable = False
-        except (SchemaUnavailable, ServiceError, DatabaseError):
+        if not read_references:
             families, cases, selection_unavailable = [], [], True
+        else:
+            try:
+                families = shared_service("family", "list", actor=request.user, query={})["results"]
+                cases = shared_service("case", "list", actor=request.user, query={})["results"] if self.kind == "hypothesis" else []
+                selection_unavailable = False
+            except (SchemaUnavailable, ServiceError, DatabaseError):
+                families, cases, selection_unavailable = [], [], True
         selection_controls(groups + context_groups, families, cases)
         presentation = draft_presentation(groups + context_groups, submitted=submitted, issues=issues, conflict=conflict, latest_url=browser_url(self.kind, record_id) if correction else None)
         context = live_context(self, request)
@@ -683,7 +686,7 @@ class RecordEditorPage(ConnectedPage):
         context.update(presentation)
         context["context_groups"] = context["field_groups"][len(groups):]
         context["field_groups"] = context["field_groups"][:len(groups)]
-        if idea is None and submitted.get("reference_idea_id"):
+        if read_references and idea is None and submitted.get("reference_idea_id"):
             try:
                 selected = exact_idea(submitted["reference_idea_id"], int(submitted.get("reference_idea_version", "")))
                 if selected and selected["idea_version_id"] == submitted.get("/originating_idea_version_id"):
@@ -765,7 +768,11 @@ class RecordEditorPage(ConnectedPage):
         except DatabaseError:
             return self.render_form(request, schema, submitted, record_id=record_id, status=503, request_key=submitted.get("idempotency_key"), issues=[{"path": "", "message": "The save outcome could not be confirmed. Input and the original request key remain below. Retry the unchanged request before editing to retrieve its server result."}])
         except ServiceError as error:
-            if isinstance(error, ResourceNotFound) or getattr(error, "http_status", None) in (401, 403):
+            if isinstance(error, ResourceNotFound):
+                return self.render_form(request, schema, submitted, record_id=record_id, status=404,
+                    request_key=kwargs["idempotency_key"], read_references=False,
+                    issues=[{"path": "", "message": "A referenced record could not be used. Missing and restricted records use the same response. Your input and original request key remain below; no save was confirmed."}])
+            if getattr(error, "http_status", None) in (401, 403):
                 return service_failure(self, request, error)
             status = getattr(error, "http_status", 409)
             if status != 409:

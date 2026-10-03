@@ -20,6 +20,115 @@ from rms.views import IdeaDetailPage, IdeaHistoryPage, SourceHistoryPage
 from tests.django_hypothesis_frontend_integration_tests import invented_actor
 
 
+class MissingReferenceInputTests(SimpleTestCase):
+    """404 failure input belongs to the editor; stored reference data does not."""
+
+    def setUp(self):
+        from rms.navigation_views import read_navigation_schema
+        self.schema = read_navigation_schema()
+        self.factory = RequestFactory()
+        self.uuid = "11111111-1111-4111-8111-111111111111"
+
+    def payloads(self):
+        from rms.hypothesis_validation import validate_request
+        hyp = {"originating_idea_version_id": "IDEV-" + self.uuid,
+               "investigation_version_id": "INVV-" + self.uuid,
+               "idea_family_binding": {"mode": "existing", "association_version_id": "IFAV-" + self.uuid},
+               "origin_rationale": "Own invented origin input", "fields": {"title": "Own unfinished Hypothesis",
+               "claim": '</textarea><script>ownInput()</script>'}}
+        family = {"fields": {"name": "Own unfinished family", "mechanism_boundary": "Own mechanism",
+                             "distinctness_rule": "Own boundary", "risk_review_reference": None}}
+        case = {"family_version_id": "RFAMV-" + self.uuid,
+                "fields": {"title": "Own unfinished case", "owner_role": "Research", "priority": "normal",
+                           "next_action": "Inspect invented input", "blocker_text": None},
+                "prior_research_assessment": {"query_scope": "Own unsaved assessment scope", "query_time": "2026-10-03T12:00:00Z",
+                "policy_version": self.schema["$defs"]["AssessmentFields"]["properties"]["policy_version"]["const"],
+                "result_watermark": "Own fictional boundary", "finding": "no_relevant_work_found", "rationale": "Own manual rationale",
+                "limitations": "Own unsaved assessment limitations", "record_links": []}}
+        correction = {"expected_latest_version": 1, "correction_reason": "Own unfinished revision reason"}
+        hyp_correction = {**validate_request("HypothesisCreate", hyp), **correction}
+        case_correction = {**case, **correction, "prior_research_assessment": {"mode": "existing", "assessment_version_id": "PRAV-" + self.uuid}}
+        classification = {**correction, "prior_association_version_id": "IFAV-" + self.uuid,
+                          "family_version_id": "RFAMV-" + self.uuid, "rationale": "Own unfinished classification reason"}
+        return [
+            ("hypothesis", "/hypotheses/new", "HypothesisCreate", hyp, "Own unfinished Hypothesis", "save"),
+            ("family", "/research-families/new", "FamilyCreate", family, "Own unfinished family", "save"),
+            ("case", "/investigations/new", "InvestigationCreate", case, "Own unfinished case", "save"),
+            ("hypothesis", "/hypotheses/HYP-" + self.uuid + "/revise", "HypothesisCorrection", hyp_correction, "Own unfinished revision reason", "save"),
+            ("family", "/research-families/RFAM-" + self.uuid + "/revise", "FamilyCorrection", {**family, **correction}, "Own unfinished revision reason", "save"),
+            ("case", "/investigations/INV-" + self.uuid + "/revise", "InvestigationCorrection", case_correction, "Own unfinished revision reason", "save"),
+            ("classification", "/idea-family-associations/IFA-" + self.uuid + "/revise", "IdeaFamilyCorrection", classification, "Own unfinished classification reason", "save"),
+            ("hypothesis", "/hypotheses/new", "FamilyCreate", family, "Own unfinished family", "create_family"),
+            ("hypothesis", "/hypotheses/new", "InvestigationCreate", case, "Own unfinished case", "create_case"),
+        ]
+
+    def test_every_save_and_revision_missing_reference_preserves_input_without_reference_reads(self):
+        from rms.navigation_views import flatten_input
+        from rms.hypothesis_validation import validate_request
+        for kind, path, schema_name, payload, text, operation in self.payloads():
+            validate_request(schema_name, payload)
+            prefix = "/context/family" if operation == "create_family" else "/context/case" if operation == "create_case" else ""
+            data = {**flatten_input(payload, prefix), "idempotency_key": "own-form-key", "operation": operation,
+                    "reference_idea_id": "IDE-" + self.uuid, "reference_idea_version": "1"}
+            if prefix:
+                data["/fields/title"] = "Own unfinished Hypothesis alongside context"
+            request = self.factory.post(path, data, HTTP_IDEMPOTENCY_KEY="own-original-header-key")
+            request._dont_enforce_csrf_checks = True
+            force_authenticate(request, user=invented_actor())
+            # Anything beyond the write call would fetch reference metadata.
+            with self.subTest(path=path, operation=operation), patch("rms.navigation_views.shared_service", side_effect=ResourceNotFound("PRIVATE reference diagnostic")) as service, patch("rms.navigation_views.exact_idea") as reference:
+                match = resolve(path)
+                response = match.func(request, **match.kwargs)
+                response.render()
+                html = response.content.decode()
+                self.assertEqual(response.status_code, 404)
+                self.assertIn(text, html)
+                self.assertIn('value="own-original-header-key"', html)
+                self.assertIn("No new save confirmed", html)
+                self.assertIn("data-error-summary", html)
+                self.assertIn('href="/"', html)
+                self.assertNotIn("PRIVATE reference diagnostic", html)
+                self.assertIsNone(response.context_data["idea"])
+                self.assertNotIn("selected_classification", response.context_data)
+                self.assertEqual(response["Cache-Control"], "private, no-store")
+                service.assert_called_once()
+                self.assertIn(service.call_args.args[1], ("create", "correct"))
+                reference.assert_not_called()
+                if prefix:
+                    self.assertIn("Own unfinished Hypothesis alongside context", html)
+                if schema_name.startswith("Hypothesis"):
+                    self.assertIn("&lt;/textarea&gt;&lt;script&gt;ownInput()&lt;/script&gt;", html)
+                    self.assertNotIn("<script>ownInput()", html)
+
+    def test_authentication_and_role_failure_still_denies_without_form_or_input(self):
+        from rms.navigation_views import flatten_input
+        payload = self.payloads()[0][3]
+        for error, status in ((Forbidden(), 403), (AuthenticationRequired(), 401)):
+            request = self.factory.post("/hypotheses/new", {**flatten_input(payload), "idempotency_key": "own-key"})
+            request._dont_enforce_csrf_checks = True
+            force_authenticate(request, user=invented_actor())
+            with self.subTest(status=status), patch("rms.navigation_views.shared_service", side_effect=error) as service:
+                response = resolve(request.path).func(request)
+                response.render()
+                self.assertEqual(response.status_code, status)
+                self.assertNotIn("Own unfinished Hypothesis", response.content.decode())
+                self.assertNotIn("data-record-form", response.content.decode())
+                service.assert_called_once()
+                if status == 401:
+                    self.assertIn("WWW-Authenticate", response)
+
+    def test_role_denial_precedes_schema_and_shared_write(self):
+        for role in ("founder_viewer", "unassigned"):
+            request = self.factory.post("/hypotheses/new", {"/fields/title": "Own unfinished input"})
+            request._dont_enforce_csrf_checks = True
+            force_authenticate(request, user=invented_actor(role))
+            with self.subTest(role=role), patch("rms.navigation_views.read_navigation_schema") as schema, patch("rms.navigation_views.shared_service") as service:
+                response = resolve(request.path).func(request)
+                self.assertEqual(response.status_code, 403)
+                schema.assert_not_called()
+                service.assert_not_called()
+
+
 class DirectorIntegrationTests(SimpleTestCase):
     @override_settings(CSRF_TRUSTED_ORIGINS=["https://private.example.invalid:4443"])
     def test_private_browser_origin_and_csrf_token_survive_adapter_host_rewrite(self):

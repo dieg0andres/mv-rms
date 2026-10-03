@@ -1,6 +1,6 @@
 {
-  "candidate_id": "RMS-HN-INTEGRATED-20261003-bc892640",
-  "receiving_run": "bc892640-8cf3-45de-b497-ffea777ce56c",
+  "candidate_id": "RMS-HN-INPUT-PRESERVATION-20261003-6f0323c2",
+  "receiving_run": "6f0323c2-5218-42b9-960f-94f81b95a436",
   "branch": "MAU-140-rms-increment-2-hypothesis-drafts-and-navigation-v1-0",
   "backend_git_object": "aab6d6dfde13fe03f184292f197ed3a56ce00b9d",
   "frontend_git_object": "fb9766f25cc723463ce15ae78feed282ab6163fc",
@@ -423,8 +423,8 @@
     },
     {
       "path": "rms/navigation_views.py",
-      "bytes": 48860,
-      "sha256": "aefd05f37200866135c15e5342a9967b526e39fe65610f2815ba6b24773f334d",
+      "bytes": 49457,
+      "sha256": "d0e9808ea0211ecfd62e15ad8d6b9fd6ed9cddc516f41222f8797a8764088a71",
       "origin": "director"
     },
     {
@@ -885,8 +885,8 @@
     },
     {
       "path": "tests/django_hypothesis_director_integration_tests.py",
-      "bytes": 7187,
-      "sha256": "66718db6f147431aaa7504c0e82db45bc9c397e02e0ab2b1884fc33363de4d48",
+      "bytes": 15238,
+      "sha256": "90c1f50dc434b9f91201edae615d6af4122c0d6b43a99bd0b1a2f8daafa52fe6",
       "origin": "director"
     },
     {
@@ -1022,6 +1022,20 @@
       "origin": "backend"
     }
   ],
-  "source_inventory_sha256": "a65be265ec2734d2c9e35154c22f87531f390c84d441052fc6598f6e825a137d",
-  "revision": 2
+  "source_inventory_sha256": "4dd7b077eddd64687c0053a93d4d85a2f5d5087fd1ac3bea5a1cd0ef06477061",
+  "revision": 3,
+  "supersedes_manifest_sha256": "78d0aeebf4dffeaeb4e3bd1d731e3d7e7578c7b7c0e59927b5151ed723ad3a6e",
+  "parent_candidate": {
+    "commit": "8c58569e5ccb82c77309553763794e2d80e43396",
+    "tree": "5d0fc6aa2f6922b2a3fd7991fea2d644b9eed512",
+    "publication": "Operator-reported GitHub draft PR4; not independently refetched by Director"
+  },
+  "source_changes_from_parent": [
+    "rms/navigation_views.py",
+    "tests/django_hypothesis_director_integration_tests.py"
+  ],
+  "source_correction_comment": "/MAU/issues/MAU-140#comment-54796808-1b3a-41e3-8ef8-456192a94437",
+  "independent_retest": "Pending MAU-144 on exact successor; Director reproduction is not an independent verdict",
+  "source_inventory_digest_format": "sha256(files canonical JSON sort_keys=True,separators=comma/colon)",
+  "test_demo_packet": "Prior8c58569 proposal preserved; candidate/source/helper pins require successor amendment before release"
 }
