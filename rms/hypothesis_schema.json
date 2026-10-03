@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mv-rms:RMS-HN-API-1:1.0",
+  "$ref": "#/$defs/HypothesisCreate",
+  "title": "RMS Hypothesis and minimum research context — source-only contract",
+  "x-interface": "RMS-HN-API-1",
+  "x-schema-version": "1.0",
+  "x-authority": {"contract_revision": "3982eccc-e180-4ac9-bc70-9c4e16aa47f1", "source_commit": "de6b971b8b1ef8b5ab6d230641aaec0daeb7e374", "contract_sha256": "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9", "source_confirmation": "b963d661-71bf-4a56-a591-0a42e31d843a", "execution": "HOLD: no database/API integration authorized"},
+  "x-transport": {
+    "idempotency_header": "Idempotency-Key", "idempotency_pattern": "^[A-Za-z0-9._:-]{1,128}$",
+    "scope": ["authenticated_principal", "method", "route", "canonical_payload"],
+    "statuses": {"created": 201, "read_or_no_change": 200, "validation_error": 400, "authentication_required": 401, "forbidden": 403, "not_found": 404, "stale_version": 409, "idempotency_conflict": 409},
+    "error_path_format": "RFC 6901 JSON Pointer relative to request body",
+    "hidden_reference_policy": "uniform not_found, no field/detail disclosure",
+    "replay": "original status/body/identity; new-key identical snapshot creates no version"
+  },
+  "x-endpoints": [
+    {"method": "POST", "path": "/api/v1/hypotheses", "request": "HypothesisCreate", "response": "HypothesisRead"},
+    {"method": "GET", "path": "/api/v1/hypotheses", "query": "ListQuery", "response": "HypothesisList"},
+    {"method": "GET", "path": "/api/v1/hypotheses/{hypothesis_id}", "response": "HypothesisRead"},
+    {"method": "GET", "path": "/api/v1/hypotheses/{hypothesis_id}/versions/{version}", "response": "HypothesisRead"},
+    {"method": "GET", "path": "/api/v1/hypotheses/{hypothesis_id}/history", "response": "HypothesisHistory"},
+    {"method": "POST", "path": "/api/v1/hypotheses/{hypothesis_id}/corrections", "request": "HypothesisCorrection", "response": "HypothesisRead"},
+    {"method": "POST", "path": "/api/v1/research-families", "request": "FamilyCreate", "response": "FamilyRead"},
+    {"method": "GET", "path": "/api/v1/research-families", "query": "ListQuery", "response": "FamilyList"},
+    {"method": "GET", "path": "/api/v1/research-families/{family_id}", "response": "FamilyRead"},
+    {"method": "GET", "path": "/api/v1/research-families/{family_id}/versions/{version}", "response": "FamilyRead"},
+    {"method": "GET", "path": "/api/v1/research-families/{family_id}/history", "response": "FamilyHistory"},
+    {"method": "POST", "path": "/api/v1/research-families/{family_id}/corrections", "request": "FamilyCorrection", "response": "FamilyRead"},
+    {"method": "POST", "path": "/api/v1/investigations", "request": "InvestigationCreate", "response": "InvestigationRead"},
+    {"method": "GET", "path": "/api/v1/investigations", "query": "ListQuery", "response": "InvestigationList"},
+    {"method": "GET", "path": "/api/v1/investigations/{investigation_id}", "response": "InvestigationRead"},
+    {"method": "GET", "path": "/api/v1/investigations/{investigation_id}/versions/{version}", "response": "InvestigationRead"},
+    {"method": "GET", "path": "/api/v1/investigations/{investigation_id}/history", "response": "InvestigationHistory"},
+    {"method": "POST", "path": "/api/v1/investigations/{investigation_id}/corrections", "request": "InvestigationCorrection", "response": "InvestigationRead"},
+    {"method": "GET", "path": "/api/v1/prior-research-assessments/{assessment_id}/versions/{version}", "response": "AssessmentRead"},
+    {"method": "POST", "path": "/api/v1/idea-family-associations/{association_id}/corrections", "request": "IdeaFamilyCorrection", "response": "AssociationRead"}
+  ],
+  "$defs": {
+    "Text": {"type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S", "x-trim": true},
+    "NullableText": {"type": ["string", "null"], "maxLength": 4000, "x-trim": true},
+    "VersionID": {"type": "string", "pattern": "^[A-Z]+V-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "IdeaVersionID": {"type": "string", "pattern": "^IDEV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "FamilyVersionID": {"type": "string", "pattern": "^RFAMV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "InvestigationVersionID": {"type": "string", "pattern": "^INVV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "AssociationVersionID": {"type": "string", "pattern": "^IFAV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "AssessmentVersionID": {"type": "string", "pattern": "^PRAV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "UTCDateTime": {"type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"},
+    "PositiveDecimal": {"type": ["string", "null"], "maxLength": 128, "pattern": "^(?=.*[1-9])(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)$", "x-positive-finite-decimal": true},
+    "Duration": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {
+        "kind": {"type": ["string", "null"], "enum": ["fixed", "event_based", null]},
+        "quantity": {"$ref": "#/$defs/PositiveDecimal"},
+        "unit": {"type": ["string", "null"], "enum": ["seconds", "minutes", "hours", "calendar_days", "trading_sessions", "bars", null]},
+        "start_anchor": {"$ref": "#/$defs/NullableText"}, "counting_convention": {"$ref": "#/$defs/NullableText"},
+        "calendar": {"$ref": "#/$defs/NullableText"}, "bar_definition": {"$ref": "#/$defs/NullableText"}, "event_condition": {"$ref": "#/$defs/NullableText"}
+      },
+      "x-kind-fields": {"fixed": ["quantity", "unit", "start_anchor", "counting_convention"], "event_based": ["event_condition", "start_anchor"]},
+      "x-unit-fields": {"trading_sessions": "calendar", "bars": "bar_definition"},
+      "x-semantic-validation": "only chosen kind/unit fields may be populated; missing kind may not combine mutually incompatible policies"
+    },
+    "HoldingDuration": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {
+        "kind": {"type": ["string", "null"], "enum": ["fixed", "event_based", "no_fixed_time_limit", null]},
+        "quantity": {"$ref": "#/$defs/PositiveDecimal"},
+        "unit": {"type": ["string", "null"], "enum": ["seconds", "minutes", "hours", "calendar_days", "trading_sessions", "bars", null]},
+        "start_anchor": {"$ref": "#/$defs/NullableText"}, "counting_convention": {"$ref": "#/$defs/NullableText"},
+        "calendar": {"$ref": "#/$defs/NullableText"}, "bar_definition": {"$ref": "#/$defs/NullableText"}, "event_condition": {"$ref": "#/$defs/NullableText"},
+        "if_event_never_occurs": {"$ref": "#/$defs/NullableText"}, "rationale": {"$ref": "#/$defs/NullableText"}
+      },
+      "x-kind-fields": {"fixed": ["quantity", "unit", "start_anchor", "counting_convention"], "event_based": ["event_condition", "start_anchor", "if_event_never_occurs"], "no_fixed_time_limit": ["rationale"]},
+      "x-unit-fields": {"trading_sessions": "calendar", "bars": "bar_definition"},
+      "x-semantic-validation": "only chosen kind/unit fields may be populated; no fixed limit requires explicit rationale and separately specified exits"
+    },
+    "HypothesisFields": {
+      "type": "object", "additionalProperties": false, "required": ["title"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "\\S", "x-trim": true},
+        "claim": {"$ref": "#/$defs/NullableText"}, "claim_basis": {"type": ["string", "null"], "enum": ["gross_return", "net_return", "other_measure", null]},
+        "economic_rationale": {"$ref": "#/$defs/NullableText"}, "expected_opportunity": {"$ref": "#/$defs/NullableText"},
+        "persistence_argument": {"$ref": "#/$defs/NullableText"}, "competing_explanations": {"$ref": "#/$defs/NullableText"}, "falsification_condition": {"$ref": "#/$defs/NullableText"},
+        "market": {"type": ["string", "null"], "enum": ["equities", "etfs", "options", "crypto", "forex", "multi_asset", null]},
+        "universe": {"$ref": "#/$defs/NullableText"}, "direction": {"type": ["string", "null"], "enum": ["long", "short", "long_short", null]},
+        "signal": {"$ref": "#/$defs/NullableText"}, "information_availability": {"$ref": "#/$defs/NullableText"},
+        "decision_schedule": {"type": ["string", "null"], "maxLength": 2000, "x-trim": true},
+        "entry_conditions": {"$ref": "#/$defs/NullableText"}, "execution_timing": {"type": ["string", "null"], "maxLength": 2000, "x-trim": true},
+        "exit_conditions": {"$ref": "#/$defs/NullableText"}, "exit_precedence": {"type": ["string", "null"], "maxLength": 2000, "x-trim": true},
+        "effect_horizon": {"$ref": "#/$defs/Duration"}, "maximum_holding_period": {"$ref": "#/$defs/HoldingDuration"},
+        "sizing_method": {"type": ["string", "null"], "enum": ["fixed_units", "fixed_notional", "equity_fraction", "risk_budget", "volatility_target", "equal_weight", "custom", null]},
+        "sizing_basis": {"type": ["string", "null"], "maxLength": 2000, "x-trim": true}, "sizing_rule": {"$ref": "#/$defs/NullableText"}, "exposure_limits": {"$ref": "#/$defs/NullableText"},
+        "implementation_assumptions": {"$ref": "#/$defs/NullableText"}, "intended_benchmark_name": {"type": ["string", "null"], "maxLength": 500, "x-trim": true},
+        "intended_benchmark_definition": {"$ref": "#/$defs/NullableText"}, "intended_benchmark_rationale": {"$ref": "#/$defs/NullableText"}, "research_limitations": {"$ref": "#/$defs/NullableText"}
+      },
+      "x-completeness": "all defined fields plus kind/unit conditional duration paths; shape/presence only, never scientific adequacy or authority"
+    },
+    "FullHypothesisFields": {"allOf": [{"$ref": "#/$defs/HypothesisFields"}, {"required": ["title", "claim", "claim_basis", "economic_rationale", "expected_opportunity", "persistence_argument", "competing_explanations", "falsification_condition", "market", "universe", "direction", "signal", "information_availability", "decision_schedule", "entry_conditions", "execution_timing", "exit_conditions", "exit_precedence", "effect_horizon", "maximum_holding_period", "sizing_method", "sizing_basis", "sizing_rule", "exposure_limits", "implementation_assumptions", "intended_benchmark_name", "intended_benchmark_definition", "intended_benchmark_rationale", "research_limitations"]}]},
+    "IdeaFamilyBinding": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["mode", "association_version_id"], "properties": {"mode": {"const": "existing"}, "association_version_id": {"$ref": "#/$defs/AssociationVersionID"}}},
+      {"type": "object", "additionalProperties": false, "required": ["mode", "family_version_id", "rationale"], "properties": {"mode": {"const": "create"}, "family_version_id": {"$ref": "#/$defs/FamilyVersionID"}, "rationale": {"$ref": "#/$defs/Text"}}}
+    ]},
+    "HypothesisCreate": {"type": "object", "additionalProperties": false, "required": ["originating_idea_version_id", "origin_rationale", "investigation_version_id", "idea_family_binding", "fields"], "properties": {"originating_idea_version_id": {"$ref": "#/$defs/IdeaVersionID"}, "origin_rationale": {"$ref": "#/$defs/Text"}, "investigation_version_id": {"$ref": "#/$defs/InvestigationVersionID"}, "idea_family_binding": {"$ref": "#/$defs/IdeaFamilyBinding"}, "fields": {"$ref": "#/$defs/HypothesisFields"}}},
+    "HypothesisCorrection": {"type": "object", "additionalProperties": false, "required": ["originating_idea_version_id", "origin_rationale", "investigation_version_id", "idea_family_binding", "fields", "expected_latest_version", "correction_reason"], "properties": {"originating_idea_version_id": {"$ref": "#/$defs/IdeaVersionID"}, "origin_rationale": {"$ref": "#/$defs/Text"}, "investigation_version_id": {"$ref": "#/$defs/InvestigationVersionID"}, "idea_family_binding": {"$ref": "#/$defs/IdeaFamilyBinding"}, "fields": {"$ref": "#/$defs/FullHypothesisFields"}, "expected_latest_version": {"type": "integer", "minimum": 1}, "correction_reason": {"$ref": "#/$defs/Text"}}},
+    "FamilyFields": {"type": "object", "additionalProperties": false, "required": ["name", "mechanism_boundary", "distinctness_rule"], "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "\\S", "x-trim": true}, "mechanism_boundary": {"$ref": "#/$defs/Text"}, "distinctness_rule": {"$ref": "#/$defs/Text"}, "risk_review_reference": {"$ref": "#/$defs/NullableText"}}},
+    "FamilyCreate": {"type": "object", "additionalProperties": false, "required": ["fields"], "properties": {"fields": {"$ref": "#/$defs/FamilyFields"}}},
+    "FamilyCorrection": {"type": "object", "additionalProperties": false, "required": ["fields", "expected_latest_version", "correction_reason"], "properties": {"fields": {"allOf": [{"$ref": "#/$defs/FamilyFields"}, {"required": ["risk_review_reference"]}]}, "expected_latest_version": {"type": "integer", "minimum": 1}, "correction_reason": {"$ref": "#/$defs/Text"}}},
+    "AssessmentLink": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind", "version_id"], "properties": {"kind": {"enum": ["source", "idea", "research_family", "investigation"]}, "version_id": {"$ref": "#/$defs/VersionID"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "reference"], "properties": {"kind": {"const": "external_document"}, "reference": {"$ref": "#/$defs/Text"}}}
+    ]},
+    "AssessmentFields": {"type": "object", "additionalProperties": false, "required": ["query_scope", "query_time", "policy_version", "result_watermark", "finding", "rationale", "limitations", "record_links"], "properties": {"query_scope": {"$ref": "#/$defs/Text"}, "query_time": {"$ref": "#/$defs/UTCDateTime"}, "policy_version": {"const": "MAU-140:contract:3982eccc-e180-4ac9-bc70-9c4e16aa47f1:section-5"}, "result_watermark": {"$ref": "#/$defs/Text"}, "finding": {"enum": ["extends", "contradicts", "replicates", "repeats", "unrelated", "no_relevant_work_found"]}, "rationale": {"$ref": "#/$defs/Text"}, "limitations": {"$ref": "#/$defs/Text"}, "record_links": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/AssessmentLink"}}}},
+    "InvestigationFields": {"type": "object", "additionalProperties": false, "required": ["title", "owner_role", "priority", "next_action"], "properties": {"title": {"type": "string", "minLength": 1, "maxLength": 500, "pattern": "\\S", "x-trim": true}, "owner_role": {"$ref": "#/$defs/Text"}, "priority": {"enum": ["low", "normal", "high"]}, "next_action": {"$ref": "#/$defs/Text"}, "blocker_text": {"$ref": "#/$defs/NullableText"}}},
+    "AssessmentBinding": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["mode", "assessment_version_id"], "properties": {"mode": {"const": "existing"}, "assessment_version_id": {"$ref": "#/$defs/AssessmentVersionID"}}},
+      {"type": "object", "additionalProperties": false, "required": ["mode", "corrects_assessment_version_id", "expected_latest_assessment_version", "correction_reason", "fields"], "properties": {"mode": {"const": "correct"}, "corrects_assessment_version_id": {"$ref": "#/$defs/AssessmentVersionID"}, "expected_latest_assessment_version": {"type": "integer", "minimum": 1}, "correction_reason": {"$ref": "#/$defs/Text"}, "fields": {"$ref": "#/$defs/AssessmentFields"}}}
+    ]},
+    "InvestigationCreate": {"type": "object", "additionalProperties": false, "required": ["family_version_id", "fields", "prior_research_assessment"], "properties": {"family_version_id": {"$ref": "#/$defs/FamilyVersionID"}, "fields": {"$ref": "#/$defs/InvestigationFields"}, "prior_research_assessment": {"$ref": "#/$defs/AssessmentFields"}}},
+    "InvestigationCorrection": {"type": "object", "additionalProperties": false, "required": ["family_version_id", "fields", "prior_research_assessment", "expected_latest_version", "correction_reason"], "properties": {"family_version_id": {"$ref": "#/$defs/FamilyVersionID"}, "fields": {"allOf": [{"$ref": "#/$defs/InvestigationFields"}, {"required": ["blocker_text"]}]}, "prior_research_assessment": {"$ref": "#/$defs/AssessmentBinding"}, "expected_latest_version": {"type": "integer", "minimum": 1}, "correction_reason": {"$ref": "#/$defs/Text"}}},
+    "IdeaFamilyCorrection": {"type": "object", "additionalProperties": false, "required": ["prior_association_version_id", "family_version_id", "rationale", "expected_latest_version", "correction_reason"], "properties": {"prior_association_version_id": {"$ref": "#/$defs/AssociationVersionID"}, "family_version_id": {"$ref": "#/$defs/FamilyVersionID"}, "rationale": {"$ref": "#/$defs/Text"}, "expected_latest_version": {"type": "integer", "minimum": 1}, "correction_reason": {"$ref": "#/$defs/Text"}}},
+    "ListQuery": {"type": "object", "additionalProperties": false, "properties": {"page": {"type": "integer", "minimum": 1}, "page_size": {"type": "integer", "minimum": 1, "maximum": 100, "default": 25}, "originating_idea_id": {"type": "string", "pattern": "^IDE-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"}}, "x-ordering": ["-created_at", "stable_id"], "x-permission-scope": "before retrieval/counts/links/notices"},
+    "FieldIssue": {"type": "object", "additionalProperties": false, "required": ["path", "code", "message"], "properties": {"path": {"type": "string"}, "code": {"type": "string"}, "message": {"type": "string"}}},
+    "Error": {"type": "object", "additionalProperties": false, "required": ["error"], "properties": {"error": {"type": "object", "additionalProperties": false, "required": ["code", "message", "request_id"], "properties": {"code": {"enum": ["validation_error", "authentication_required", "forbidden", "not_found", "stale_version", "idempotency_conflict", "conflict", "method_not_allowed"]}, "message": {"type": "string"}, "request_id": {"type": "string"}, "fields": {"type": "array", "items": {"$ref": "#/$defs/FieldIssue"}}}}}},
+    "CommonEnvelope": {"type": "object", "required": ["stable_id", "version_id", "version", "schema_version", "created_at", "created_by", "recorded_at", "classification", "authority_reference", "state", "row_digest", "impact_status", "corrects_version", "correction_reason", "changed_fields"], "properties": {"stable_id": {"type": "string"}, "version_id": {"$ref": "#/$defs/VersionID"}, "version": {"type": "integer", "minimum": 1}, "schema_version": {"const": "1.0"}, "created_at": {"$ref": "#/$defs/UTCDateTime"}, "created_by": {"type": "string"}, "recorded_at": {"$ref": "#/$defs/UTCDateTime"}, "classification": {"const": "synthetic"}, "authority_reference": {"$ref": "#/$defs/Text"}, "state": {"type": "string"}, "row_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "impact_status": {"type": "string"}, "corrects_version": {"type": ["integer", "null"], "minimum": 1}, "correction_reason": {"type": ["string", "null"]}, "changed_fields": {"type": "array", "items": {"type": "string"}}, "supersedes_version_id": {"type": ["string", "null"]}, "effective_at": {"type": ["string", "null"], "format": "date-time"}}},
+    "PinnedEndpoint": {"type": "object", "additionalProperties": false, "required": ["stable_id", "version_id", "version"], "properties": {"stable_id": {"type": "string"}, "version_id": {"$ref": "#/$defs/VersionID"}, "version": {"type": "integer", "minimum": 1}}},
+    "AssociationRead": {"allOf": [{"$ref": "#/$defs/CommonEnvelope"}, {"type": "object", "required": ["kind", "from", "to", "rationale"], "properties": {"kind": {"enum": ["IdeaFamily", "InvestigationFamily", "PriorResearchInvestigation", "HypothesisInvestigation", "IdeaHypothesis", "AssessmentRecord"]}, "from": {"$ref": "#/$defs/PinnedEndpoint"}, "to": {"$ref": "#/$defs/PinnedEndpoint"}, "rationale": {"type": ["string", "null"]}, "origin_type": {"const": "direct"}}}]},
+    "Links": {"type": "object", "additionalProperties": {"type": "string"}, "x-version-links": "derived/permission-scoped/visibly exact, never authoritative"},
+    "OriginRead": {"type": "object", "additionalProperties": false, "required": ["idea", "association", "sources"], "properties": {"idea": {"$ref": "#/$defs/PinnedEndpoint"}, "association": {"$ref": "#/$defs/AssociationRead"}, "sources": {"type": "array", "items": {"type": "object", "required": ["source", "contribution_version_id"], "properties": {"source": {"$ref": "#/$defs/PinnedEndpoint"}, "contribution_version_id": {"type": "string"}}}}}},
+    "ResearchContextRead": {"type": "object", "additionalProperties": false, "required": ["investigation", "family", "assessment", "idea_family_association", "investigation_family_association", "investigation_assessment_association", "hypothesis_investigation_association"], "properties": {"investigation": {"$ref": "#/$defs/PinnedEndpoint"}, "family": {"$ref": "#/$defs/PinnedEndpoint"}, "assessment": {"$ref": "#/$defs/PinnedEndpoint"}, "idea_family_association": {"$ref": "#/$defs/AssociationRead"}, "investigation_family_association": {"$ref": "#/$defs/AssociationRead"}, "investigation_assessment_association": {"$ref": "#/$defs/AssociationRead"}, "hypothesis_investigation_association": {"$ref": "#/$defs/AssociationRead"}}},
+    "UpstreamNotice": {"type": "object", "additionalProperties": false, "required": ["code", "pinned", "newer", "impact_version_id"], "properties": {"code": {"const": "review_needed"}, "pinned": {"$ref": "#/$defs/PinnedEndpoint"}, "newer": {"$ref": "#/$defs/PinnedEndpoint"}, "impact_version_id": {"$ref": "#/$defs/VersionID"}}},
+    "HypothesisRead": {"allOf": [{"$ref": "#/$defs/CommonEnvelope"}, {"type": "object", "required": ["hypothesis_id", "hypothesis_version_id", "status", "fields", "origin", "research_context", "draft_completeness", "missing_fields", "upstream_notices", "links"], "properties": {"hypothesis_id": {"type": "string", "pattern": "^HYP-[0-9a-f-]{36}$"}, "hypothesis_version_id": {"type": "string", "pattern": "^HYPV-[0-9a-f-]{36}$"}, "status": {"const": "draft"}, "fields": {"$ref": "#/$defs/FullHypothesisFields"}, "origin": {"$ref": "#/$defs/OriginRead"}, "research_context": {"$ref": "#/$defs/ResearchContextRead"}, "draft_completeness": {"enum": ["incomplete", "complete"]}, "missing_fields": {"type": "array", "items": {"$ref": "#/$defs/FieldIssue"}}, "upstream_notices": {"type": "array", "items": {"$ref": "#/$defs/UpstreamNotice"}}, "links": {"$ref": "#/$defs/Links"}}}]},
+    "FamilyRead": {"allOf": [{"$ref": "#/$defs/CommonEnvelope"}, {"type": "object", "required": ["family_id", "family_version_id", "fields", "links"], "properties": {"family_id": {"type": "string"}, "family_version_id": {"$ref": "#/$defs/FamilyVersionID"}, "fields": {"$ref": "#/$defs/FamilyFields"}, "links": {"$ref": "#/$defs/Links"}}}]},
+    "InvestigationRead": {"allOf": [{"$ref": "#/$defs/CommonEnvelope"}, {"type": "object", "required": ["investigation_id", "investigation_version_id", "status", "fields", "family", "prior_research_assessment", "family_association", "assessment_association", "links"], "properties": {"investigation_id": {"type": "string"}, "investigation_version_id": {"$ref": "#/$defs/InvestigationVersionID"}, "status": {"const": "proposed"}, "fields": {"$ref": "#/$defs/InvestigationFields"}, "family": {"$ref": "#/$defs/PinnedEndpoint"}, "prior_research_assessment": {"$ref": "#/$defs/AssessmentRead"}, "family_association": {"$ref": "#/$defs/AssociationRead"}, "assessment_association": {"$ref": "#/$defs/AssociationRead"}, "links": {"$ref": "#/$defs/Links"}}}]},
+    "AssessmentRead": {"allOf": [{"$ref": "#/$defs/CommonEnvelope"}, {"type": "object", "required": ["assessment_id", "assessment_version_id", "fields", "record_associations", "links"], "properties": {"assessment_id": {"type": "string"}, "assessment_version_id": {"$ref": "#/$defs/AssessmentVersionID"}, "fields": {"$ref": "#/$defs/AssessmentFields"}, "record_associations": {"type": "array", "items": {"$ref": "#/$defs/AssociationRead"}}, "links": {"$ref": "#/$defs/Links"}}}]},
+    "Pagination": {"type": "object", "required": ["page", "page_size", "count", "next", "previous"], "properties": {"page": {"type": "integer", "minimum": 1}, "page_size": {"type": "integer", "minimum": 1, "maximum": 100}, "count": {"type": "integer", "minimum": 0}, "next": {"type": ["string", "null"]}, "previous": {"type": ["string", "null"]}}},
+    "HypothesisList": {"allOf": [{"$ref": "#/$defs/Pagination"}, {"required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/HypothesisRead"}}}}]},
+    "FamilyList": {"allOf": [{"$ref": "#/$defs/Pagination"}, {"required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/FamilyRead"}}}}]},
+    "InvestigationList": {"allOf": [{"$ref": "#/$defs/Pagination"}, {"required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/InvestigationRead"}}}}]},
+    "HypothesisHistory": {"type": "object", "required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/HypothesisRead"}}}, "x-ordering": ["version"]},
+    "FamilyHistory": {"type": "object", "required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/FamilyRead"}}}, "x-ordering": ["version"]},
+    "InvestigationHistory": {"type": "object", "required": ["results"], "properties": {"results": {"type": "array", "items": {"$ref": "#/$defs/InvestigationRead"}}}, "x-ordering": ["version"]}
+  }
+}
