@@ -125,3 +125,37 @@ validator findings now pass; independent retest remains Test-owned.
 Next: Operations supplies the existing-staging route/observed SQL role; Director
 allocates Backend's bounded migration/service slot, then Test's independent
 slot. Application deployment and merge are still separate release decisions.
+
+## Frozen handoff and Home regression checkpoint
+
+Director independently compared final Backend archive
+`a188f1f6bfa4f1f1f84c7434092614944e02afd916a0ff06a1bd7e81c7ad7879`
+and final Frontend archive
+`10cf544c35a865370d151d441ab00ee9757d3ae913eba951c4e47770fe6ad509`
+against the integrated checkout. All 13 Backend and 17 Frontend product files
+match byte-for-byte. `docs/RMS-TP-FROZEN-HANDOFF-VERIFICATION.json` records every
+file hash; the earlier intermediate API-1 receipt remains historical.
+
+Legacy Home-count and authorization-shell test fixtures now mock the sixth
+permission-scoped Test Plans reader. Unknown counts remain distinct from zero.
+The combined navigation/shell/schema regression run passes 45/45, with no DB
+access. Its initial two stale shell-fixture failures are preserved in
+`docs/RMS-TP-HOME-REGRESSION-RECEIPT.json`; Frontend's original navigation-fixture
+failures remain in its own evidence. No product/API/schema changes were needed.
+
+Test's source input is satisfied by the published exact candidate. Whole-task
+Backend/Frontend completion must not prevent independent source retest. Director's
+PATCH to update the Test gate returned 409 because Test had a live receiving
+run; no change or retry was claimed. Current Test owner received the explicit
+instruction to remove its obsolete source blockers and execute the unchanged
+original source assertions under its own run, retaining the full acceptance scope.
+
+Operations supplies the actual sole-executor route: the existing authenticated
+Hostinger console. The current Director tool catalog contains no Hostinger,
+browser, computer, or tool-search capability. The supplied metadata-only probe
+was byte/hash/syntax verified; no host connection or DB operation was attempted.
+Operations coordinates the sole Codex executor's current container/role/schema
+receipt. Director cannot allocate an executable mutation slot until that receipt
+and exact test-source binding are available. No alternate host transport, access
+grant, new service/database, or application update is inferred. Other permitted
+source work continues; PostgreSQL/private-browser acceptance remains unexecuted.

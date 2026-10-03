@@ -1,6 +1,6 @@
 {
-  "candidate_id": "RMS-TP-SLICE-001edfa4",
-  "receiving_run": "001edfa4-120a-4de9-9526-c0dbc66d9cfc",
+  "candidate_id": "RMS-TP-HOME-b83740b0",
+  "receiving_run": "b83740b0-a011-45c4-bb01-068eb3c53607",
   "branch": "MAU-150-rms-increment-3-strategy-specification-and-test-plan-v1-0",
   "base": "e166539d507cf9b05fcf1d44373f172883ee386b",
   "interface": "RMS-TP-API-1/1.1",
@@ -576,6 +576,16 @@
       "sha256": "1bf298ca3fa293fbb564bf6a8ad8f2b51dc1a4711bfefda0f4c4b07d9d55995f"
     },
     {
+      "path": "tests/django_hypothesis_frontend_navigation_tests.py",
+      "bytes": 21948,
+      "sha256": "f67b6b1520bfbf65d444e70b2fad662514bd2d7746568d1b3cfd39e74cc7ca57"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_shell_tests.py",
+      "bytes": 4164,
+      "sha256": "ae6110b0f97bf80c96edc92e66949bbb1d0ca1247f9cb6f3cbdf3acb40b54dc7"
+    },
+    {
       "path": "tests/django_test_plan_backend_staging_checks.py",
       "bytes": 13790,
       "sha256": "effea59eb8c14af9647d10b43423d916d0fa03c2477bf216a21b8678f527ac88"
@@ -600,5 +610,7 @@
       "bytes": 7667,
       "sha256": "b7a0dfda35369145322725c564628701796f83895bdb5d39a1de468344cd8563"
     }
-  ]
+  ],
+  "prior_candidate": "0722202644251f327eb1a52bd0ec2993651195ba",
+  "change_summary": "Repair legacy source-only Home reader fixtures; verify final frozen handoff bytes. Product/API source unchanged."
 }

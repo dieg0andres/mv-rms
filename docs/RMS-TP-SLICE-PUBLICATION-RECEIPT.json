@@ -1,0 +1,20 @@
+{
+  "run_id": "001edfa4-120a-4de9-9526-c0dbc66d9cfc",
+  "branch": "MAU-150-rms-increment-3-strategy-specification-and-test-plan-v1-0",
+  "commit": "0722202644251f327eb1a52bd0ec2993651195ba",
+  "tree": "49665dcaa13ec04422a593deec96c99f49719a26",
+  "parent": "beb5d113855873c91559686ce5d86b4df51ab200",
+  "local_head": "e166539d507cf9b05fcf1d44373f172883ee386b",
+  "pr_url": "https://github.com/dieg0andres/mv-rms/pull/5",
+  "draft": true,
+  "schema_sha256": "17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e",
+  "manifest_sha256": "cb5d99a914d7f65af0202c5e199955b7fa3489c0422f7d1884d45c4d24920d59",
+  "verified_product_files": 118,
+  "changed_files": 42,
+  "publication": "existing granted GitHub alias; Git object API",
+  "local_branch_changed": false,
+  "permissions_changed": false,
+  "database_executed": false,
+  "merged": false,
+  "deployed": false
+}
