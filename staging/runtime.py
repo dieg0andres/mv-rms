@@ -7,24 +7,23 @@ import json
 import os
 import sys
 from pathlib import Path
+from release_identity import validate_release, verified_asset, version_page_requested
 
 ROOT = Path('/srv')
 metadata = json.loads((ROOT / 'metadata.json').read_text())
-RELEASE = ROOT / 'releases' / metadata['commit']
-if metadata['commit'] != '0fd772a54bbb1bea7962feb77db21a6c7a6c6dd0':
-    raise RuntimeError('Unexpected application commit')
+RELEASE = validate_release(ROOT, metadata)
 sys.path.insert(0, str(RELEASE))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rms_project.settings')
 import django
 django.setup()
+from django.conf import settings
+settings.RMS_DEPLOYED_COMMIT = metadata['commit']
+settings.CSRF_TRUSTED_ORIGINS = ['https://' + os.environ['RMS_STAGING_HOST']]
 from django.contrib.auth import authenticate
 from django.core.wsgi import get_wsgi_application
 from request_policy import unsafe_request_allowed
 
 application = get_wsgi_application()
-asset = RELEASE / 'static/rms/rms_forms.js'
-if not RELEASE.is_dir() or hashlib.sha256(asset.read_bytes()).hexdigest() != metadata['static_sha256']:
-    raise RuntimeError('Staging product/static identity mismatch')
 
 
 def reply(start_response, status, body, content_type, headers=()):
@@ -65,7 +64,7 @@ def staging_app(environ, start_response):
                      [('WWW-Authenticate', 'Basic realm="RMS synthetic staging"')])
     if not user.groups.filter(name__in=('editor', 'founder_viewer')).exists():
         return reply(start_response, '403 Forbidden', b'Forbidden.\n', 'text/plain')
-    if path in ('/', '/__staging/version'):
+    if version_page_requested(path, metadata):
         commit = html.escape(metadata['commit'])
         summary = html.escape(metadata['summary'])
         body = ('<!doctype html><html lang="en"><meta charset="utf-8">'
@@ -76,6 +75,10 @@ def staging_app(environ, start_response):
                 '<p><a href="/sources/new">Source editor</a> (editor only). '
                 'History links are available after creating a Source.</p></html>').encode()
         return reply(start_response, '200 OK', body, 'text/html; charset=utf-8')
-    if path == '/static/rms/rms_forms.js':
-        return reply(start_response, '200 OK', asset.read_bytes(), 'text/javascript; charset=utf-8')
+    try:
+        asset = verified_asset(path, RELEASE, metadata)
+    except (OSError, ValueError):
+        return reply(start_response, '503 Service Unavailable', b'unavailable\n', 'text/plain')
+    if asset is not None:
+        return reply(start_response, '200 OK', asset[0], asset[1])
     return application(environ, start_response)

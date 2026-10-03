@@ -1,0 +1,23 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ heading }} — RMS{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+{% if list_error %}<p class="error" role="alert">{{ list_error }}</p>{% endif %}
+{% for collection in collections %}
+<section aria-labelledby="collection-{{ collection.kind }}"><h2 id="collection-{{ collection.kind }}">{{ collection.resource.label }}</h2>
+{% if can_edit %}<p><a href="/{{ collection.resource.route }}/new">Create {% if collection.kind == "source" %}source{% elif collection.kind == "idea" %}idea{% else %}{{ collection.resource.label|lower }}{% endif %}</a></p>{% endif %}
+<p>Permitted records: {{ collection.listing.count }} · Page {{ collection.listing.page }} · Page size {{ collection.listing.page_size }}</p>
+<ul class="record-list">{% for record in collection.listing.results %}<li class="card">
+{% if collection.kind == "source" or collection.kind == "idea" %}
+  <h3><a href="{{ record.links.detail }}">{{ record.title }}</a></h3>
+  <p>Stable ID: <code>{{ record.stable_id }}</code> · Latest version {{ record.latest_version }} · <code>{{ record.latest_version_id }}</code>{% if collection.kind == "idea" %}<br>Status: {{ record.status }}{% endif %}</p>
+  <p><a href="{{ record.links.selected_version }}">Open exact version {{ record.latest_version }}</a> · <a href="{{ record.links.history }}">View saved history</a></p>
+{% else %}
+  <a href="{{ record.browser_url }}">{% firstof record.fields.title record.fields.name %}</a><br><code>{% firstof record.hypothesis_id record.family_id record.investigation_id %}</code> · Version {{ record.version }}<br>{% firstof record.status record.state "Unknown state" %}{% if record.draft_completeness == "complete" %} · Draft complete{% elif record.draft_completeness == "incomplete" %} · Draft incomplete{% endif %}
+{% endif %}
+</li>{% empty %}<li>{% if collection.listing.count == 0 %}No permitted saved records.{% else %}No permitted records on this page.{% endif %}</li>{% endfor %}</ul>
+<nav aria-label="{{ collection.resource.label }} pages">{% if collection.listing.previous %}<a href="{{ collection.listing.previous }}">Previous page</a>{% endif %} {% if collection.listing.next %}<a href="{{ collection.listing.next }}">Next page</a>{% endif %}</nav>
+</section>{% endfor %}
+{% if heading == "Research context" %}<p><a href="/idea-family-associations">Inspect Idea-family classification and history for an exact Idea version</a>. Existing Hypotheses retain pinned classifications until an explicit reasoned revision.</p>{% endif %}
+{% if not can_edit %}<p>Viewer access is read-only.</p>{% endif %}
+{% endblock %}

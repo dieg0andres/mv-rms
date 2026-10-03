@@ -1,0 +1,22 @@
+{
+  "source_manifest_sha256": "78d0aeebf4dffeaeb4e3bd1d731e3d7e7578c7b7c0e59927b5151ed723ad3a6e",
+  "tests_run": 132,
+  "passed": true,
+  "database_connection_attempts": 0,
+  "modules": [
+    "tests.django_hypothesis_director_integration_tests",
+    "tests.django_hypothesis_frontend_navigation_tests",
+    "tests.django_hypothesis_frontend_classification_tests",
+    "tests.django_hypothesis_frontend_integration_tests",
+    "tests.django_hypothesis_frontend_shell_tests",
+    "tests.django_hypothesis_frontend_draft_tests",
+    "tests.django_hypothesis_frontend_schema_tests",
+    "tests.django_rms_si_frontend_template_tests",
+    "tests.test_hypothesis_staging_preflight",
+    "tests.test_hypothesis_staging_release",
+    "tests.test_hypothesis_staging_package",
+    "tests.test_staging_request_policy"
+  ],
+  "run_id": "bc892640-8cf3-45de-b497-ffea777ce56c",
+  "H01_H20_acceptance": "NOT_EXECUTED"
+}

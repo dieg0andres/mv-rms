@@ -296,3 +296,13 @@ class IdempotencyRecord(models.Model):
         db_persist=True,
     )
     created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+
+# Register the additive feature models without changing the Source/Idea schema.
+from .hypothesis_models import (  # noqa: E402,F401
+    AssessmentExternalReference, Hypothesis, HypothesisVersion,
+    HypothesisCorrectionImpact, Investigation, InvestigationVersion,
+    PriorResearchAssessment, PriorResearchAssessmentVersion,
+    ResearchAssociation, ResearchAssociationIdentity,
+    ResearchFamily, ResearchFamilyVersion,
+)

@@ -1,0 +1,9 @@
+{% extends "rms/base.html" %}
+{% block title %}Idea-family classification — RMS{% endblock %}
+{% block content %}
+<h1>Idea-family classification</h1>
+<p>Inspect the current classification of an exact Idea version. Reading it does not change a Hypothesis citation. Missing and restricted classifications use the same response; absence is not proof of an unclassified Idea.</p>
+{% if lookup_error %}<p class="error" role="alert">{{ lookup_error }}</p>{% endif %}
+<form method="get"><label for="classification-idea-version">Exact Idea version ID</label><input id="classification-idea-version" name="idea_version_id" type="text" value="{{ idea_version_id }}" aria-describedby="classification-idea-help"><p id="classification-idea-help">Open classification from an Idea detail or historical version, or enter an authorized IDEV identity.</p><button type="submit">Inspect current classification</button></form>
+{% if record %}<p><a href="{{ detail_url }}">Open exact classification v{{ record.version }}</a> · <a href="{{ latest_url }}">Open latest classification</a> · <a href="{{ history_url }}">Classification history</a>{% if can_edit %} · <a href="{{ revision_url }}">Revise classification with a reason</a>{% endif %}</p>{% include "rms/includes/record_card.html" %}{% endif %}
+{% endblock %}

@@ -1,0 +1,1027 @@
+{
+  "candidate_id": "RMS-HN-INTEGRATED-20261003-bc892640",
+  "receiving_run": "bc892640-8cf3-45de-b497-ffea777ce56c",
+  "branch": "MAU-140-rms-increment-2-hypothesis-drafts-and-navigation-v1-0",
+  "backend_git_object": "aab6d6dfde13fe03f184292f197ed3a56ce00b9d",
+  "frontend_git_object": "fb9766f25cc723463ce15ae78feed282ab6163fc",
+  "frontend_manifest_sha256": "38b73ce2ae85534628044ea9f2e2867eb0abd4a88bf0494a108660cc143bca8d",
+  "frontend_overlay_paths": [
+    "docs/RMS-HN-FRONTEND-R4-R5-CHECKS.py",
+    "rms/navigation_urls.py",
+    "rms/navigation_views.py",
+    "rms/views.py",
+    "static/rms/draft_shell.js",
+    "static/rms/navigation.css",
+    "static/rms/record_form.js",
+    "templates/rms/base.html",
+    "templates/rms/classification_lookup.html",
+    "templates/rms/hypothesis_draft_shell.html",
+    "templates/rms/idea_detail.html",
+    "templates/rms/idea_history.html",
+    "templates/rms/includes/draft_control.html",
+    "templates/rms/includes/hypothesis_record_preview.html",
+    "templates/rms/includes/idea_version.html",
+    "templates/rms/includes/navigation.html",
+    "templates/rms/includes/record_card.html",
+    "templates/rms/navigation.html",
+    "templates/rms/record_detail.html",
+    "templates/rms/record_form.html",
+    "templates/rms/record_history.html",
+    "templates/rms/record_lookup.html",
+    "templates/rms/record_selection.html",
+    "templates/rms/service_unavailable.html",
+    "templates/rms/source_history.html",
+    "tests/django_hypothesis_frontend_classification_tests.py",
+    "tests/django_hypothesis_frontend_draft.test.js",
+    "tests/django_hypothesis_frontend_draft_tests.py",
+    "tests/django_hypothesis_frontend_integration_tests.py",
+    "tests/django_hypothesis_frontend_navigation_tests.py",
+    "tests/django_hypothesis_frontend_record_form.test.js",
+    "tests/django_hypothesis_frontend_schema_tests.py",
+    "tests/django_hypothesis_frontend_shell_tests.py"
+  ],
+  "director_changed_paths": [
+    "docs/RMS-HN-INTEGRATED-HANDOFF.md",
+    "rms/hypothesis_staging_preflight.py",
+    "rms/navigation_views.py",
+    "rms/views.py",
+    "rms_project/urls.py",
+    "scripts/check-rms-hn-source.py",
+    "staging/Dockerfile",
+    "staging/Dockerfile.hn",
+    "staging/build-hn-package.py",
+    "staging/build-package.sh",
+    "staging/release_identity.py",
+    "staging/runtime.py",
+    "tests/django_hypothesis_director_integration_tests.py",
+    "tests/django_hypothesis_frontend_schema_tests.py",
+    "tests/test_hypothesis_staging_package.py",
+    "tests/test_hypothesis_staging_preflight.py",
+    "tests/test_hypothesis_staging_release.py"
+  ],
+  "contract_sha256": "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9",
+  "api_schema_sha256": "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea",
+  "interface_version": "1.2",
+  "record_schema_version": "1.0",
+  "git_checkpoint_at_manifest_generation": null,
+  "database_execution_authorized": false,
+  "H01_H20": "NOT_EXECUTED",
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 156,
+      "sha256": "1b03fd66cf3abd287630097cc76872324a2c8c459c47df1584294192877d4b69",
+      "origin": "backend"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 526,
+      "sha256": "6a9876043b28e86b81573706031300ac828b3addf823fc8fd149d6503dd1c19d",
+      "origin": "backend"
+    },
+    {
+      "path": "README.md",
+      "bytes": 80,
+      "sha256": "57c78904681a6510044a7eba43463e6529fc3553c6b08b826e4cbe0ed1b8e7f9",
+      "origin": "backend"
+    },
+    {
+      "path": "diagnostics/local-workspace/diagnostic.js",
+      "bytes": 374,
+      "sha256": "18f704fed040c53440692e750831f39302fa83a9b18e666493f3a45ebdff9c7a",
+      "origin": "backend"
+    },
+    {
+      "path": "diagnostics/local-workspace/diagnostic.test.js",
+      "bytes": 454,
+      "sha256": "1c295e5d063c0343d4063901d1dba5bc3d71e373cc8eff59b3abc03ab075d278",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1-CORRECTIONS-008a5ef0.md",
+      "bytes": 11911,
+      "sha256": "30cfc6098b5acda665e55a9f1a0a64e769b1cde446b740e4d6c1c4c13118f703",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1-IMPLEMENTATION.md",
+      "bytes": 18325,
+      "sha256": "fdab85b65bbc75a8035c35d431ce30a9d741f1eedd6403e24710c66aa7fff65d",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1-R4-R5-2ba615a6-source.json",
+      "bytes": 2639,
+      "sha256": "36802de394988e35d208f6ff34c8fced3f30d5aa5f031082ce0f872d80e20e44",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1-R4-R5-2ba615a6-tests.txt",
+      "bytes": 5960,
+      "sha256": "1aeeefc1cec1eb77c72071716a58a07ee87ccc3f44c930316f55b5a86af1737f",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1-R4-R5-2ba615a6.md",
+      "bytes": 8795,
+      "sha256": "1e69fb329aaa015a5840a3592e5ac5428859ff228846542c299e3c5426357656",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-API-1.md",
+      "bytes": 16513,
+      "sha256": "c03f57baf0386876caee9fd80ba2bc9ab3a7fecd7b9e796bb65ca5bef8530471",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-BACKEND-CORRECTION-RECEIPT.md",
+      "bytes": 7774,
+      "sha256": "cb216f535c861948da8f1362bafd232b59dab8b2c30c0fa4b825773aa9f5023e",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-BACKEND-EXECUTABLE-RECEIPT.md",
+      "bytes": 7079,
+      "sha256": "f9ae419cd47f2aa01462f5418f173f3341d063a837c2f0a8370800177cc14e21",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-BACKEND-G05-RECEIPT.md",
+      "bytes": 6854,
+      "sha256": "4b8b7ffd7403891259df69a383b2f632056f0db6e75b3fd11b2ccf2f062490a4",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-BACKEND-RECEIPT.md",
+      "bytes": 12944,
+      "sha256": "2c78d7f8544196e7c20047f20c1eacd4a26a0057fc35da4ad45110fa490897c5",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-BACKEND-RUNNER.md",
+      "bytes": 40955,
+      "sha256": "c360d9b2b05945687b44e9eb0b72fbd768fd1120f043302c78beaea357b7125d",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-HN-FRONTEND-R4-R5-CHECKS.py",
+      "bytes": 6388,
+      "sha256": "1333e206caebf5de029e84bdddb89e2218a6ebbf108801305002a1b2e03361f0",
+      "origin": "frontend"
+    },
+    {
+      "path": "docs/RMS-HN-INTEGRATED-HANDOFF.md",
+      "bytes": 12159,
+      "sha256": "43e1e560ea1bd8454a5a67b2c44410ba40153cb74b293862ae25c8e9fb2df66a",
+      "origin": "director"
+    },
+    {
+      "path": "docs/RMS-SI-1-FRONTEND.md",
+      "bytes": 1128,
+      "sha256": "fba4dfe0db6ef39758ba940e1c44d618bc1c5f97af5b8cbf7c701959b677f701",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-SI-1-INTEGRATION.md",
+      "bytes": 8352,
+      "sha256": "c0ab022de07238f68254c518658388d382f09f3bd97250cc8665c3bb239c8503",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-VS-1-BACKEND.md",
+      "bytes": 5974,
+      "sha256": "b97c27e89055553fe35cf55bb424366dfe31d68905c81fb0811e4f09ffc979be",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS-VS-1-FRONTEND.md",
+      "bytes": 1944,
+      "sha256": "c7216235bb5550dbc86be36dc99cfb322197095a3b822642db5e951f186cecf4",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/RMS_HYPOTHESIS_DESIGN_CONTRACT_V1_0.md",
+      "bytes": 58395,
+      "sha256": "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/rms-python-environment.md",
+      "bytes": 17136,
+      "sha256": "29a98419496a78b351bedd0b0a88c6e9d77629e1b804eb96ee17fe46d930709a",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/verification/rms-si-1-independent-verification-report.md",
+      "bytes": 9628,
+      "sha256": "05910591a4162e80b185554e14c85b9fb5d246a3ca9118768d2d8490de6832de",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/verification/rms-si-1-predeclared-checklist.md",
+      "bytes": 22647,
+      "sha256": "1ac8aa60ab740f0cdb862b0566c36c63f233f09130f97c9cee4879defb893b4c",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/verification/rms-si-ui01-browser-evidence.md",
+      "bytes": 3848,
+      "sha256": "6925d13e94ade4e51ac0d4cd4af1ba614a2128a8da91ab7f72e94171278317f6",
+      "origin": "backend"
+    },
+    {
+      "path": "docs/verification/rms-vs-1-predeclared-checklist.md",
+      "bytes": 28943,
+      "sha256": "961968b92ed13415a8964e8b5187b39dea35de9d4b3a8c3f8e75f4084586fd97",
+      "origin": "backend"
+    },
+    {
+      "path": "manage.py",
+      "bytes": 349,
+      "sha256": "3fc57fc909a418ba3fb2789485ea88c7572654a70cb1520c756cc126b36ff24e",
+      "origin": "backend"
+    },
+    {
+      "path": "requirements.lock",
+      "bytes": 622,
+      "sha256": "d21ca3b1acbcd2bbd60637b3870b5498307084173e070a9f78834dc4b4341ea4",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/__init__.py",
+      "bytes": 855,
+      "sha256": "abdd3fd0269a1bd0704dcc2e1ce93ff0d9f3fb06c6b0aa40c39f9158a5031419",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/api.py",
+      "bytes": 19102,
+      "sha256": "7edf1d53fa35a066441ac9a68c725aa60605e10f9185af99d55b8a48753fb5b0",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/apps.py",
+      "bytes": 138,
+      "sha256": "f4130b0a0698b2ebcd850c2b0f93a8b4c86715182a630789ffb9bf99e3ffd187",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_api.py",
+      "bytes": 6423,
+      "sha256": "d88d113342b80f25b0d62888702a166dfbdc7aa73ff9f0e2ba160ec243192026",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_api_urls.py",
+      "bytes": 1447,
+      "sha256": "abdc0bbbf9b1dcb50c7c8b8f2eb7f491672f1aa867d41aaa8d10b628c8f88ad8",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_assessment_links.py",
+      "bytes": 703,
+      "sha256": "d499464a2366a498982ab4967c5fcdb7048e478a39271200ba27067347038daa",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_fixture.py",
+      "bytes": 3918,
+      "sha256": "f43738cda1f97fc7065cb39c51d81c87aae4194c25659ce9ddd82694baa1b34a",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_models.py",
+      "bytes": 14263,
+      "sha256": "313447bace1572a2979a82d41ac14ae85788b27cacfdda9b9e3df8e1c0a76bba",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_preserving_harness.py",
+      "bytes": 25390,
+      "sha256": "78359c681c5fd08de18e20d70495657e881bac995b56fc77710d11b5de6a01d3",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_preserving_runner.py",
+      "bytes": 14269,
+      "sha256": "bb4859820e025c7aafdf1b96c80a0c7ee37d1f4a5b10f195c0cfe79b1105d3e8",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_runner_manifest.json",
+      "bytes": 25284,
+      "sha256": "7358e861657b1b8aca68196db741ae56678b4a00a5f5e7df4c933f45728cea5d",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_schema.json",
+      "bytes": 29915,
+      "sha256": "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_services.py",
+      "bytes": 11510,
+      "sha256": "54a1e849c2433aea865607075cef770a93622c244051d7aff4af53f3c37e9d09",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_source_identity.py",
+      "bytes": 7487,
+      "sha256": "bb47f1fa1a78f0cb611cb2abd41893223ba27df74798652a9e30b5175dd9ff7c",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/hypothesis_staging_preflight.py",
+      "bytes": 9632,
+      "sha256": "4e3c89e9294d7ec9eeb586c0a7064766f5a27353cb9b55bbfd64a65d2b389fbf",
+      "origin": "director"
+    },
+    {
+      "path": "rms/hypothesis_validation.py",
+      "bytes": 11109,
+      "sha256": "19598fcfd4f6de0202fa452fff589a3d8f3835fb962fda3e3d42930358e7d748",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/management/__init__.py",
+      "bytes": 31,
+      "sha256": "1e46795212a5027e1dde3e656c14b13d8d7d3809d3afad9f05b60ac1a72f8942",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/management/commands/__init__.py",
+      "bytes": 43,
+      "sha256": "88226877da284061c586a95b292c5053121d7c9a8ef35ff4e6a08e3b90a71aee",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/management/commands/export_rms_vs_1_fixture.py",
+      "bytes": 1090,
+      "sha256": "6de10706c8d1e5c529728d7a09ce8d04f42ede72543a26e349aefac339d424a8",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/management/commands/load_rms_hn_fixture.py",
+      "bytes": 9436,
+      "sha256": "1ca6562b4f8e4261a678ce0000672e5e55f69f8354d561e417b2a1524e6670e7",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/management/commands/load_rms_vs_1_fixture.py",
+      "bytes": 5982,
+      "sha256": "0cecb2d47564951b549e1032187fc1608aa9ff15aaf79d3cd4e7de161157110a",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/0001_initial.py",
+      "bytes": 5645,
+      "sha256": "f108abe2fb0ccdbd37bbc96d9e7359482859debc80d38153f646460794272acf",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/0002_source_invariants.py",
+      "bytes": 5452,
+      "sha256": "6ce06b0e0ee8c7ebe28fb9dd1e3dae953afedaffda3e5d6549fe0846d695c4d6",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/0003_source_idea_contract.py",
+      "bytes": 12701,
+      "sha256": "bc39af637e162bb9c29ec20875f2021e37b69edb6889c07d1d80c1f6bf9296dd",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/0004_hypothesis_records.py",
+      "bytes": 43872,
+      "sha256": "e9bd32315f3a22e326536843fd65ead7209fe6ad520693383e05a97554da060e",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/0005_hypothesis_history_guards.py",
+      "bytes": 12190,
+      "sha256": "f30ecd90e1d28e482d62b623813fdd2cc397210fea6d267ac93b20fcd6f29b85",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/migrations/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/models.py",
+      "bytes": 11353,
+      "sha256": "a41501cf6c76f144d529aa99a7af566254ca6df1a460c42efc626fe36edf5ce8",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/navigation_urls.py",
+      "bytes": 1876,
+      "sha256": "48f053ccdba67891533f0df290398033012d1e6f8a0c55668956150c0afa2411",
+      "origin": "frontend"
+    },
+    {
+      "path": "rms/navigation_views.py",
+      "bytes": 48860,
+      "sha256": "aefd05f37200866135c15e5342a9967b526e39fe65610f2815ba6b24773f334d",
+      "origin": "director"
+    },
+    {
+      "path": "rms/permissions.py",
+      "bytes": 1083,
+      "sha256": "7fd92ab477eeeb3b1c1dbcfb9562878786e4de133a1917b8a47109427ab87d57",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/record_selection_services.py",
+      "bytes": 3357,
+      "sha256": "ee2805b566b78496ea08d925cb700c64bdcc6e495ee303a392bcdc24c261a608",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/research_context_common.py",
+      "bytes": 8187,
+      "sha256": "a378a6876d5224f4a9719c2ff9a057e0e3a308edbf6ea69cd51a6b6096452580",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/research_context_services.py",
+      "bytes": 16398,
+      "sha256": "6bb306bada9114aa7be54365bdf99566df0eb9d59efc8b62a2396cc9e6b208e6",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/services.py",
+      "bytes": 20035,
+      "sha256": "03ef8c6bab28355be0c94b65ca217f5204994180493be5427e2b10e05b1b44ff",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/source_manifests.py",
+      "bytes": 7599,
+      "sha256": "ed17678324eb12339362d7624248e0174c75bcad04f17dca2334e5955ed47f43",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/source_versions.py",
+      "bytes": 3799,
+      "sha256": "9f5bc5d75ad54e14fa2fb73625c6d2d93230733e0dc248e847bde1f6e3749b91",
+      "origin": "backend"
+    },
+    {
+      "path": "rms/views.py",
+      "bytes": 11824,
+      "sha256": "68ec69d5ae2d6883929183f2f921507c5340730fbcad89174002ece7301978a8",
+      "origin": "director"
+    },
+    {
+      "path": "rms_project/__init__.py",
+      "bytes": 74,
+      "sha256": "25f2e2ca8a465ac6a6263f9cbb67576dd471620d59f6d7f32c8a8bcb30338c4b",
+      "origin": "backend"
+    },
+    {
+      "path": "rms_project/settings.py",
+      "bytes": 1605,
+      "sha256": "9920f7ad4f44997e4d5ecb26c8e0f7a02a6bbaca990724f0703d368dd0f5d684",
+      "origin": "backend"
+    },
+    {
+      "path": "rms_project/urls.py",
+      "bytes": 2229,
+      "sha256": "1c74bf23f64b0121e0383d8bdcde1c4fc5713c0f6eda5608d28a151f5c577590",
+      "origin": "director"
+    },
+    {
+      "path": "rms_project/wsgi.py",
+      "bytes": 240,
+      "sha256": "3d1d97cfcc4ac20570c5772243d633591efe6b72e0e96fce26a97fa7a0c4e076",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/check-rms-hn-source.py",
+      "bytes": 2421,
+      "sha256": "c9fb2c4aebb62e776ff3b79429c9c157a662b98033676a4ef5c6966e62a78148",
+      "origin": "director"
+    },
+    {
+      "path": "scripts/rms-python/bootstrap-postgres-test.sh",
+      "bytes": 3217,
+      "sha256": "649cdac79bdc5e8ffe0015c17f1e1fa1c8f5a78659c5d8eea98085b957cca574",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/bootstrap.sh",
+      "bytes": 3965,
+      "sha256": "f4bcdcb1910de324e759affea810032bbad1368b1d3ecb69d9b738d8d2b1ac02",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/postgres-test-env.sh",
+      "bytes": 332,
+      "sha256": "b9274b9d2cfa5881dc08b1c0c481731580624b57e4185f496ac6ada17a724b8c",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/postgres-test.sh",
+      "bytes": 3704,
+      "sha256": "5200755775b849a7a5e6bae86f05443bfe1059b3e75882768e5872fc5faa8fdf",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/provision-workspace.sh",
+      "bytes": 3801,
+      "sha256": "fb0bc792212cccbde8f73556b5b17a11678bc741e200627382fd8c4fab341285",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/python3",
+      "bytes": 424,
+      "sha256": "acc37699d382c6fc7b82886c9bfd5813e996ccb4378fecf728c6913b20965586",
+      "origin": "backend"
+    },
+    {
+      "path": "scripts/rms-python/shell-env.sh",
+      "bytes": 431,
+      "sha256": "02ca25be86f380dde7a6f7973056d1de33e5cfb62d0420fb25df6f6774e719a3",
+      "origin": "backend"
+    },
+    {
+      "path": "stack.lock",
+      "bytes": 2351,
+      "sha256": "937dfe5d48c71f14a092e9196a2e38ea22a4dbb33e89d6a58b1c5bf4668eeb00",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/Dockerfile",
+      "bytes": 1125,
+      "sha256": "78dfde9e6ddaca89c0444fb21f6a5f5e055633381e3d7299914899a64ac16207",
+      "origin": "director"
+    },
+    {
+      "path": "staging/Dockerfile.hn",
+      "bytes": 953,
+      "sha256": "6891b11ea1bda88d90e08d6421eb08aa2966b9e74e07eb02bf11affb75f41062",
+      "origin": "director"
+    },
+    {
+      "path": "staging/README.md",
+      "bytes": 6933,
+      "sha256": "65c745c486a615081dac4af8cafa7ee9b5bb87c6915a2d9dcdaaef59d37f6dfd",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/browser/HEADLESS.md",
+      "bytes": 4324,
+      "sha256": "f0c8a02e310f912914ab68f1f27760b76e7f0e869aad11043d80f6dba14aa9a4",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/browser/package-lock.json",
+      "bytes": 1693,
+      "sha256": "f715650cf145a3bda8e550935e67506e3ceb0558bf7fba8dfcb6ff9164a442ec",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/browser/package.json",
+      "bytes": 122,
+      "sha256": "e45a6f1869ad3a152901d6651c33134f455f52c37c7d67806d3ed3b03146ec75",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/browser/preflight-headless.mjs",
+      "bytes": 684,
+      "sha256": "04da340690f545e32b5b177699a7b52cfad632595c96d78b3b44ca4f82dcaa54",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/browser/staging-origin.mjs",
+      "bytes": 846,
+      "sha256": "ac5c09b9b1caa41dcc8a3d6534e7d2e38b919aa7b1a64e6168b23e8fddc181d9",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/build-hn-package.py",
+      "bytes": 3460,
+      "sha256": "d06a388b8b5a6b2717e7139b9fdb4a38789f8663717862695b5ac898790ba4ec",
+      "origin": "director"
+    },
+    {
+      "path": "staging/build-package.sh",
+      "bytes": 1373,
+      "sha256": "3982231665e1f9d6e2511ca6bce48ab74258a112d34d7e396df289bf347733bc",
+      "origin": "director"
+    },
+    {
+      "path": "staging/compose.yaml",
+      "bytes": 1462,
+      "sha256": "e23b2a2e92ffedefbade66c31e7c12029d5f60e24040554d1ac1c4c90a2fc741",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/create-principals.py",
+      "bytes": 1015,
+      "sha256": "ee42b85b2fd4a3fe74bd5b1aeec240337de313877800a7b0e357fd05886ad918",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/entrypoint.sh",
+      "bytes": 160,
+      "sha256": "74a231277b9042eeee254e1dd52a493a002912042c675b4b1faa6f60ad51a033",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/release_identity.py",
+      "bytes": 3006,
+      "sha256": "d2217e2b3de9479a9686e56dbee4b91813fafdc2aa0987c33ee5c8cf4aa0b905",
+      "origin": "director"
+    },
+    {
+      "path": "staging/request_policy.py",
+      "bytes": 404,
+      "sha256": "0fa6a5329d6d4d0efb5b1c255ffef5fac6bbdbf3fe35989c84e97aea24dcc38f",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/requirements-staging.lock",
+      "bytes": 203,
+      "sha256": "ba3535a402d10bee382ae46daf080e71fb68d60a1be885f3f5482341f4c733ba",
+      "origin": "backend"
+    },
+    {
+      "path": "staging/runtime.py",
+      "bytes": 4073,
+      "sha256": "7cb339b7f8fdcadd52395d7789e8d3fff7e368eb43a5d8d9733be75b54aa2fee",
+      "origin": "director"
+    },
+    {
+      "path": "static/rms/draft_shell.js",
+      "bytes": 656,
+      "sha256": "db4255e0f13c857ec59b2fcf8a2368861cdf82b7b979bd1370d82da78b7b4c87",
+      "origin": "frontend"
+    },
+    {
+      "path": "static/rms/navigation.css",
+      "bytes": 1344,
+      "sha256": "1efdb051ad1e63a1badfede07efa61fe667986f25a77147e4cf9b301c647af60",
+      "origin": "frontend"
+    },
+    {
+      "path": "static/rms/record_form.js",
+      "bytes": 1211,
+      "sha256": "88c9d0aefd746ba416c9246a9b327a4156298e4323629e6b0addbf698148339f",
+      "origin": "frontend"
+    },
+    {
+      "path": "static/rms/rms_forms.js",
+      "bytes": 2062,
+      "sha256": "da5ead4cf42ccf22845fe39dc9e1e4d0561a93c61db4da58e7bbbcde53b403e8",
+      "origin": "backend"
+    },
+    {
+      "path": "templates/rms/base.html",
+      "bytes": 2090,
+      "sha256": "27fe5426613e4aa26d89f4ecc591987cb6cc156c875e070a651f1c62f0205ab2",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/classification_lookup.html",
+      "bytes": 1298,
+      "sha256": "d0a3e4f541116afd21c35cda107b97b6bf6951d8773cdba7cc58fa6cc99f9c0a",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/denied.html",
+      "bytes": 195,
+      "sha256": "5dc4a79373b287e9f76bae0dd6044886e24a7a89e7e5588c810d8bf8a720a268",
+      "origin": "backend"
+    },
+    {
+      "path": "templates/rms/hypothesis_draft_shell.html",
+      "bytes": 3849,
+      "sha256": "f6824ba7e28e27483d33911e4ed4a062a71c2f7f9f418393ef246bfabe7d50ba",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/idea_detail.html",
+      "bytes": 1661,
+      "sha256": "a45cf14d50283958c5fd7c74b1a69ab544df903ec14a0b69e6ebb2a5b18bc54e",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/idea_editor.html",
+      "bytes": 2259,
+      "sha256": "f8df8d55ad459555499d16b2b7d959a8d9056f2c62df81c9bd0b51f5096b5852",
+      "origin": "backend"
+    },
+    {
+      "path": "templates/rms/idea_history.html",
+      "bytes": 944,
+      "sha256": "61fb7a8b31751331dbd8195fef0c4facd66a1caa4e545beff27082e1ee70be27",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/includes/draft_control.html",
+      "bytes": 1841,
+      "sha256": "a721e578b16296d0abce872e94f1bd87649a6b06651b55f7583e2677b762868d",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/includes/hypothesis_record_preview.html",
+      "bytes": 3259,
+      "sha256": "3fbc2739a062845028222a897b2c5df67b7a7fcffa680a59cdd163be7a78f894",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/includes/idea_version.html",
+      "bytes": 1916,
+      "sha256": "6c779ad2c26ade7de5fa8bbe921e43adcd40a9e8dee3385bdeeeb83411469326",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/includes/navigation.html",
+      "bytes": 1260,
+      "sha256": "711b8bcaba88a72851e8036af885558cf3353ed212f09e9b6dc1a163569506bf",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/includes/record_card.html",
+      "bytes": 4324,
+      "sha256": "557a914912d6ef18505d23fe796ed16ea035b88306b0879245ecaf97c873372f",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/navigation.html",
+      "bytes": 2048,
+      "sha256": "89f2bda00b8425fdaf0fde22eb075e48e108630f5d7433ef9bc4bb0e8f0ddeb8",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/not_found.html",
+      "bytes": 194,
+      "sha256": "fcf05ea1657e4d13e82b50765bc48c6cbd9b50c77cd0ae58c746e05c0e859b25",
+      "origin": "backend"
+    },
+    {
+      "path": "templates/rms/record_detail.html",
+      "bytes": 665,
+      "sha256": "dbd79146367c119e90a3411a13a9c137ab3b4c1bbf5d8b0691d8ffebaec1bc95",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/record_form.html",
+      "bytes": 7125,
+      "sha256": "63a21432bb5f07bb88bdb1fcd54153725b5579f635673a01ebe527ac9e87a111",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/record_history.html",
+      "bytes": 665,
+      "sha256": "b2121e5fa39679677134c6c3f14b567b7e382841518082689910e1f6de6cc1cc",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/record_lookup.html",
+      "bytes": 1011,
+      "sha256": "c839cabe632b1c7e6b166cbaec9cbac74abc349bfd39e3b80a13b411609c58b7",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/record_selection.html",
+      "bytes": 2620,
+      "sha256": "095f90817f2166377d85caab1a05d29a5b94803bb6e6f851090230eac6d0b4e4",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/service_unavailable.html",
+      "bytes": 696,
+      "sha256": "3099d565c43012fe3bd81e8f61aa23017eff7649138666c08b84e4e323bccd61",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/source_editor.html",
+      "bytes": 1952,
+      "sha256": "2d76cbb38eb132f17fab323fcf7ec3e5cd2b05092359fc598567ee1ab3fab517",
+      "origin": "backend"
+    },
+    {
+      "path": "templates/rms/source_history.html",
+      "bytes": 2885,
+      "sha256": "94c1150903dcdd3bd2ffa3666074856254dd27f20c8029a9f765a460d7059d37",
+      "origin": "frontend"
+    },
+    {
+      "path": "templates/rms/unavailable.html",
+      "bytes": 204,
+      "sha256": "1bf298ca3fa293fbb564bf6a8ad8f2b51dc1a4711bfefda0f4c4b07d9d55995f",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/__init__.py",
+      "bytes": 39,
+      "sha256": "d1a91a7c04a0f2fc49a38a1358b6eea6779637aadf36f9cc4897da255a73b246",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/browser/staging-origin.mjs",
+      "bytes": 93,
+      "sha256": "7e953732972ec0f937de311b818dc6918b5b236d9556f8a13743e163c5e28e9d",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/browser/test-staging-origin.mjs",
+      "bytes": 4172,
+      "sha256": "db75866e81023b5cf68593f0d206e86d2912d5a446967c4b66f9653133d02060",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/browser/test-ui01.mjs",
+      "bytes": 13500,
+      "sha256": "b168ff094c84c9e5e968020b759cecba65c57934a4dfe83c41b486f758419e08",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_contract_tests.py",
+      "bytes": 5521,
+      "sha256": "e41f4ddc55b573f4754e36d29c0660b7a6c968f5b40823d658500de23572d4d8",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_fixture_tests.py",
+      "bytes": 1418,
+      "sha256": "decc7217540a79c60a96b34152c7566a9d92451c31caf72a3c68c4f12e01cef9",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_corrections_tests.py",
+      "bytes": 19372,
+      "sha256": "f051f760abc808f11f3ecb948d05e6a5181d2f882b9aa57d846a8dbca8d2d16e",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_preservation_helper_tests.py",
+      "bytes": 25051,
+      "sha256": "c3645b3d13610b4c75ec4ed43792d9a5f6cd105785e1cb3a0ebf646f34f9c435",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_runner_guard_tests.py",
+      "bytes": 22490,
+      "sha256": "ee43368c8d1b877e9fc1d9cf2d9f1cf037815a5496033a02ea50f06f865acf60",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_source_tests.py",
+      "bytes": 10694,
+      "sha256": "8a07d09a1c19149754c8d20a3252195e4ee9ef7732d4b8d3b51fa252e90619f3",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_validation_tests.py",
+      "bytes": 15041,
+      "sha256": "3d3109e36b2abb3ae603985a715c6ec312bc1ec8f0d312066148dbe1691f0450",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_hypothesis_director_integration_tests.py",
+      "bytes": 7187,
+      "sha256": "66718db6f147431aaa7504c0e82db45bc9c397e02e0ab2b1884fc33363de4d48",
+      "origin": "director"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_classification_tests.py",
+      "bytes": 17488,
+      "sha256": "91f40894c9f5c559b360b9547728c3405a078918029290efb4a09e4cabc4361e",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_draft.test.js",
+      "bytes": 1899,
+      "sha256": "046276f255e9224b054c2a1d0aa1dc9c5c9d9937d79722a23326c45fd83479ee",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_draft_tests.py",
+      "bytes": 3673,
+      "sha256": "26c588645af5e308a13ad9eb1308d13218fc06db0b4989d75d853c38b61979a8",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_integration_tests.py",
+      "bytes": 26083,
+      "sha256": "495213e0f98189bdbf4b0866e20764ead2b4c21bf7674ce9289f369cc3d268ee",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_navigation_tests.py",
+      "bytes": 21632,
+      "sha256": "d191234554010283762a5826fe8950656e0a5b5659eccdcc93cde5825841942f",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_record_form.test.js",
+      "bytes": 2827,
+      "sha256": "dc45c33cb65e9733c303de96ac2c3f45c3570030c2cc53643468102dd7abf85e",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_schema_tests.py",
+      "bytes": 17637,
+      "sha256": "d9f09f0d2a0ee4e73d890d0f30477f1622a65e16f6414d377510debce505d690",
+      "origin": "director"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_shell_tests.py",
+      "bytes": 3843,
+      "sha256": "4584da08bef60fbfe76e1acf7f7aa2701633efc005d414a32237f88a91eea937",
+      "origin": "frontend"
+    },
+    {
+      "path": "tests/django_record_selection_backend_tests.py",
+      "bytes": 24603,
+      "sha256": "fe6d90f6fcce3504de3ab92da653a16a2ec5992214e05fcdbd377f321c36f2b3",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_research_context_backend_source_tests.py",
+      "bytes": 10877,
+      "sha256": "54951d3684e28b39453e30a913815628355fd1de96172d978e0652677cfcb796",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_rms_si_frontend_page_tests.py",
+      "bytes": 8608,
+      "sha256": "c4e8ecf3211ebc585e8daf52564ca9d518d2f29cad3c1e29c7a6104233b62845",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_rms_si_frontend_template_tests.py",
+      "bytes": 2248,
+      "sha256": "06628c6587fbcd0253eb2a4ed037fa9c0aa59510c139a8bf4e2f3f5432cb1c2c",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_rms_si_independent_tests.py",
+      "bytes": 24396,
+      "sha256": "b2cbeb7e840ac2b7cd3e0bc49afd1364028391639017514df2537fdffaf2c989",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_source_api_tests.py",
+      "bytes": 10219,
+      "sha256": "4b5134020bd4413a4dbad5b48fe8069e882ac16526a46a475af9da095dff8663",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_source_history_page_tests.py",
+      "bytes": 3456,
+      "sha256": "80f21160d97c13f48dec9f1684646bb4310041a57844ffe583270ce7565a4569",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/django_source_idea_tests.py",
+      "bytes": 15054,
+      "sha256": "76500e41f01539aa5c04adf0e1f886e981664f40f1ee729fdf0398216d6c08ca",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/test_hypothesis_staging_package.py",
+      "bytes": 4774,
+      "sha256": "9c9d9676dffd97d0a295e2fef15273f643bcf53ed2accb15473de8e7729d7d48",
+      "origin": "director"
+    },
+    {
+      "path": "tests/test_hypothesis_staging_preflight.py",
+      "bytes": 8683,
+      "sha256": "efa4c22788d590e1388221ae520cd3a4a90dd62df00ff9c319380a289dddb909",
+      "origin": "director"
+    },
+    {
+      "path": "tests/test_hypothesis_staging_release.py",
+      "bytes": 3194,
+      "sha256": "894c26e9f546ace75ae424c27cbc046ccca9872a98685eb306b01eadd865b068",
+      "origin": "director"
+    },
+    {
+      "path": "tests/test_source_manifests.py",
+      "bytes": 7221,
+      "sha256": "40336d74954d1ce181a8657c52ac966451654957f28805e732cb25999ed5e562",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/test_source_versions.py",
+      "bytes": 3056,
+      "sha256": "3173ac01a8a436b221a18db1c7c4715a79d73d57e8e619cd29cf3e5298e37908",
+      "origin": "backend"
+    },
+    {
+      "path": "tests/test_staging_request_policy.py",
+      "bytes": 1592,
+      "sha256": "d40cc7a76561c5eefaaa93884deb8b0a5a5b854116f17e709ab1e631ae42b16c",
+      "origin": "backend"
+    }
+  ],
+  "source_inventory_sha256": "a65be265ec2734d2c9e35154c22f87531f390c84d441052fc6598f6e825a137d",
+  "revision": 2
+}

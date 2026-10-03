@@ -1,0 +1,3 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ resource.label }} detail — RMS{% endblock %}
+{% block content %}<h1>{{ resource.label }} detail</h1><p>{% if historical %}Exact historical version {{ record.version }}. Parent versions remain pinned.{% else %}Latest version as returned by the shared service.{% endif %}</p>{% if kind != "assessment" %}<p><a href="{{ latest_url }}">Open latest</a> · <a href="{{ history_url }}">Version history</a>{% if can_edit %} · <a href="{{ revision_url }}">Revise {{ resource.label|lower }}</a>{% endif %}</p>{% endif %}{% include "rms/includes/record_card.html" %}<p>Saved version {{ record.version }}.</p>{% endblock %}

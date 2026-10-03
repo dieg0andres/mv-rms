@@ -166,6 +166,8 @@ def correct_source(
     request_digest = _request_digest("POST", request_path, canonical_request)
 
     with transaction.atomic():
+        from .research_context_common import lock_lineage
+        lock_lineage()
         _lock_idempotency_key(idempotency_key)
         replay = _replay_or_conflict(idempotency_key, request_digest)
         if replay is not None:
@@ -198,6 +200,8 @@ def correct_source(
             )
             source.refresh_from_db()
             _create_manifest(source)
+            from .hypothesis_services import record_upstream_impacts
+            record_upstream_impacts("source", source.versions.get(version=source.latest_version), actor=actor)
         except DatabaseError as error:
             raise SourceConflict from error
 
@@ -364,6 +368,8 @@ def correct_idea(
     request_digest = _request_digest("POST", request_path, canonical_request)
 
     with transaction.atomic():
+        from .research_context_common import lock_lineage
+        lock_lineage()
         _lock_idempotency_key(idempotency_key)
         replay = _replay_or_conflict(idempotency_key, request_digest)
         if replay is not None:
@@ -404,6 +410,8 @@ def correct_idea(
             )
             _create_contributions(version, resolved)
             idea.refresh_from_db()
+            from .hypothesis_services import record_upstream_impacts
+            record_upstream_impacts("idea", version, actor=actor)
         except DatabaseError as error:
             raise IdeaConflict from error
 

@@ -1,0 +1,24 @@
+<section class="card" aria-labelledby="hypothesis-version-{{ record.version }}">
+  <h2 id="hypothesis-version-{{ record.version }}">Hypothesis version {{ record.version }} — supplied record preview</h2>
+  <p class="warning">Invented in-memory rendering only. This is not a persisted research record, a completeness verification, or a released detail screen.</p>
+  <dl>
+    <dt>Stable identity</dt><dd><code>{{ record.hypothesis_id }}</code></dd>
+    <dt>Immutable version identity</dt><dd><code>{{ record.hypothesis_version_id }}</code></dd>
+    <dt>Schema / classification</dt><dd>{{ record.schema_version }} / {{ record.classification|default:"Unknown" }}</dd>
+    <dt>Workflow status</dt><dd>{{ record.status|default:"Unknown" }} — not approval</dd>
+    <dt>Supplied completeness</dt><dd>{% if record.draft_completeness == "complete" %}Draft complete{% elif record.draft_completeness == "incomplete" %}Draft incomplete{% else %}Unknown{% endif %} — not validated, qualified or ready to trade</dd>
+    <dt>Recorded</dt><dd>{{ record.created_at|default:"Unknown time" }} by {{ record.created_by|default:"Unknown actor" }}</dd>
+    <dt>Correction context</dt><dd>{% if record.corrects_version %}Corrects v{{ record.corrects_version }}: {{ record.correction_reason }}{% else %}Original version{% endif %}</dd>
+    <dt>Changed fields</dt><dd>{% for field in record.changed_fields %}<code>{{ field }}</code>{% if not forloop.last %}, {% endif %}{% empty %}None supplied{% endfor %}</dd>
+  </dl>
+  <h3>Supplied missing fields</h3>
+  <ul>{% for issue in record.missing_fields %}<li><code>{{ issue.path }}</code>: {{ issue.message }}</li>{% empty %}<li>No missing-field output supplied; no independent completeness judgment made.</li>{% endfor %}</ul>
+  <h3>Exact origin and Research context</h3>
+  <ul>{% for reference in pinned_references %}<li>{{ reference.label }}: {% if reference.url %}<a href="{{ reference.url }}">{{ reference.stable_id }} v{{ reference.version }}</a>{% else %}{{ reference.stable_id }} v{{ reference.version }} — exact-version page not connected{% endif %}; <code>{{ reference.version_id }}</code>{% if reference.association_version_id %}; contribution <code>{{ reference.association_version_id }}</code>{% endif %}</li>{% endfor %}</ul>
+  <h3>Pinned associations</h3>
+  <ul>{% for association in pinned_associations %}<li>{{ association.kind }}: <code>{{ association.version_id }}</code>; from <code>{{ association.from.version_id }}</code> to <code>{{ association.to.version_id }}</code>; {{ association.rationale|default:"No rationale supplied" }}</li>{% endfor %}</ul>
+  <h3>Upstream review — separate from completeness</h3>
+  <ul>{% for notice in record.upstream_notices %}<li>Review needed: pinned <code>{{ notice.pinned.version_id }}</code>; newer <code>{{ notice.newer.version_id }}</code>; impact <code>{{ notice.impact_version_id }}</code>. The citation is not retargeted.</li>{% empty %}<li>No upstream-notice output supplied; freshness is not independently confirmed.</li>{% endfor %}</ul>
+  <h3>Entered field snapshot</h3>
+  <dl>{% for name, value in record.fields.items %}<dt>{{ name }}</dt><dd>{% if value == None or value == "" %}Missing / unknown{% else %}{{ value }}{% endif %}</dd>{% endfor %}</dl>
+</section>

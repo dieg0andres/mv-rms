@@ -1,13 +1,17 @@
 """Authenticated server-rendered pages for the bounded RMS-SI-1 slice."""
 
+from django.db import DatabaseError
 from django.template.response import TemplateResponse
+from django.utils.cache import patch_vary_headers
 from rest_framework import exceptions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from .api import PUBLIC_ID_RE, SOURCE_ID_RE
 from .models import ELIGIBLE_MARKETS, SOURCE_TYPES, WORKFLOW_STATUSES, SourceVersion
+from .permissions import has_rms_read_access, has_rms_write_access
 from .services import (
+    ServiceError,
     IdeaNotFound,
     SourceConflict,
     SourceNotFound,
@@ -74,23 +78,50 @@ def _source_version_options():
 class RmsPage(APIView):
     permission_classes = [IsAuthenticated]
 
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        if response.status_code == 403 and not isinstance(response, TemplateResponse):
+            response = TemplateResponse(request._request, "rms/denied.html", status=403)
+        if isinstance(response, TemplateResponse):
+            # Import at response time to keep the existing views/schema adapters
+            # independent during module initialization.
+            from .navigation_views import navigation_context
+            role = None
+            if has_rms_read_access(request.user):
+                if has_rms_write_access(request.user):
+                    role = "editor"
+                else:
+                    role = "founder_viewer"
+            section = "home"
+            for prefix, key in (("/sources", "sources"), ("/ideas", "ideas"), ("/hypotheses", "hypotheses"), ("/research-context", "context"), ("/research-families", "context"), ("/investigations", "context"), ("/prior-research-assessments", "context"), ("/idea-family-associations", "context")):
+                if request.path == prefix or request.path.startswith(prefix + "/"):
+                    section = key
+                    break
+            context = navigation_context(section=section, role=role)
+            context["repository_preview"] = False
+            context.update(response.context_data or {})
+            response.context_data = context
+        response["Cache-Control"] = "private, no-store"
+        patch_vary_headers(response, ("Authorization", "Cookie"))
+        return response
+
     def handle_exception(self, exc):
         if isinstance(exc, (exceptions.NotAuthenticated, exceptions.AuthenticationFailed)):
-            return TemplateResponse(self.request._request, "rms/denied.html", status=401)
+            response = TemplateResponse(self.request._request, "rms/denied.html", status=401)
+            challenge = self.get_authenticate_header(self.request)
+            if challenge:
+                response["WWW-Authenticate"] = challenge
+            return response
         if isinstance(exc, exceptions.PermissionDenied):
             return TemplateResponse(self.request._request, "rms/denied.html", status=403)
         return super().handle_exception(exc)
 
-    @staticmethod
-    def _has_role(request, *roles):
-        return request.user.groups.filter(name__in=roles).exists()
-
     def _require_editor(self, request):
-        if not self._has_role(request, "editor"):
+        if not has_rms_write_access(request.user):
             raise exceptions.PermissionDenied
 
     def _require_reader(self, request):
-        if not self._has_role(request, "editor", "founder_viewer"):
+        if not has_rms_read_access(request.user):
             raise exceptions.PermissionDenied
 
     @staticmethod
@@ -213,7 +244,18 @@ class IdeaDetailPage(RmsPage):
             detail = idea_detail(get_idea(idea_id))
         except IdeaNotFound:
             return self._not_found(request)
-        return TemplateResponse(request._request, "rms/idea_detail.html", {"detail": detail})
+        from .navigation_views import (
+            SchemaUnavailable, shared_service, selection_projection, service_failure,
+        )
+        context = {"detail": detail}
+        try:
+            listing = shared_service("hypothesis", "list", actor=request.user, query={"originating_idea_id": idea_id})
+            context["hypotheses"] = selection_projection("hypothesis", listing)
+        except (SchemaUnavailable, DatabaseError):
+            context["hypotheses_unavailable"] = True
+        except ServiceError as error:
+            return service_failure(self, request, error)
+        return TemplateResponse(request._request, "rms/idea_detail.html", context)
 
 
 class IdeaHistoryPage(RmsPage):

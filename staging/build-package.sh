@@ -13,7 +13,7 @@ git archive --format=tar "$commit" | gzip -n > "$output/product.tar.gz"
 static_sha256=$(git show "$commit:static/rms/rms_forms.js" | sha256sum | cut -d' ' -f1)
 printf '{"commit":"%s","tree":"%s","static_sha256":"%s","summary":"Initial Source-to-Idea demonstration; fictional data only."}\n' \
   "$commit" "$tree" "$static_sha256" > "$output/metadata.json"
-cp staging/{Dockerfile,compose.yaml,entrypoint.sh,requirements-staging.lock,runtime.py,request_policy.py,create-principals.py,README.md} "$output/"
+cp staging/{Dockerfile,compose.yaml,entrypoint.sh,requirements-staging.lock,runtime.py,request_policy.py,release_identity.py,create-principals.py,README.md} "$output/"
 mkdir -p "$output/browser"
 cp staging/browser/{package.json,package-lock.json,staging-origin.mjs,preflight-headless.mjs,HEADLESS.md} "$output/browser/"
 cp tests/browser/test-ui01.mjs "$output/browser/"
