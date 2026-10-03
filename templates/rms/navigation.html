@@ -1,0 +1,22 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ heading }} — RMS{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+{% if heading == "Home" %}
+  <p>Choose a record type to review research descriptions and their exact saved versions.</p>
+  <ul class="record-links">{% for item in navigation %}{% if item.key != "home" %}<li><a href="{{ item.url }}">{{ item.label }}</a></li>{% endif %}{% endfor %}</ul>
+{% elif heading == "Research context" %}
+  <h2>Research family</h2><p>A proposed grouping rationale, not a certification of scientific novelty.</p>
+  <h2>Research case</h2><p>State: proposed. A manual prior-research assessment must record its checked scope and limitations. No assessment or family assignment is inferred.</p>
+{% else %}
+  <p class="notice">Record selection is not connected in this source-only preparation. Available records and counts are unknown, not zero.</p>
+{% endif %}
+{% if can_edit %}
+  {% if heading == "Home" or heading == "Sources" %}<p><a href="/sources/new">Create source (existing screen)</a></p>{% endif %}
+  {% if heading == "Home" or heading == "Ideas" %}<p><a href="/ideas/new">Create idea (existing screen)</a></p>{% endif %}
+{% else %}
+  <p>Viewer access is read-only. Creation and revision require server-authorized editor access.</p>
+{% endif %}
+<p>Hypothesis draft and research-context forms remain unavailable until the exact Backend schema is received and later integration is authorized.</p>
+<p><a href="/">Return Home</a></p>
+{% endblock %}
