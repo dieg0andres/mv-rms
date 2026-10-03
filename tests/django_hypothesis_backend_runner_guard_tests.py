@@ -1,6 +1,7 @@
 import ast
 from copy import deepcopy
 from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
 import unittest
 
@@ -15,11 +16,151 @@ NOW = datetime(2026, 10, 3, 8, tzinfo=timezone.utc)
 
 
 class PreservingGuardTests(unittest.TestCase):
-    def codes(self, receipts=None, manifest=None):
+    def codes(self, receipts=None, manifest=MANIFEST):
         report = assess_prerequisites(receipts, now=NOW, manifest=manifest)
         self.assertEqual(report.disposition, "HOLD")
         self.assertIs(report.db_access_permitted, False)
+        self.assertTrue(all(finding.owner and finding.action for finding in report.findings))
         return {finding.code for finding in report.findings}
+
+    def invented_identity(self):
+        return {
+            **deepcopy(MANIFEST["lifecycle_policy"]),
+            "synthetic": True,
+            "evidence_ref": "invented-negative-only",
+            "proposal_id": MANIFEST["proposal_id"],
+            "revision": MANIFEST["revision"],
+            "candidate_commit": "1" * 40,
+            "file_sha256": {
+                path: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                for path in (
+                    "rms/hypothesis_runner_manifest.json",
+                    "rms/hypothesis_preserving_runner.py",
+                    "docs/RMS-HN-BACKEND-RUNNER.md",
+                )
+            },
+        }
+
+    def test_missing_and_nonobject_manifests_return_owned_hold(self):
+        for manifest in (None, [], "invented", 3, False):
+            with self.subTest(manifest=manifest):
+                self.assertIn("invalid_manifest", self.codes(manifest=manifest))
+        codes = self.codes(manifest={})
+        self.assertIn("invalid_receipts", codes)
+        self.assertIn("invalid_target", codes)
+        self.assertIn("source_only_execution_hold", codes)
+
+    def test_missing_and_nonobject_required_receipts_return_owned_hold(self):
+        for value in (None, [], "invented", 3):
+            manifest = deepcopy(MANIFEST)
+            manifest["required_receipts"] = value
+            with self.subTest(value=value):
+                self.assertIn("invalid_receipts", self.codes(manifest=manifest))
+        manifest.pop("required_receipts")
+        self.assertIn("invalid_receipts", self.codes(manifest=manifest))
+
+    def test_missing_and_nonobject_targets_return_owned_hold(self):
+        for value in (None, [], "invented", 3, False):
+            manifest = deepcopy(MANIFEST)
+            manifest["target"] = value
+            with self.subTest(value=value):
+                codes = self.codes(manifest=manifest)
+                self.assertIn("invalid_target", codes)
+                self.assertIn("target_mismatch", codes)
+        manifest.pop("target")
+        self.assertIn("invalid_target", self.codes(manifest=manifest))
+
+    def test_missing_nonobject_or_changed_policies_return_owned_hold(self):
+        for name in ("fixture_policy", "sequence_policy", "coordination_policy", "lifecycle_policy", "source_identity", "stop_policy"):
+            for value in (None, [], "invented", 3, {}):
+                manifest = deepcopy(MANIFEST)
+                manifest[name] = value
+                with self.subTest(name=name, value=value):
+                    code = f"{name}_mismatch" if isinstance(value, dict) else f"{name}_invalid"
+                    self.assertIn(code, self.codes(manifest=manifest))
+            manifest.pop(name)
+            self.assertIn(f"{name}_invalid", self.codes(manifest=manifest))
+
+    def test_unhashable_or_nonlist_prohibition_metadata_is_held(self):
+        for value in (None, "cleanup", {}, [[], {}], [None], [True]):
+            manifest = deepcopy(MANIFEST)
+            manifest["prohibited_operations"] = value
+            with self.subTest(value=value):
+                self.assertIn("preservation_policy_mismatch", self.codes(manifest=manifest))
+
+    def test_malformed_assessment_times_return_owned_hold(self):
+        for value in ([], {}, "2026-10-03T08:00:00Z", 3, False, datetime(2026, 10, 3, 8)):
+            with self.subTest(value=value):
+                report = assess_prerequisites(now=value)
+                self.assertEqual(report.disposition, "HOLD")
+                self.assertIs(report.db_access_permitted, False)
+                self.assertTrue(all(finding.owner and finding.action for finding in report.findings))
+                self.assertIn("invalid_time_metadata", {finding.code for finding in report.findings})
+
+    def test_malformed_authority_times_return_owned_hold(self):
+        for value in (None, [], {}, 3, False, "", "99999-10-03T08:00:00Z", "2026-10-03T09:00:00"):
+            with self.subTest(value=value):
+                self.assertIn("authority_expired_or_unknown", self.codes({"authority": {"expires_at": value}}))
+
+    def test_changed_environment_and_invented_binding_are_held(self):
+        for name, value, code in (
+            ("environment_id", "invented-other-environment", "target_mismatch"),
+            ("binding", "invented-substitute-binding", "target_binding_mismatch"),
+            ("binding", [], "target_binding_missing"),
+        ):
+            manifest = deepcopy(MANIFEST)
+            manifest["target"][name] = value
+            self.assertIn(code, self.codes(manifest=manifest))
+
+    def test_stale_candidate_revision_or_file_hashes_are_held(self):
+        for name, value in (("revision", "1.0"), ("candidate_commit", None), ("candidate_commit", []), ("file_sha256", {"invented": "stale"})):
+            identity = self.invented_identity()
+            identity[name] = value
+            self.assertIn("source_identity_unavailable", self.codes({"runtime_identity": identity}))
+        manifest = deepcopy(MANIFEST)
+        manifest["revision"] = "1.0"
+        self.assertIn("proposal_identity_mismatch", self.codes(manifest=manifest))
+
+    def test_indirect_lifecycle_import_settings_and_routing_are_held(self):
+        prohibited = {
+            "execution_command": "python manage.py test --keepdb",
+            "settings_binding": "rms_project.hypothesis_source_settings",
+            "aliases": ["invented-secondary"],
+            "routers": ["invented.router"],
+            "connections": [{"target": "invented-other"}],
+            "requested_operations": ["flush"],
+            "imports": ["django.test.runner", "psycopg"],
+            "setup": ["create_database"],
+            "teardown": ["cleanup"],
+            "callbacks": ["on_commit:fixture_loader"],
+        }
+        for name, value in prohibited.items():
+            identity = self.invented_identity()
+            identity[name] = value
+            with self.subTest(name=name):
+                self.assertIn(f"routing_or_lifecycle_{name}_unreviewed", self.codes({"runtime_identity": identity}))
+            manifest = deepcopy(MANIFEST)
+            manifest["lifecycle_policy"][name] = value
+            self.assertIn("lifecycle_policy_mismatch", self.codes(manifest=manifest))
+
+    def test_exact_local_source_metadata_still_cannot_release_execution(self):
+        codes = self.codes({"runtime_identity": self.invented_identity()})
+        self.assertNotIn("source_identity_unavailable", codes)
+        self.assertIn("runtime_identity_unverified", codes)
+        self.assertIn("source_only_execution_hold", codes)
+
+    def test_manifest_inventories_are_proposals_not_executed_evidence(self):
+        for section in ("effect_inventory", "denial_matrix", "preservation_inventory", "stop_policy", "concurrency_scenario"):
+            self.assertTrue(MANIFEST[section])
+        for effect in MANIFEST["effect_inventory"]:
+            self.assertTrue(all(effect[key] for key in ("id", "owner", "action", "accounting", "hold", "fail")))
+        association_kinds = {"IdeaFamily", "InvestigationFamily", "PriorResearchInvestigation", "HypothesisInvestigation", "IdeaHypothesis", "AssessmentRecord"}
+        for kind in association_kinds:
+            self.assertTrue(any(kind in item for item in MANIFEST["denial_matrix"]["introduced_immutable"]))
+        self.assertIn("NOT RUN", MANIFEST["concurrency_scenario"]["status"])
+        self.assertIsNone(MANIFEST["source_identity"]["execution_command"])
+        self.assertIsNone(MANIFEST["source_identity"]["installed_settings_binding"])
+        self.assertTrue(all(value is None for value in MANIFEST["required_receipts"].values()))
 
     def test_actual_manifest_stays_hold_for_every_unavailable_prerequisite(self):
         codes = self.codes()

@@ -113,3 +113,83 @@ Native review is repository-only. H01–H20 remain unexecuted; Test INCONCLUSIVE
 Risk INCONCLUSIVE / NOT ACCEPTED (HIGH), 34 unexecuted Stage 1 cases and separately
 restricted OPEN incident remain unchanged. No merge, deployment, integration,
 authority/access expansion or independent acceptance is implied.
+
+## Bounded correction receipt — October 3, 2026
+
+Receiving correction run `dec0c81c-3a3c-4a25-9581-1b28b277f02f`, MAU-145.
+Director wake comment `ffaec22a-3d73-43a8-9b52-7b8009650bde` and source-review
+revision `9a3f0b14-1bac-4569-b01c-6c5a47a31cc5` change the next action from waiting
+to these bounded corrections only. Native checkout response confirms Backend
+ownership and this run; the existing Director review stage/return-assignee is retained.
+Founder confirmation was read back ACCEPTED against unchanged source-plan revision
+`69f99154-495a-417f-8bd3-79137c560cdd`, effective October 3, 07:14:52.621 UTC.
+
+Current injected workspace remains `8258fcbb-78e0-44f2-bbf2-59e619b24920`, existing
+cwd/remote/branch exactly as the original receiving receipt. Initial HEAD was
+`a324f60173b9d7c259fc4f858dfb2831ada66e02`, working tree clean. No fetch/startup,
+provisioner/import verification, workspace/binding change, branch switch or reset
+was repeated; the accepted original startup is unchanged evidence, not a claim
+that this correction run repeated it. Sandbox namespace launch initially failed
+before command execution; supported tool approval allowed bounded commands without
+host-policy/service changes. Existing native executable-name `apply_patch` dispatch
+used one run-owned scratch alias; no installation or shared configuration change.
+
+Changed scope is exactly runner source, runner manifest, preserving procedure,
+this appended receipt and invented pure guard tests. Manifest revision is 1.1.
+P01–P06 are now explicit source proposals: effect/alias/lifecycle inventory;
+external candidate/file/command identity with absent settings; every immutable
+entity/version/association/impact versus permitted projections and success-is-FAIL
+denial semantics; full preservation/additive/compatibility inventory with unknowns
+HOLD; bounded cancellation/interrupted Operations handoff; deterministic durable
+overlapping A/B create/replay/conflict/correction/no-change scenario. No schema,
+signature, validator, model, migration, route, frontend or integration source changed.
+Actual schema/roles/privileges/routing/capacity/receipt sink remain unavailable/HOLD.
+
+### Correction verification and pins
+
+Exact focused command (existing approved toolchain, invented metadata only):
+
+```bash
+TOOLS=/paperclip/instances/default/projects/f6bf0bf4-801d-4dd1-8e60-02a58d2052ef/6fa1af9a-2486-44f2-b1c5-f152826cd54e/toolchains/rms
+BASH_ENV="$TOOLS/shell-env.sh" bash -lc 'time python3 -B -m unittest tests.django_hypothesis_backend_runner_guard_tests -v'
+git diff --check
+```
+
+Observed October 3, 2026, 08:10:46 UTC in this run: **22/22 PASS**, unittest
+0.044 seconds, exit 0; Bash wall 0.283 seconds, user CPU 0.173 seconds, system CPU
+0.127 seconds. Whitespace check PASS. The command never calls `PreservingRunner.run`;
+its unconditional raise and absence of DB imports are inspected via AST only.
+Tests include all ten previous guard tests plus twelve new malformed metadata,
+time, stale source identity, changed target/binding, indirect lifecycle/import/
+settings/alias/router/connection and proposal-shape checks. Owned findings/HOLD and
+DB access false are asserted; local hash matches and invented metadata never release
+execution. Every actual receipt remains null. Fixed synthetic assessment time is
+`2026-10-03T08:00:00+00:00`; invented candidate `1111111111111111111111111111111111111111`
+is a negative fixture, not a published commit/binding. Namespace/record examples in
+P06 are symbolic invented future inputs, not installed fixtures or live evidence.
+
+| Changed source | SHA-256 |
+| --- | --- |
+| `rms/hypothesis_preserving_runner.py` | `beeb6a9ce02ffae8c4573c06133d4041ff3319cddfaa38b2604e135ad7db04f3` |
+| `rms/hypothesis_runner_manifest.json` | `248d005cc6df06d407ef6c4d1a65a9505d280e33f5f1d2abd58d514410b95e48` |
+| `docs/RMS-HN-BACKEND-RUNNER.md` | `c371941d55443e76ebafb0036dcfbf1aa4957896cb164c4850cd8712acc60b76` |
+| `tests/django_hypothesis_backend_runner_guard_tests.py` | `3f7f607a8cfacf477a95e7987b0e0fd9a58f6cbd54c888375572ea75bbdb0fe3` |
+
+The final candidate and this receipt own hash are external in the MAU-145
+resubmission receipt/work product, avoiding self-referential commit/hash claims.
+Rechecked adopted schema/signature/validator hashes exactly match the earlier table.
+Preserved contract and recipe Git-object hashes also match the original receipt.
+Earlier candidate and 50/50 results remain above, attributed only to earlier run
+`cab01339-8210-4348-be4d-fb8ae24bb632`; they were not rerun and are not new evidence.
+No full-suite/build, installed settings, DB probe, runner, migration or fixture
+execution occurred. Memory/token/cost measurements are unavailable; no incremental
+spending/resource/credential/access change. DB access/writes: zero.
+
+Director of Engineering is the same named native repository-only reviewer.
+Operations/Test inspect this corrected pinned proposal through existing MAU-141/144
+before later adoption/execution; no recipient start or independent acceptance is
+claimed. P01–P06/H01–H20 NOT RUN; Test INCONCLUSIVE / NOT ADOPTABLE; Risk
+INCONCLUSIVE / NOT ACCEPTED (HIGH); 34 unexecuted Stage 1 cases and separately
+restricted OPEN incident unchanged. MAU-142/143/144 and all DB/integration gates
+remain unchanged. Rollback is source decline/revert through Director only, with
+no database recovery/reset/cleanup. No self-merge, deployment or stage release.

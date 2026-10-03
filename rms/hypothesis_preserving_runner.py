@@ -12,6 +12,7 @@ from rms.hypothesis_validation import SCHEMA_SHA256
 MANIFEST_PATH = Path(__file__).with_name("hypothesis_runner_manifest.json")
 MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 MANIFEST_SHA256 = hashlib.sha256(MANIFEST_PATH.read_bytes()).hexdigest()
+_DEFAULT_MANIFEST = object()
 FORBIDDEN = frozenset({
     "create_database", "drop_database", "reset", "flush", "truncate",
     "delete_existing", "update_existing", "cleanup", "role_create",
@@ -37,16 +38,22 @@ class RunnerHeld(RuntimeError):
     pass
 
 
-def assess_prerequisites(receipts=None, *, now=None, manifest=None):
+def assess_prerequisites(receipts=None, *, now=None, manifest=_DEFAULT_MANIFEST):
     """Inspect supplied metadata only, never attest facts or release execution."""
-    manifest = MANIFEST if manifest is None else manifest
-    receipts = manifest["required_receipts"] if receipts is None else receipts
-    now = datetime.now(timezone.utc) if now is None else now
     findings = []
 
     def hold(code, owner, action):
         findings.append(GuardFinding(code, owner, action))
 
+    manifest = MANIFEST if manifest is _DEFAULT_MANIFEST else manifest
+    if not isinstance(manifest, dict):
+        hold("invalid_manifest", "Backend", "Supply the exact reviewed object manifest; do not execute it.")
+        manifest = {}
+    receipts = manifest.get("required_receipts") if receipts is None else receipts
+    now = datetime.now(timezone.utc) if now is None else now
+    time_valid = isinstance(now, datetime) and now.tzinfo is not None and now.utcoffset() is not None
+    if not time_valid:
+        hold("invalid_time_metadata", "Director", "Supply a timezone-aware assessment time; no authority is inferred.")
     if not isinstance(receipts, dict):
         receipts = {}
         hold("invalid_receipts", "Director", "Supply reviewed metadata receipts, never credentials.")
@@ -54,13 +61,27 @@ def assess_prerequisites(receipts=None, *, now=None, manifest=None):
         hold("manifest_not_source_only", "Director", "Retain the accepted source-only boundary.")
     if manifest.get("schema_sha256") != SCHEMA_SHA256:
         hold("schema_pin_mismatch", "Backend", "Reconcile exact schema/proposal identity through Director.")
-    if set(manifest.get("prohibited_operations", [])) != FORBIDDEN:
+    operations = manifest.get("prohibited_operations")
+    if not isinstance(operations, list) or not all(isinstance(operation, str) for operation in operations) or set(operations) != FORBIDDEN:
         hold("preservation_policy_mismatch", "Director", "Preserve every prohibited lifecycle/mutation operation.")
+    for name in ("fixture_policy", "sequence_policy", "coordination_policy", "lifecycle_policy", "source_identity", "stop_policy"):
+        policy = manifest.get(name)
+        if not isinstance(policy, dict):
+            hold(f"{name}_invalid", "Backend", "Supply an object policy from the pinned proposal; missing policy stays HOLD.")
+        elif policy != MANIFEST[name]:
+            hold(f"{name}_mismatch", "Director", "Review changed limits, imports, lifecycle, routing and identity before adoption.")
+    if manifest.get("proposal_id") != MANIFEST["proposal_id"] or manifest.get("revision") != MANIFEST["revision"]:
+        hold("proposal_identity_mismatch", "Director", "Reject stale or alternate proposal identity; receipt the exact candidate.")
 
     expected_target = MANIFEST["target"]
-    target = manifest.get("target", {})
+    target = manifest.get("target")
+    if not isinstance(target, dict):
+        hold("invalid_target", "Operations", "Supply the reviewed target object without credentials; never initialize it.")
+        target = {}
     if target.get("database") != expected_target["database"] or target.get("environment_id") != expected_target["environment_id"]:
         hold("target_mismatch", "Operations", "Use only the existing authorized target/environment; no alternate resource.")
+    if target.get("binding") != expected_target["binding"]:
+        hold("target_binding_mismatch", "Operations", "No installed binding is pinned; separately review any proposed binding before use.")
     if not isinstance(target.get("binding"), str) or not target["binding"].strip():
         hold("target_binding_missing", "Operations", "Report the existing secure target binding by name after authorization.")
 
@@ -73,15 +94,30 @@ def assess_prerequisites(receipts=None, *, now=None, manifest=None):
             hold(f"{name}_unverified", "Director", "Replace invented/unknown claims with an exact independently reviewed evidence reference.")
         return value
 
+    identity = receipt("runtime_identity")
+    expected_files = {
+        "rms/hypothesis_runner_manifest.json": MANIFEST_SHA256,
+        "rms/hypothesis_preserving_runner.py": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "docs/RMS-HN-BACKEND-RUNNER.md": hashlib.sha256((MANIFEST_PATH.parent.parent / "docs/RMS-HN-BACKEND-RUNNER.md").read_bytes()).hexdigest(),
+    }
+    candidate = identity.get("candidate_commit")
+    if not isinstance(candidate, str) or len(candidate) != 40 or any(character not in "0123456789abcdef" for character in candidate) or identity.get("proposal_id") != MANIFEST["proposal_id"] or identity.get("revision") != MANIFEST["revision"] or identity.get("file_sha256") != expected_files:
+        hold("source_identity_unavailable", "Director", "Match the external exact candidate/path/hash receipt; local bytes are not independent adoption.")
+    lifecycle = MANIFEST["lifecycle_policy"]
+    for name in ("execution_command", "settings_binding", "aliases", "routers", "connections", "requested_operations", "imports", "setup", "teardown", "callbacks"):
+        if name not in identity or identity[name] != lifecycle[name]:
+            hold(f"routing_or_lifecycle_{name}_unreviewed", "Operations", "Reject indirect setup, cleanup, imports and unbound connections before any mutation; no transport exists here.")
+
     authority = receipt("authority")
     if authority.get("scope") != "preserving_db_execution" or authority.get("status") != "accepted" or authority.get("revoked") is not False:
         hold("execution_authority_missing", "Director", "Resolve the separately held exact execution decision through VP; source approval is not DB authority.")
     if authority.get("target") != target.get("database") or authority.get("schema_sha256") != SCHEMA_SHA256:
         hold("authority_target_or_schema_mismatch", "Director", "Bind any later release to this exact reviewed target and schema.")
     try:
-        expiry = datetime.fromisoformat(authority.get("expires_at", ""))
-        active = expiry.tzinfo is not None and now.tzinfo is not None and expiry > now
-    except (TypeError, ValueError):
+        expiry_value = authority.get("expires_at")
+        expiry = datetime.fromisoformat(expiry_value) if isinstance(expiry_value, str) else None
+        active = time_valid and expiry is not None and expiry.tzinfo is not None and expiry.utcoffset() is not None and expiry > now
+    except (TypeError, ValueError, OverflowError):
         active = False
     if not active:
         hold("authority_expired_or_unknown", "Director", "Confirm a current nonrevoked exact authority record; fail closed meanwhile.")
