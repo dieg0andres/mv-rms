@@ -12,6 +12,8 @@ ASSETS = {
     "/static/rms/draft_shell.js": "text/javascript; charset=utf-8",
     "/static/rms/record_form.js": "text/javascript; charset=utf-8",
     "/static/rms/navigation.css": "text/css; charset=utf-8",
+    "/static/rms/test_plan.js": "text/javascript; charset=utf-8",
+    "/static/rms/test_plan.css": "text/css; charset=utf-8",
 }
 
 

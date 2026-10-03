@@ -29,6 +29,7 @@ NAVIGATION = (
     ("sources", "Sources", "/sources"),
     ("ideas", "Ideas", "/ideas"),
     ("hypotheses", "Hypotheses", "/hypotheses"),
+    ("test-plans", "Test Plans", "/test-plans"),
     ("context", "Research context", "/research-context"),
 )
 
@@ -309,6 +310,16 @@ class NavigationPage(RmsPage):
                 if getattr(error, "http_status", None) in (401, 403):
                     return service_failure(self, request, error)
             context["home_counts"].append(item)
+        from .test_plan_views import plan_service
+        plan_count = {"label": "Test Plans", "url": "/test-plans", "count": None}
+        try:
+            plan_count["count"] = plan_service("list_test_plans", actor=request.user, query={"page": 1, "page_size": 1})["count"]
+        except (SchemaUnavailable, DatabaseError):
+            pass
+        except ServiceError as error:
+            if getattr(error, "http_status", None) in (401, 403):
+                return service_failure(self, request, error)
+        context["home_counts"].append(plan_count)
         return TemplateResponse(request._request, "rms/navigation.html", context)
 
 
@@ -615,6 +626,26 @@ class RecordDetailPage(ConnectedPage):
         except ServiceError as error:
             return service_failure(self, request, error)
         context.update(record_display(self.kind, record))
+        if self.kind in ("hypothesis", "case"):
+            from .test_plan_views import plan_service
+            filters = {"hypothesis_id": record_id} if self.kind == "hypothesis" else {"case_id": record_id}
+            if self.kind == "hypothesis":
+                pin = record["hypothesis_version_id"]
+                context["plan_pin"] = pin
+                context["plans_exact_url"] = "/test-plans?" + urlencode({"hypothesis_version_id": pin})
+                context["plans_all_url"] = "/test-plans?" + urlencode(filters)
+                context["create_plan_url"] = "/test-plans/new?" + urlencode({"hypothesis_id": record_id, "hypothesis_version": record["version"], "hypothesis_version_id": pin})
+                filters["hypothesis_version_id"] = pin
+            else:
+                context["plans_all_url"] = "/test-plans?" + urlencode(filters)
+            try:
+                context["related_plans"] = plan_service("list_test_plans", actor=request.user, query=filters)
+            except (SchemaUnavailable, DatabaseError):
+                context["plans_unavailable"] = True
+            except ServiceError as error:
+                if getattr(error, "http_status", None) in (401, 403):
+                    return service_failure(self, request, error)
+                context["plans_unavailable"] = True
         context.update({"historical": version is not None, "latest_url": browser_url(self.kind, record_id), "history_url": browser_url(self.kind, record_id) + "/history", "revision_url": browser_url(self.kind, record_id) + "/revise"})
         return TemplateResponse(request._request, "rms/record_detail.html", context)
 

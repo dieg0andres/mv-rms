@@ -1,0 +1,125 @@
+{
+  "run_id": "001edfa4-120a-4de9-9526-c0dbc66d9cfc",
+  "branch": "MAU-150-rms-increment-3-strategy-specification-and-test-plan-v1-0",
+  "local_head": "e166539d507cf9b05fcf1d44373f172883ee386b",
+  "remote_commit": "beb5d113855873c91559686ce5d86b4df51ab200",
+  "remote_tree": "a7b4d7eac30ba9d4ad638cfe5f69f820a1f30641",
+  "pr_url": "https://github.com/dieg0andres/mv-rms/pull/5",
+  "pr_number": 5,
+  "draft": true,
+  "publication": "GitHub API using existing granted alias",
+  "local_branch_changed": false,
+  "permissions_changed": false,
+  "merged": false,
+  "deployed": false,
+  "files": [
+    {
+      "path": "docs/RMS_STRATEGY_SPECIFICATION_AND_TEST_PLAN_DESIGN_CONTRACT_V1_0.md",
+      "bytes": 82585,
+      "sha256": "9236d104249fc796d3b5fbe214a5be92c4d4f95812ee17ba0f0fb99d1cb1a240",
+      "git_blob": "5a9baf38e8ff43f7cb569f974f1cc5091d9b90c4"
+    },
+    {
+      "path": "docs/RMS-TP-INTEGRATION.md",
+      "bytes": 6417,
+      "sha256": "9bdd044dd33cc02d1c2c9b99b1be9e2b7d5ea710fab053080794677a5df9f0db",
+      "git_blob": "f72ccd2f33f730cead02615a7cc7de8265c24e54"
+    },
+    {
+      "path": "docs/RMS-TP-API-1.md",
+      "bytes": 10242,
+      "sha256": "45207e497f3a0cc8c8b70daeb92922298b09ab886ff3016e5765d670f209d0ea",
+      "git_blob": "384b400202c843379cd02ba00e9f0e7790515bd2"
+    },
+    {
+      "path": "docs/RMS-TP-API-1-INTEGRATION-RECEIPT.json",
+      "bytes": 1583,
+      "sha256": "3e7df9578631655a9ec3920a7b9f2c207d068546b806ea1a9a5a008f5c16a3c8",
+      "git_blob": "40ef3502a1db9bb07e66d8a0f118eff97302d002"
+    },
+    {
+      "path": "rms/test_plan_schema.json",
+      "bytes": 38340,
+      "sha256": "bcd72eb27e932f8778a7fa09bd47dafb40550364490c459839d5f04a84e23900",
+      "git_blob": "2b177e2a82f9e31da4aeaacd43485166568f8d78"
+    },
+    {
+      "path": "rms/test_plan_models.py",
+      "bytes": 7547,
+      "sha256": "2d60ce342f7c6fef2f0140fd500454a2e86c95379f1f1487e4ea3ca002940226",
+      "git_blob": "9ee49f250975eac8983af49294bb7fbbbe45b857"
+    },
+    {
+      "path": "rms/test_plan_validation.py",
+      "bytes": 17179,
+      "sha256": "f27c115ab6547770c94037c9e482d64da3556bf312522091b25b59bb6808a6e7",
+      "git_blob": "63f69e30f509331cdbaac0b78bd7e4fb5077ad80"
+    },
+    {
+      "path": "rms/test_plan_services.py",
+      "bytes": 20324,
+      "sha256": "f3809407f6b0ddce6334ee0087faa6bc3d20e7d85dc3b154bcec273b7d352db9",
+      "git_blob": "6c847b0f195d76eb48e58aad044bd0922796b1b5"
+    },
+    {
+      "path": "rms/test_plan_api.py",
+      "bytes": 3203,
+      "sha256": "4a1e484624b16acbb83e75941a433db20ad7ac823dddb8a66f1a1adb7caa4cfd",
+      "git_blob": "a81ac470d4e3c4d6e25949c7ebf2eaddf8bd24d5"
+    },
+    {
+      "path": "rms/test_plan_api_urls.py",
+      "bytes": 1136,
+      "sha256": "4f6c64706af8c7c98474699b86ede30f6f72ad66661184180e5102423b303a98",
+      "git_blob": "3e019106a0b30fad294b956e7611244bb39edf3f"
+    },
+    {
+      "path": "rms/models.py",
+      "bytes": 11564,
+      "sha256": "939390aebdc9b6e3da0a6452414f4aaa767c20922a9db65d938b17b0bc304b36",
+      "git_blob": "f19ec52f3e105b29a3a810a4ccdab0370eb8fa7f"
+    },
+    {
+      "path": "rms/migrations/0006_test_plan_records.py",
+      "bytes": 19424,
+      "sha256": "60b4685f08045d3468da5dac5336fa27008be56b7c2e82b8aacf4052f08b7d4b",
+      "git_blob": "f815cd74a68b78a922b9bc767eb2ae933523c49e"
+    },
+    {
+      "path": "rms/migrations/0007_test_plan_history_guards.py",
+      "bytes": 8349,
+      "sha256": "cb359da8415d9a6c0e58cc6df62896ad297682d359dd34e4e17a252700a054da",
+      "git_blob": "f003d2206cc19eda6dc3a6db46917e05ece9f2e7"
+    },
+    {
+      "path": "rms_project/urls.py",
+      "bytes": 2272,
+      "sha256": "50da2ee5a7ececf563cca05edfc6d54ec6f61a884a7d3a5bce5423c3aff6dc80",
+      "git_blob": "7e417811cb82e84c3dca1149c63714b5bede6ce3"
+    },
+    {
+      "path": "rms/staging_test_reset.py",
+      "bytes": 9105,
+      "sha256": "9fd65ebb1e4f4083a4ae829bd8e7278d0b03094c84666f5d961ec9ea780a70f3",
+      "git_blob": "512529ad0eb829cf4156e583e9a2b99196b90268"
+    },
+    {
+      "path": "tests/test_staging_test_reset.py",
+      "bytes": 19183,
+      "sha256": "5d69b3c1224818697bde6e4302b7f9a24ebfe8f5cea8f910bb7ee657894e57ba",
+      "git_blob": "e6e5a637d22e75724459abe898559df32685dd0d"
+    },
+    {
+      "path": "staging/build-hn-package.py",
+      "bytes": 3511,
+      "sha256": "c40738014cb0ee44450dcdda1ed473d8e00be88e5c34f5eb5853a411eee1f146",
+      "git_blob": "82ceabd55e0d2f8f1ed4f2ca7388471c95c59833"
+    },
+    {
+      "path": "staging/build-tp-package.py",
+      "bytes": 1396,
+      "sha256": "379fa82f452245ea95bb898dee358711d1e48b80851031d2b2520d60b6ea0add",
+      "git_blob": "b26348960eca70bf21edd10da3c3966dce204757"
+    }
+  ]
+}

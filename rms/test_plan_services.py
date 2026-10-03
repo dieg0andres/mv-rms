@@ -5,8 +5,9 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from . import test_plan_models as m
-from .test_plan_validation import validate_request, draft_completeness, resolved_configurations, issue, TestPlanValidationError
-from .hypothesis_models import HypothesisVersion
+from .test_plan_validation import validate_json_size, validate_request, draft_completeness, resolved_configurations, issue, TestPlanValidationError
+from .hypothesis_models import HypothesisVersion, Hypothesis, Investigation
+from .research_context_services import edge
 from .hypothesis_services import hypothesis_read
 from .research_context_common import require_actor, resolve as resolve_hn, wire, lock_lineage, StaleVersion
 from .models import IdempotencyRecord
@@ -60,7 +61,7 @@ def _append(model,record,actor,fields,old=None,reason=None,changed=(),**extra):
 def _execute(actor,key,payload,name,path,operation):
     require_actor(actor,write=True)
     if not isinstance(key,str) or not re.fullmatch(r'[A-Za-z0-9._:-]{1,128}',key): _error('/Idempotency-Key','invalid_format')
-    p=validate_request(name,payload)
+    validate_json_size(payload)
     storage_key='TP:'+digest([str(actor.pk),key])
     request_digest=digest({'actor':str(actor.pk),'method':'POST','path':path,'payload':payload})
     with transaction.atomic():
@@ -68,6 +69,7 @@ def _execute(actor,key,payload,name,path,operation):
         _lock_idempotency_key(storage_key)
         replay=_replay_or_conflict(storage_key,request_digest)
         if replay is not None: return replay
+        p=validate_request(name,payload)
         status,body=operation(p)
         data=canonical_json_bytes(body)
         IdempotencyRecord.objects.create(key=storage_key,request_method='POST',request_path=path,request_sha256=request_digest,response_status=status,response_identity=body.get('plan_id',body.get('check_id')),response_bytes=data)
@@ -237,6 +239,10 @@ def list_test_plans(*,actor,query):
     hyp=None
     if 'hypothesis_version_id' in q: hyp=resolve_hn(HypothesisVersion,q['hypothesis_version_id'])
     if hyp and 'hypothesis_id' in q and hyp.record.public_id!=q['hypothesis_id']: _error('/hypothesis_id','inconsistent_filter')
+    if 'hypothesis_id' in q: resolve_hn(Hypothesis,q['hypothesis_id'])
+    if 'case_id' in q:
+        case=resolve_hn(Investigation,q['case_id'])
+        if hyp and edge(hyp,'HypothesisInvestigation').investigation_version.record_id!=case.id: _error('/case_id','inconsistent_filter')
     if 'hypothesis_id' in q: qs=qs.filter(associations__kind='HypothesisPlan',associations__hypothesis_version__record__public_id=q['hypothesis_id'])
     if hyp: qs=qs.filter(associations__kind='HypothesisPlan',associations__hypothesis_version=hyp)
     if 'case_id' in q: qs=qs.filter(associations__kind='HypothesisPlan',associations__hypothesis_version__research_associations__kind='HypothesisInvestigation',associations__hypothesis_version__research_associations__investigation_version__record__public_id=q['case_id'])

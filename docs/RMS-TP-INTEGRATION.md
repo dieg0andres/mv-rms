@@ -98,3 +98,30 @@ the successor schema/note and defect checks; Director integrates their next
 receipts, provides one exact candidate, and allocates the existing-staging slot
 after Operations supplies observed project/container/database/SQL-role binding.
 Merge and application deployment remain separate decisions.
+
+## Browser/API source integration checkpoint
+
+Backend API-1 candidate revision 1.1 is adopted; schema SHA-256
+`17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e`.
+Director captured 12 Backend and 17 Frontend owned files as source snapshots;
+`docs/RMS-TP-SLICE-INTEGRATION-RECEIPT.json` preserves their exact bytes/hashes.
+All nine browser routes now resolve, alongside all nine API bindings.
+The release static allowlist includes the new Test Plan JS/CSS.
+
+Executed integrated-source checks: 45 rendering/backend validation cases pass
+with the DB skipped; six JavaScript cases pass; eleven package/static-identity
+cases pass after the static allowlist change. Reset boundary tests passed 22/22.
+`docs/RMS-TP-SLICE-SOURCE-CHECKS.json` records commands, results and limitations.
+`docs/RMS-TP-INTEGRATED-SOURCE-MANIFEST.json` inventories the exact product inputs
+for the Test Plan packaging recipe. These checks do not prove database saving
+or a browser click-through against an installed build.
+
+[Draft PR #5](https://github.com/dieg0andres/mv-rms/pull/5) was published early
+at `beb5d113855873c91559686ce5d86b4df51ab200`; the initial publication receipt
+is preserved in `docs/RMS-TP-PUBLICATION-RECEIPT.json`. Later candidate commits
+are explicit successors. Ordinary source checks for the two early Backend
+validator findings now pass; independent retest remains Test-owned.
+
+Next: Operations supplies the existing-staging route/observed SQL role; Director
+allocates Backend's bounded migration/service slot, then Test's independent
+slot. Application deployment and merge are still separate release decisions.

@@ -8,7 +8,8 @@ CREATE FUNCTION rms_tp_validate_links() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE plan uuid; expected_count integer; expected_digest text; actual_count integer;
         actual_digest text; hypothesis_count integer; plan_record uuid; prior_hyp uuid; current_hyp uuid;
 BEGIN
-    plan := CASE WHEN TG_TABLE_NAME='rms_testplanversion' THEN NEW.id ELSE NEW.plan_version_id END;
+    IF TG_TABLE_NAME='rms_testplanversion' THEN plan := NEW.id;
+    ELSE plan := NEW.plan_version_id; END IF;
     SELECT link_count,link_digest,record_id INTO expected_count,expected_digest,plan_record
       FROM rms_testplanversion WHERE id=plan;
     SELECT count(*),count(*) FILTER (WHERE a.kind='HypothesisPlan'),

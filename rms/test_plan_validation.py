@@ -53,7 +53,7 @@ def _validate(value, rule, path, errors):
             if fmt == 'date' and date.fromisoformat(value).isoformat() != value: raise ValueError
             if fmt == 'date-time':
                 dt = datetime.fromisoformat(value)
-                if not value.endswith('Z') or dt.tzinfo is None: raise ValueError
+                if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z',value) or dt.tzinfo is None: raise ValueError
             if fmt == 'iana-zone': ZoneInfo(value)
             if fmt in ('https-uri', 'evidence-uri'):
                 url = urlsplit(value)
@@ -161,6 +161,8 @@ def _snapshot_rules(p,errors):
             if (child[identity] is None)!=(child[version] is None): errors.append(issue(f'/{kind}/{i}','incomplete_identity'))
     for i,child in enumerate(p['criteria']):
         c=child['fields']; path=f'/criteria/{i}/fields'
+        if c['rule_type'] is None and c['objective_rule'] is not None:
+            _irrelevant(c,['operator','threshold','upper_threshold'],path,errors)
         if c['rule_type']=='objective_rule': _irrelevant(c,['operator','threshold','upper_threshold'],path,errors)
         if c['rule_type']=='numeric': _irrelevant(c,['objective_rule'],path,errors)
         if c['operator'] is not None and c['operator']!='between_inclusive': _irrelevant(c,['upper_threshold'],path,errors)
@@ -172,6 +174,9 @@ def _snapshot_rules(p,errors):
         _pair(d,'coverage_start','coverage_end',path,errors)
         selections=d['used_by_configurations']
         if selections and (len(set(selections))!=len(selections) or not set(selections)<=configs): errors.append(issue(path+'/used_by_configurations','invalid_configuration'))
+        if d['access_method'] is None:
+            populated=[method for method,names in methods.items() if any(d[n] is not None for n in names)]
+            if len(populated)>1: errors.append(issue(path+'/access_method','incompatible_field'))
         if d['access_method']:
             _irrelevant(d,[n for method,names in methods.items() if method!=d['access_method'] for n in names],path,errors)
         if d['execution_location'] and d['execution_location']!='other_existing_tool': _irrelevant(d,['execution_tool'],path,errors)
@@ -180,13 +185,18 @@ def _snapshot_rules(p,errors):
         _secrets(d,path,errors)
 
 
-def validate_request(name,payload):
-    if name not in ('PlanCreate','PlanCorrection','CheckCreate','PlanListQuery','CheckListQuery'): raise ValueError('Unknown request schema.')
+def validate_json_size(payload):
     errors=[]
     try:
         if len(json.dumps(payload,ensure_ascii=False,allow_nan=False).encode('utf-8'))>SCHEMA['x-max-request-bytes']: errors.append(issue('','too_large'))
     except (ValueError,TypeError,UnicodeError): errors.append(issue('','invalid_json'))
     if errors: raise TestPlanValidationError(errors)
+
+
+def validate_request(name,payload):
+    if name not in ('PlanCreate','PlanCorrection','CheckCreate','PlanListQuery','CheckListQuery'): raise ValueError('Unknown request schema.')
+    validate_json_size(payload)
+    errors=[]
     p=_validate(deepcopy(payload),SCHEMA['$defs'][name],'',errors)
     if errors: raise TestPlanValidationError(errors)
     if name.startswith('Plan') and name!='PlanListQuery':
@@ -194,9 +204,25 @@ def validate_request(name,payload):
             for k in SCHEMA['$defs']['PlanFields']['properties']:
                 if k not in p['fields']: errors.append(issue('/fields/'+k,'required_snapshot_field'))
         p['fields']=_fill(p['fields'],'PlanFields')
+        for collection,definition in [('parameters','Parameter'),('variations','Variation')]:
+            for index,item in enumerate(p['fields'][collection]):
+                if name=='PlanCorrection':
+                    for key in SCHEMA['$defs'][definition]['properties']:
+                        if key not in item: errors.append(issue(f'/fields/{collection}/{index}/{key}','required_snapshot_field'))
+                p['fields'][collection][index]=_fill(item,definition)
         p.setdefault('criteria',[]); p.setdefault('data_requirements',[])
         for coll,definition in [('criteria','CriterionFields'),('data_requirements','DataFields')]:
-            for item in p[coll]: item['fields']=_fill(item['fields'],definition)
+            for index,item in enumerate(p[coll]):
+                if name=='PlanCorrection':
+                    for key in SCHEMA['$defs'][definition]['properties']:
+                        if key not in item['fields']: errors.append(issue(f'/{coll}/{index}/fields/{key}','required_snapshot_field'))
+                item['fields']=_fill(item['fields'],definition)
+                if coll=='data_requirements':
+                    for field_index,field in enumerate(item['fields']['field_schema']):
+                        if name=='PlanCorrection':
+                            for key in SCHEMA['$defs']['DataField']['properties']:
+                                if key not in field: errors.append(issue(f'/{coll}/{index}/fields/field_schema/{field_index}/{key}','required_snapshot_field'))
+                        item['fields']['field_schema'][field_index]=_fill(field,'DataField')
         _snapshot_rules(p,errors)
         if name=='PlanCreate' and any(x.get('criterion_id') or x.get('data_requirement_id') for x in p['criteria']+p['data_requirements']): errors.append(issue('','new_children_required'))
     if name=='CheckCreate':
@@ -231,6 +257,8 @@ def draft_completeness(snapshot):
         if c['rule_type']=='numeric':
             need(c,['units','operator','threshold'],path)
             if c['operator']=='between_inclusive': need(c,['upper_threshold'],path)
+        if c['rule_type'] is None and c['objective_rule'] is not None:
+            _irrelevant(c,['operator','threshold','upper_threshold'],path,errors)
         if c['rule_type']=='objective_rule': need(c,['objective_rule'],path)
     if not snapshot['data_requirements']: missing.append(issue('/data_requirements','required_for_completeness','Include a data requirement.'))
     for i,child in enumerate(snapshot['data_requirements']):

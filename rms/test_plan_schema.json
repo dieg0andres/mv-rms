@@ -8,7 +8,8 @@
     {
       "method": "POST",
       "path": "/api/v1/test-plans",
-      "request": "PlanCreate"
+      "request": "PlanCreate",
+      "response": "PlanRead"
     },
     {
       "method": "GET",
@@ -17,7 +18,8 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/test-plans/{plan_id}"
+      "path": "/api/v1/test-plans/{plan_id}",
+      "response": "PlanRead"
     },
     {
       "method": "GET",
@@ -25,12 +27,14 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/test-plans/{plan_id}/versions/{version_id}"
+      "path": "/api/v1/test-plans/{plan_id}/versions/{version_id}",
+      "response": "PlanRead"
     },
     {
       "method": "POST",
       "path": "/api/v1/test-plans/{plan_id}/corrections",
-      "request": "PlanCorrection"
+      "request": "PlanCorrection",
+      "response": "PlanRead"
     },
     {
       "method": "GET",
@@ -1598,6 +1602,398 @@
       },
       "required": [],
       "additionalProperties": false
+    },
+    "MissingField": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "Configuration": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "integer",
+              "boolean"
+            ]
+          }
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "key",
+        "parameters",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "AssociationRead": {
+      "type": "object",
+      "properties": {
+        "association_id": {
+          "type": "string",
+          "pattern": "^TPAS-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "HypothesisPlan",
+            "PlanCriterion",
+            "PlanDataRequirement"
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "row_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "hypothesis_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^HYPV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "criterion_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^CRTV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "data_requirement_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^DREQV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "association_id",
+        "kind",
+        "position",
+        "required",
+        "row_digest",
+        "hypothesis_version_id",
+        "criterion_version_id",
+        "data_requirement_version_id"
+      ],
+      "additionalProperties": false
+    },
+    "CheckSummary": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_checked",
+            "partially_checked",
+            "checks_reported_passed",
+            "issues_reported"
+          ]
+        },
+        "required_pairs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reported_pairs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "historical_report_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status",
+        "required_pairs",
+        "reported_pairs",
+        "historical_report_count"
+      ],
+      "additionalProperties": false
+    },
+    "CurrentIndicators": {
+      "type": "object",
+      "properties": {
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "upstream_notices": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "check_summary": {
+          "$ref": "#/$defs/CheckSummary"
+        }
+      },
+      "required": [
+        "as_of",
+        "upstream_notices",
+        "check_summary"
+      ],
+      "additionalProperties": false
+    },
+    "PlanRead": {
+      "type": "object",
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^TPL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "stable_id": {
+          "type": "string",
+          "pattern": "^TPL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "plan_version_id": {
+          "type": "string",
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "version_id": {
+          "type": "string",
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "hypothesis_version_id": {
+          "type": "string",
+          "pattern": "^HYPV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema_version": {
+          "const": "1.0"
+        },
+        "status": {
+          "const": "draft"
+        },
+        "classification": {
+          "const": "synthetic"
+        },
+        "authority_reference": {
+          "type": "string"
+        },
+        "implementation_target": {
+          "const": "quantconnect_lean"
+        },
+        "fields": {
+          "$ref": "#/$defs/PlanFields"
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CriterionItem"
+          }
+        },
+        "data_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataItem"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "row_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "config_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Configuration"
+          }
+        },
+        "configuration_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 21
+        },
+        "corrects_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "correction_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supersedes_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "associations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssociationRead"
+          }
+        },
+        "hypothesis": {
+          "type": "object",
+          "description": "Existing RMS-HN-API-1 exact-version representation, unchanged."
+        },
+        "research_context": {
+          "type": "object",
+          "description": "Exact inherited RMS-HN-API-1 context, unchanged."
+        },
+        "draft_completeness": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "incomplete"
+          ]
+        },
+        "missing_fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MissingField"
+          }
+        },
+        "current_indicators": {
+          "$ref": "#/$defs/CurrentIndicators"
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "no_change": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "plan_id",
+        "stable_id",
+        "plan_version_id",
+        "version_id",
+        "hypothesis_version_id",
+        "version",
+        "schema_version",
+        "status",
+        "classification",
+        "authority_reference",
+        "implementation_target",
+        "fields",
+        "criteria",
+        "data_requirements",
+        "created_at",
+        "recorded_at",
+        "created_by",
+        "row_digest",
+        "config_digest",
+        "configurations",
+        "configuration_count",
+        "corrects_version",
+        "correction_reason",
+        "changed_fields",
+        "supersedes_version_id",
+        "associations",
+        "hypothesis",
+        "research_context",
+        "draft_completeness",
+        "missing_fields",
+        "current_indicators",
+        "links"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MissingField"
+              }
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "request_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false
     }
   },
   "x-server-owned": [
@@ -1666,5 +2062,12 @@
       "/fields/overall_interpretation",
       "/fields/inconclusive_rule"
     ]
-  ]
+  ],
+  "x-revision-notes": {
+    "1.1": [
+      "Exact Decimal identity without context rounding (independent TP-SRC-01).",
+      "Form-section completeness order (independent TP-SRC-02).",
+      "Published read envelope, authorized pin-preview service, and timestamp-free child content digests."
+    ]
+  }
 }
