@@ -1,0 +1,1670 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mv-rms:test-plan:api-1:1.0",
+  "x-schema-version": "1.0",
+  "x-interface-version": "RMS-TP-API-1",
+  "x-max-request-bytes": 524288,
+  "x-endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/v1/test-plans",
+      "request": "PlanCreate"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans",
+      "query": "PlanListQuery"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans/{plan_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans/{plan_id}/versions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans/{plan_id}/versions/{version_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/test-plans/{plan_id}/corrections",
+      "request": "PlanCorrection"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/criterion-profiles/versions/{version_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/data-requirements/versions/{version_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/test-plans/{plan_id}/data-checks",
+      "request": "CheckCreate"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans/{plan_id}/data-checks",
+      "query": "CheckListQuery"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/test-plans/{plan_id}/data-checks/{check_id}"
+    }
+  ],
+  "$defs": {
+    "PlanFields": {
+      "type": "object",
+      "properties": {
+        "objective": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "scope_limitations": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "measure_definition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "universe_definition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "hypothesis_alignment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "signal_definition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "entry_rules": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "exit_rules": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "position_rules": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "decision_timing": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "execution_timing": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "edge_case_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "implementation_notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "split_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "reserve_boundary": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "sample_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "warmup_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "parameter_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "related_trial_treatment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "stopping_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "benchmark_definition": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "benchmark_rationale": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "benchmark_difference_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "overall_interpretation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "inconclusive_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 500,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "measurement_basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "gross_return",
+            "other_measure",
+            null
+          ]
+        },
+        "time_zone": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128,
+          "x-trim": true,
+          "format": "iana-zone"
+        },
+        "pseudocode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 20000,
+          "x-trim": true
+        },
+        "expected_outputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4000,
+            "x-trim": true,
+            "minLength": 1
+          },
+          "maxItems": 50
+        },
+        "reviewer_roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 500,
+            "x-trim": true,
+            "minLength": 1
+          },
+          "maxItems": 20
+        },
+        "evaluation_design": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "development_only",
+            "development_and_initial_evaluation",
+            null
+          ]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "maxItems": 50
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Variation"
+          },
+          "maxItems": 20
+        },
+        "trial_budget": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "benchmark_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "benchmark_alignment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "same_as_hypothesis",
+            "different",
+            null
+          ]
+        },
+        "benchmark_input_mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "data_requirements",
+            "defined_without_external_input",
+            null
+          ]
+        },
+        "benchmark_data_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "maxItems": 20
+        },
+        "development_start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        },
+        "development_end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        },
+        "initial_evaluation_start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        },
+        "initial_evaluation_end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "additionalProperties": false,
+      "x-completeness-required": [
+        "objective",
+        "scope_limitations",
+        "measure_definition",
+        "universe_definition",
+        "hypothesis_alignment",
+        "signal_definition",
+        "entry_rules",
+        "exit_rules",
+        "position_rules",
+        "decision_timing",
+        "execution_timing",
+        "edge_case_policy",
+        "split_policy",
+        "reserve_boundary",
+        "sample_rule",
+        "warmup_rule",
+        "parameter_policy",
+        "related_trial_treatment",
+        "stopping_rule",
+        "benchmark_definition",
+        "benchmark_rationale",
+        "overall_interpretation",
+        "inconclusive_rule",
+        "title",
+        "measurement_basis",
+        "time_zone",
+        "pseudocode",
+        "expected_outputs",
+        "reviewer_roles",
+        "evaluation_design",
+        "trial_budget",
+        "benchmark_name",
+        "benchmark_alignment",
+        "benchmark_input_mode",
+        "development_start",
+        "development_end"
+      ]
+    },
+    "CriterionFields": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "units": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "objective_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "sample_requirement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "evaluator_role": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "rule_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "numeric",
+            "objective_rule",
+            null
+          ]
+        },
+        "operator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "eq",
+            "between_inclusive",
+            null
+          ]
+        },
+        "threshold": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128,
+          "x-trim": true,
+          "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "upper_threshold": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128,
+          "x-trim": true,
+          "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+          "x-decimal": true
+        },
+        "mandatory": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "applies_to": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "baseline",
+            "all_configurations",
+            null
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "x-completeness-required": [
+        "name",
+        "metric",
+        "rule_type",
+        "sample_requirement",
+        "evaluator_role",
+        "mandatory",
+        "applies_to"
+      ],
+      "x-field-order": [
+        "name",
+        "metric",
+        "units",
+        "rule_type",
+        "operator",
+        "threshold",
+        "upper_threshold",
+        "objective_rule",
+        "sample_requirement",
+        "evaluator_role",
+        "mandatory",
+        "applies_to"
+      ]
+    },
+    "DataFields": {
+      "type": "object",
+      "properties": {
+        "purpose": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "dataset_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "provider_version_policy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "execution_tool": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "symbols_and_mapping": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "historical_universe_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "resolution": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "session_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "availability_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "revision_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "normalization_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "transformations_and_joins": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "quality_rules": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "access_requirements": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "known_limitations": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "sdk_namespace": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "subscription_call": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "history_or_data_call": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "configuration_arguments": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "endpoint_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "request_parameters": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "response_selector": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "pagination_rule": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "request_limits": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "file_location": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "file_format": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "file_schema": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "partition_pattern": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "parser_instructions": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "release_identifier": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "credential_alias": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "used_by_configurations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "maxItems": 21
+        },
+        "documentation_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2000,
+          "x-trim": true,
+          "format": "https-uri"
+        },
+        "documentation_checked_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 40,
+          "x-trim": true,
+          "format": "date-time"
+        },
+        "access_method": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "lean_sdk",
+            "rest_api",
+            "existing_file",
+            null
+          ]
+        },
+        "execution_location": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "quantconnect_cloud",
+            "existing_local_lean",
+            "other_existing_tool",
+            null
+          ]
+        },
+        "coverage_start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        },
+        "coverage_end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10,
+          "x-trim": true,
+          "format": "date"
+        },
+        "source_time_zone": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 128,
+          "x-trim": true,
+          "format": "iana-zone"
+        },
+        "field_schema": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataField"
+          },
+          "maxItems": 100
+        },
+        "retrieval_instructions": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 20000,
+          "x-trim": true
+        },
+        "response_example": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 20000,
+          "x-trim": true
+        },
+        "credential_requirement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "none",
+            "platform_managed",
+            "existing_alias",
+            null
+          ]
+        },
+        "base_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2000,
+          "x-trim": true,
+          "format": "https-uri"
+        },
+        "http_method": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "GET",
+            "POST",
+            null
+          ]
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false,
+      "x-completeness-required": [
+        "purpose",
+        "provider",
+        "dataset_name",
+        "provider_version_policy",
+        "symbols_and_mapping",
+        "historical_universe_rule",
+        "resolution",
+        "session_rule",
+        "availability_rule",
+        "revision_rule",
+        "normalization_rule",
+        "transformations_and_joins",
+        "quality_rules",
+        "access_requirements",
+        "known_limitations",
+        "key",
+        "name",
+        "used_by_configurations",
+        "documentation_url",
+        "documentation_checked_at",
+        "access_method",
+        "execution_location",
+        "coverage_start",
+        "coverage_end",
+        "source_time_zone",
+        "field_schema",
+        "retrieval_instructions",
+        "response_example",
+        "credential_requirement"
+      ],
+      "x-method-fields": {
+        "lean_sdk": [
+          "sdk_namespace",
+          "subscription_call",
+          "history_or_data_call",
+          "configuration_arguments"
+        ],
+        "rest_api": [
+          "base_url",
+          "http_method",
+          "endpoint_path",
+          "request_parameters",
+          "response_selector",
+          "pagination_rule",
+          "request_limits"
+        ],
+        "existing_file": [
+          "file_location",
+          "file_format",
+          "file_schema",
+          "partition_pattern",
+          "parser_instructions",
+          "release_identifier"
+        ]
+      },
+      "x-field-order": [
+        "key",
+        "name",
+        "purpose",
+        "used_by_configurations",
+        "provider",
+        "dataset_name",
+        "documentation_url",
+        "documentation_checked_at",
+        "provider_version_policy",
+        "access_method",
+        "execution_location",
+        "execution_tool",
+        "symbols_and_mapping",
+        "historical_universe_rule",
+        "coverage_start",
+        "coverage_end",
+        "resolution",
+        "session_rule",
+        "source_time_zone",
+        "field_schema",
+        "availability_rule",
+        "revision_rule",
+        "normalization_rule",
+        "transformations_and_joins",
+        "quality_rules",
+        "retrieval_instructions",
+        "response_example",
+        "access_requirements",
+        "credential_requirement",
+        "credential_alias",
+        "known_limitations",
+        "sdk_namespace",
+        "subscription_call",
+        "history_or_data_call",
+        "configuration_arguments",
+        "base_url",
+        "http_method",
+        "endpoint_path",
+        "request_parameters",
+        "response_selector",
+        "pagination_rule",
+        "request_limits",
+        "file_location",
+        "file_format",
+        "file_schema",
+        "partition_pattern",
+        "parser_instructions",
+        "release_identifier"
+      ]
+    },
+    "Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "integer",
+            "decimal",
+            "boolean",
+            "string"
+          ]
+        },
+        "baseline_value": {
+          "type": [
+            "string",
+            "integer",
+            "boolean",
+            "null"
+          ]
+        },
+        "units": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "meaning": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "baseline_value"
+      ],
+      "additionalProperties": false
+    },
+    "Variation": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "rationale": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "parameter_overrides": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 50,
+          "additionalProperties": {
+            "type": [
+              "string",
+              "integer",
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "required": [
+        "key",
+        "parameter_overrides"
+      ],
+      "additionalProperties": false
+    },
+    "DataField": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 500,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "data_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "units_meaning": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        },
+        "nullable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "use": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "CriterionItem": {
+      "type": "object",
+      "properties": {
+        "criterion_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^CRT-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "criterion_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^CRTV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "fields": {
+          "$ref": "#/$defs/CriterionFields"
+        }
+      },
+      "required": [
+        "criterion_id",
+        "criterion_version_id",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "DataItem": {
+      "type": "object",
+      "properties": {
+        "data_requirement_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^DREQ-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "data_requirement_version_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^DREQV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "fields": {
+          "$ref": "#/$defs/DataFields"
+        }
+      },
+      "required": [
+        "data_requirement_id",
+        "data_requirement_version_id",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "EvidenceReference": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxLength": 500,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "uri": {
+          "type": "string",
+          "maxLength": 2000,
+          "x-trim": true,
+          "minLength": 1,
+          "format": "evidence-uri"
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500,
+          "x-trim": true
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64,
+          "x-trim": true,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "label",
+        "uri",
+        "revision",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "PlanCreate": {
+      "type": "object",
+      "properties": {
+        "hypothesis_version_id": {
+          "type": "string",
+          "pattern": "^HYPV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "fields": {
+          "$ref": "#/$defs/PlanFields"
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CriterionItem"
+          },
+          "maxItems": 20
+        },
+        "data_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataItem"
+          },
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "hypothesis_version_id",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "PlanCorrection": {
+      "type": "object",
+      "properties": {
+        "hypothesis_version_id": {
+          "type": "string",
+          "pattern": "^HYPV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "fields": {
+          "$ref": "#/$defs/PlanFields"
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CriterionItem"
+          },
+          "maxItems": 20
+        },
+        "data_requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataItem"
+          },
+          "maxItems": 20
+        },
+        "expected_latest_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "correction_reason": {
+          "type": "string",
+          "maxLength": 4000,
+          "x-trim": true,
+          "minLength": 1
+        }
+      },
+      "required": [
+        "hypothesis_version_id",
+        "fields",
+        "criteria",
+        "data_requirements",
+        "expected_latest_version",
+        "correction_reason"
+      ],
+      "additionalProperties": false
+    },
+    "CheckCreate": {
+      "type": "object",
+      "properties": {
+        "plan_version_id": {
+          "type": "string",
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "data_requirement_version_id": {
+          "type": "string",
+          "pattern": "^DREQV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "configuration_key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "performed_at": {
+          "type": "string",
+          "maxLength": 40,
+          "x-trim": true,
+          "format": "date-time"
+        },
+        "performed_by": {
+          "type": "string",
+          "maxLength": 500,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "tool": {
+          "type": "string",
+          "maxLength": 500,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "inconclusive"
+          ]
+        },
+        "check_scope": {
+          "type": "string",
+          "maxLength": 4000,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "observations": {
+          "type": "string",
+          "maxLength": 4000,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "evidence_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "maxItems": 20,
+          "minItems": 1
+        },
+        "limitations": {
+          "type": "string",
+          "maxLength": 4000,
+          "x-trim": true,
+          "minLength": 1
+        },
+        "sanitized_evidence_confirmed": {
+          "type": "boolean",
+          "const": true
+        },
+        "expected_current_check_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^DCHK-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "supersedes_check_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^DCHK-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correction_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000,
+          "x-trim": true
+        }
+      },
+      "required": [
+        "plan_version_id",
+        "data_requirement_version_id",
+        "configuration_key",
+        "performed_at",
+        "performed_by",
+        "tool",
+        "outcome",
+        "check_scope",
+        "observations",
+        "evidence_references",
+        "limitations",
+        "sanitized_evidence_confirmed",
+        "expected_current_check_id",
+        "supersedes_check_id",
+        "correction_reason"
+      ],
+      "additionalProperties": false
+    },
+    "PlanListQuery": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "hypothesis_id": {
+          "type": "string",
+          "pattern": "^HYP-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "hypothesis_version_id": {
+          "type": "string",
+          "pattern": "^HYPV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^INV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "CheckListQuery": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "plan_version_id": {
+          "type": "string",
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "data_requirement_version_id": {
+          "type": "string",
+          "pattern": "^DREQV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "configuration_key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "x-server-owned": [
+    "implementation_target",
+    "classification",
+    "status",
+    "authority_reference",
+    "created_by",
+    "config_digest"
+  ],
+  "x-normalization": "Trim text; blank nullable text is null; read snapshots contain every declared field, null or empty arrays. Cross-field draft constraints are documented in RMS-TP-API-1.",
+  "x-interface-revision": "1.1",
+  "x-completeness-sections": [
+    [
+      "/fields/title",
+      "/fields/objective",
+      "/fields/scope_limitations",
+      "/fields/measurement_basis",
+      "/fields/measure_definition",
+      "/fields/universe_definition",
+      "/fields/hypothesis_alignment"
+    ],
+    [
+      "/fields/signal_definition",
+      "/fields/entry_rules",
+      "/fields/exit_rules",
+      "/fields/position_rules",
+      "/fields/decision_timing",
+      "/fields/execution_timing",
+      "/fields/time_zone",
+      "/fields/pseudocode",
+      "/fields/edge_case_policy",
+      "/fields/expected_outputs",
+      "/fields/implementation_notes",
+      "/fields/reviewer_roles"
+    ],
+    [
+      "/data_requirements"
+    ],
+    [
+      "/fields/evaluation_design",
+      "/fields/development_start",
+      "/fields/development_end",
+      "/fields/initial_evaluation_start",
+      "/fields/initial_evaluation_end",
+      "/fields/split_policy",
+      "/fields/reserve_boundary",
+      "/fields/sample_rule",
+      "/fields/warmup_rule",
+      "/fields/parameters",
+      "/fields/parameter_policy",
+      "/fields/variations",
+      "/fields/trial_budget",
+      "/fields/related_trial_treatment",
+      "/fields/stopping_rule"
+    ],
+    [
+      "/fields/benchmark_name",
+      "/fields/benchmark_definition",
+      "/fields/benchmark_rationale",
+      "/fields/benchmark_alignment",
+      "/fields/benchmark_difference_reason",
+      "/fields/benchmark_input_mode",
+      "/fields/benchmark_data_keys",
+      "/criteria",
+      "/fields/overall_interpretation",
+      "/fields/inconclusive_rule"
+    ]
+  ]
+}

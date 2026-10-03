@@ -1,4 +1,4 @@
-"""Integrated Hypothesis/navigation routes and preserved Source/Idea routes."""
+"""Integrated research routes and preserved Source/Idea routes."""
 
 from django.urls import include, path
 
@@ -63,6 +63,7 @@ urlpatterns = [
         name="idea-history",
     ),
     path("api/v1/readiness", api.ReadinessView.as_view(), name="readiness"),
+    path("api/v1/", include("rms.test_plan_api_urls")),
     path("", include("rms.hypothesis_api_urls")),
     path("", include("rms.navigation_urls")),
 ]
