@@ -6,11 +6,11 @@ from html.parser import HTMLParser
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from django.test import RequestFactory, SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase, override_settings
 from django.db import DatabaseError
 from django.middleware.csrf import get_token
 from django.urls import resolve
-from rest_framework.test import force_authenticate
+from rest_framework.test import APIClient, force_authenticate
 
 from rms import hypothesis_api, hypothesis_services, research_context_services
 from rms.hypothesis_validation import HypothesisValidationError, validate_request
@@ -225,6 +225,77 @@ class ConnectedFrontendTests(SimpleTestCase):
             response = RecordEditorPage.as_view()(request)
         self.assertEqual(response.status_code, 303)
         save.assert_called_once()
+
+    def fresh_editor_form(self, path="/hypotheses/new"):
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_authenticate(user=self.actor)
+        response = client.get(path, secure=True)
+        self.assertEqual(response.status_code, 200)
+        class TokenParser(HTMLParser):
+            token = None
+            def handle_starttag(self, tag, attrs):
+                attributes = dict(attrs)
+                if tag == "input" and attributes.get("name") == "csrfmiddlewaretoken":
+                    self.token = attributes.get("value")
+        parser = TokenParser()
+        parser.feed(response.content.decode())
+        self.assertTrue(parser.token)
+        return client, response, parser.token
+
+    @override_settings(MIDDLEWARE=[], CSRF_TRUSTED_ORIGINS=["https://private.example.invalid:4443"])
+    def test_fresh_editor_get_cookie_allows_bound_native_post(self):
+        idea = {"idea_version_id": self.record["origin"]["idea"]["version_id"], "version": 1}
+        path = "/hypotheses/new?idea_id=IDE-11111111-1111-4111-8111-111111111111&idea_version=1"
+        with patch("rms.navigation_views.exact_idea", return_value=idea):
+            client, form, token = self.fresh_editor_form(path)
+        self.assertIn("csrftoken", form.cookies)
+        self.assertEqual(form["Cache-Control"], "private, no-store")
+        data = {**flatten_input(self.create_payload()), "csrfmiddlewaretoken": token,
+                "operation": "save", "idempotency_key": "invented-fresh-csrf-key"}
+        with patch.object(hypothesis_services, "create_hypothesis", return_value=StoredResponse(201, json.dumps(self.record).encode())) as save:
+            response = client.post(path, data, secure=True, HTTP_ORIGIN="https://private.example.invalid:4443")
+        self.assertEqual(response.status_code, 303)
+        save.assert_called_once()
+        self.assertEqual(save.call_args.kwargs["idempotency_key"], data["idempotency_key"])
+        self.assertEqual(validate_request("HypothesisCreate", save.call_args.kwargs["payload"]),
+                         validate_request("HypothesisCreate", self.create_payload()))
+
+    @override_settings(MIDDLEWARE=[])
+    def test_fresh_shared_editor_forms_issue_cookie(self):
+        for path in ("/hypotheses/new", "/research-families/new", "/investigations/new"):
+            with self.subTest(path=path):
+                _, response, _ = self.fresh_editor_form(path)
+                self.assertIn("csrftoken", response.cookies)
+        with patch.object(hypothesis_services, "get_hypothesis", return_value=self.record), patch("rms.navigation_views.exact_idea", return_value={"version": 1}):
+            _, response, _ = self.fresh_editor_form(f"/hypotheses/{self.record['hypothesis_id']}/revise")
+        self.assertIn("csrftoken", response.cookies)
+
+    @override_settings(MIDDLEWARE=[])
+    def test_fresh_form_still_rejects_missing_cookie_and_bad_token(self):
+        for mode in ("missing_cookie", "bad_token"):
+            with self.subTest(mode=mode):
+                client, _, token = self.fresh_editor_form()
+                if mode == "missing_cookie":
+                    client.cookies.clear()
+                else:
+                    token = "A" * 64 if token != "A" * 64 else "B" * 64
+                data = {**flatten_input(self.create_payload()), "csrfmiddlewaretoken": token}
+                with patch.object(hypothesis_services, "create_hypothesis") as save:
+                    response = client.post("/hypotheses/new", data, secure=True, HTTP_ORIGIN="https://testserver")
+                self.assertEqual(response.status_code, 403)
+                save.assert_not_called()
+
+    @override_settings(MIDDLEWARE=[], CSRF_TRUSTED_ORIGINS=["https://private.example.invalid:4443"])
+    def test_fresh_form_still_rejects_foreign_origin_and_referer(self):
+        for headers in ({"HTTP_ORIGIN": "https://foreign.example.invalid"},
+                        {"HTTP_REFERER": "https://foreign.example.invalid/hypotheses/new"}):
+            with self.subTest(headers=headers):
+                client, _, token = self.fresh_editor_form()
+                data = {**flatten_input(self.create_payload()), "csrfmiddlewaretoken": token}
+                with patch.object(hypothesis_services, "create_hypothesis") as save:
+                    response = client.post("/hypotheses/new", data, secure=True, **headers)
+                self.assertEqual(response.status_code, 403)
+                save.assert_not_called()
 
     def test_unconfirmed_save_retains_original_key_and_input(self):
         with patch.object(hypothesis_services, "create_hypothesis", side_effect=DatabaseError("Invented private database diagnostic")):

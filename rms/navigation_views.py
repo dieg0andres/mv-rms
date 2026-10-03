@@ -11,7 +11,7 @@ from uuid import uuid4
 from django.http import HttpResponseRedirect
 from django.db import DatabaseError
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
 from .services import ServiceError, ResourceNotFound, get_idea, idea_history, idea_detail
 from .permissions import has_rms_write_access
@@ -635,6 +635,7 @@ class RecordHistoryPage(ConnectedPage):
 
 
 class RecordEditorPage(ConnectedPage):
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, record_id=None):
         self._require_editor(request)
         try:

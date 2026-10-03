@@ -1,6 +1,6 @@
 {
-  "candidate_id": "RMS-HN-RESET-CORRECTIONS-20261003-e7c5d074",
-  "receiving_run": "e7c5d074-0e83-410e-8695-201f280f5215",
+  "candidate_id": "RMS-HN-CSRF-20261003-dd793c48",
+  "receiving_run": "dd793c48-5e4d-4b6b-8217-075c4cd99eaf",
   "branch": "MAU-140-rms-increment-2-hypothesis-drafts-and-navigation-v1-0",
   "backend_git_object": "aab6d6dfde13fe03f184292f197ed3a56ce00b9d",
   "frontend_git_object": "fb9766f25cc723463ce15ae78feed282ab6163fc",
@@ -59,6 +59,7 @@
     "staging/release_identity.py",
     "staging/runtime.py",
     "tests/django_hypothesis_director_integration_tests.py",
+    "tests/django_hypothesis_frontend_integration_tests.py",
     "tests/django_hypothesis_frontend_schema_tests.py",
     "tests/test_hypothesis_staging_package.py",
     "tests/test_hypothesis_staging_preflight.py",
@@ -70,7 +71,7 @@
   "interface_version": "1.2",
   "record_schema_version": "1.0",
   "git_checkpoint_at_manifest_generation": null,
-  "H01_H20": "NOT_EXECUTED",
+  "H01_H20": "INCOMPLETE / INCONCLUSIVE; remaining Viewer verification waived by founder",
   "files": [
     {
       "path": ".env.example",
@@ -446,8 +447,8 @@
     },
     {
       "path": "rms/navigation_views.py",
-      "bytes": 49457,
-      "sha256": "d0e9808ea0211ecfd62e15ad8d6b9fd6ed9cddc516f41222f8797a8764088a71",
+      "bytes": 49519,
+      "sha256": "5d5d1b8ca6eac526572cb40fb28de4a031c64b6cb1fd43376d6f553f71999aba",
       "origin": "director"
     },
     {
@@ -944,9 +945,9 @@
     },
     {
       "path": "tests/django_hypothesis_frontend_integration_tests.py",
-      "bytes": 26083,
-      "sha256": "495213e0f98189bdbf4b0866e20764ead2b4c21bf7674ce9289f369cc3d268ee",
-      "origin": "frontend"
+      "bytes": 30585,
+      "sha256": "dff38c19a6751f7cde003512ff830d3fa8619d78036a0cfa34b1ffc72c321b55",
+      "origin": "director"
     },
     {
       "path": "tests/django_hypothesis_frontend_navigation_tests.py",
@@ -1063,35 +1064,32 @@
       "origin": "director"
     }
   ],
-  "source_inventory_sha256": "3d72da3fea04412abbc65598c0bc1edc9e5d45131ce18e3648ab3da174000947",
-  "revision": 6,
-  "supersedes_manifest_sha256": "c9b06e6ab32fead3b23222138b639d8ce871f4b1d5aa43abfe8095ddbe3e3b54",
+  "source_inventory_sha256": "52312719addc506626d0cadaf891b4d06dfbfecd66bbaf53bcd3de3e8afb4116",
+  "revision": 7,
+  "supersedes_manifest_sha256": "e773264a51049a7c5c8f6646582f5ff8a8457b9e5e2f3d55ad6e9c760656fbae",
   "parent_candidate": {
-    "commit": "e38b32378e35ce4dbe297152a978f0a19f39dfbc",
-    "tree": "f35149b71b4ae6c2c38cb87549f5b4296e4d8afa",
-    "publication": "Operator-reported draft PR4 at exact e38b323; comment f5c030a6-4593-4fa1-b712-90d419a5bac7"
+    "commit": "aead8ff52128859fbae8b0f3d8ed2de67aff5131",
+    "tree": "5880845c045af75e19c686cb5840b736a414abfa"
   },
   "source_changes_from_parent": [
-    "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
-    "rms/staging_test_reset.py",
-    "scripts/check-rms-staging-reset.py",
-    "tests/test_staging_test_reset.py"
+    "rms/navigation_views.py",
+    "tests/django_hypothesis_frontend_integration_tests.py"
   ],
-  "source_correction_comment": "/MAU/issues/MAU-140#comment-f5c030a6-4593-4fa1-b712-90d419a5bac7",
-  "independent_retest": "Pending receiving Test retest of reset descendant/column-INSERT successor. Prior F1 affected-source PASS on byte-identical application inputs remains closed.",
+  "source_correction_comment": "/MAU/issues/MAU-140#comment-dfd27700-bcd6-4a82-a6a7-52910e634f06",
+  "independent_retest": "PENDING: fresh GET-to-POST CSRF cookie issuance and unchanged negative protections on exact source; prior evidence stays scoped to aead8ff.",
   "source_inventory_digest_format": "sha256(files canonical JSON sort_keys=True,separators=comma/colon)",
-  "test_demo_packet": "e38b323 reset/proposed-role/package and 40228c7f decision packet withheld from approval/execution due independent source findings. Existing-credentials preview route remains a proposal; bind only reviewed corrected successor after independent retest.",
+  "test_demo_packet": "Installed aead8ff preserved. CSRF successor source-only, no staging update/reset in this run.",
   "authority": {
-    "staging_disposable_rms_reset": "Founder authorized October3; comment4dc2c3b8-534c-4053-abfc-d22b62f34392",
+    "source_correction": "Founder direction /MAU/issues/MAU-140#comment-dfd27700-bcd6-4a82-a6a7-52910e634f06",
     "new_role_access": "NOT_AUTHORIZED",
-    "persistent_schema_app_release": "NOT_AUTHORIZED",
-    "database_operations_executed_in_receiving_run": false
+    "staging_app_update_executed_in_receiving_run": false,
+    "database_operations_executed_in_receiving_run": false,
+    "prior_staging_approval": "Accepted, unchanged existing target; exact changed-source retest/checkpoint and operator action still required."
   },
   "founder_data_policy_comment": "/MAU/issues/MAU-140#comment-4dc2c3b8-534c-4053-abfc-d22b62f34392",
   "published_baseline": {
-    "commit": "e38b32378e35ce4dbe297152a978f0a19f39dfbc",
-    "tree": "f35149b71b4ae6c2c38cb87549f5b4296e4d8afa",
-    "publication": "Operator-reported draft PR4 at exact e38b323; comment f5c030a6-4593-4fa1-b712-90d419a5bac7"
+    "commit": "aead8ff52128859fbae8b0f3d8ed2de67aff5131",
+    "tree": "5880845c045af75e19c686cb5840b736a414abfa"
   },
   "reset_source_verification": {
     "Director_checks": 19,
