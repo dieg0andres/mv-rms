@@ -1,0 +1,39 @@
+{
+  "proposal_id": "RMS-HN-PRESERVING-1",
+  "revision": "1.0",
+  "disposition": "HOLD",
+  "source_only": true,
+  "runner_entrypoint": "rms.hypothesis_preserving_runner.PreservingRunner",
+  "schema_path": "rms/hypothesis_schema.json",
+  "schema_sha256": "ef2fe7d0e71d644ca978d7a3878f9ced4338212969cb6cdbc34a46550b73c5bc",
+  "first_schema_commit": "57ac0a3efeb7e10738e3bfb0e788d5f85edec002",
+  "contract_revision": "3982eccc-e180-4ac9-bc70-9c4e16aa47f1",
+  "requirements_sha256": "d21ca3b1acbcd2bbd60637b3870b5498307084173e070a9f78834dc4b4341ea4",
+  "target": {"database": "rms_synthetic", "environment_id": "c3931944-3432-4b78-ad1d-ff7e39cc78c0", "binding": null},
+  "required_receipts": {
+    "authority": null,
+    "schema": null,
+    "ordinary_role": null,
+    "principals": null,
+    "sequence": null,
+    "coordination": null,
+    "preservation": null,
+    "concurrency": null,
+    "operations_review": null,
+    "independent_test_review": null,
+    "director_adoption": null
+  },
+  "prohibited_operations": ["create_database", "drop_database", "reset", "flush", "truncate", "delete_existing", "update_existing", "cleanup", "role_create", "role_grant", "migration", "fixture_loader"],
+  "prohibited_substitutes": ["default_django_runner", "keepdb", "schema_owner_role", "rollback_as_preservation_proof", "single_session_as_concurrency_proof"],
+  "fixture_policy": {"classification": "invented", "identifier": "run-qualified UUIDs supplied by later authorized procedure", "record_limit": 100, "existing_records": "read-only after authorization; no current DB access", "committed_additions": "retain records/history; never cleanup"},
+  "sequence_policy": {"mode": "no_sequence_calls", "requirements": ["review actual defaults/triggers/ORM write paths", "prove no nextval/setval or implicit sequence effects", "account for every existing sequence before/after", "stop if any unexpected effect occurs; rollback is insufficient"]},
+  "coordination_policy": {"single_reservation_owner": true, "explicit_handoff_and_release": true, "no_shared_target_overlap": true},
+  "phases": [
+    {"id": "preflight", "behavior": "Only after separate execution release: verify exact candidate/schema, authorized target/ordinary role/principals, rights and DB/evidence watermarks; no initialization", "state": "HOLD"},
+    {"id": "negative_probes", "behavior": "Reviewed ordinary-role denied/invalid operations within transactions that roll back even on unexpected success/error; guard sequence noninterference separately", "state": "HOLD"},
+    {"id": "append_only_setup", "behavior": "Only authorized bounded invented run-qualified additions may commit; retain all additions and version/association history", "state": "HOLD"},
+    {"id": "separate_session_concurrency", "behavior": "Two actual separately committed sessions against reviewed invented records; coordinate simultaneous retries/revisions, observe one idempotent result/one stale conflict and preserve both session receipts", "state": "HOLD"},
+    {"id": "preservation_closeout", "behavior": "Authorized before/after checks of original data/account/role/sequence and DB/evidence watermarks; retain additions and release reservation explicitly; never teardown/cleanup", "state": "HOLD"}
+  ],
+  "acceptance_limits": {"H01_H20": "UNEXECUTED", "H10_H11": "committed separate-session proof unavailable", "H14": "authorized ordinary application-role proof unavailable", "H18": "migration/fixture preservation unexecuted", "independent_test": "INCONCLUSIVE", "risk": "INCONCLUSIVE / NOT ACCEPTED (HIGH)", "stage_1_unexecuted_cases": 34, "restricted_incident": "OPEN; restricted route unchanged"}
+}
