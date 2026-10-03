@@ -1,6 +1,6 @@
 {
-  "candidate_id": "RMS-HN-INPUT-PRESERVATION-20261003-6f0323c2",
-  "receiving_run": "6f0323c2-5218-42b9-960f-94f81b95a436",
+  "candidate_id": "RMS-HN-DISPOSABLE-STAGING-20261003-7046399a",
+  "receiving_run": "7046399a-521b-445b-97f9-eebad9b156fb",
   "branch": "MAU-140-rms-increment-2-hypothesis-drafts-and-navigation-v1-0",
   "backend_git_object": "aab6d6dfde13fe03f184292f197ed3a56ce00b9d",
   "frontend_git_object": "fb9766f25cc723463ce15ae78feed282ab6163fc",
@@ -41,12 +41,17 @@
     "tests/django_hypothesis_frontend_shell_tests.py"
   ],
   "director_changed_paths": [
+    "docs/RMS-HN-DISPOSABLE-STAGING-ADDENDUM.md",
     "docs/RMS-HN-INTEGRATED-HANDOFF.md",
+    "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
     "rms/hypothesis_staging_preflight.py",
+    "rms/management/commands/reset_rms_staging.py",
     "rms/navigation_views.py",
+    "rms/staging_test_reset.py",
     "rms/views.py",
     "rms_project/urls.py",
     "scripts/check-rms-hn-source.py",
+    "scripts/check-rms-staging-reset.py",
     "staging/Dockerfile",
     "staging/Dockerfile.hn",
     "staging/build-hn-package.py",
@@ -57,14 +62,14 @@
     "tests/django_hypothesis_frontend_schema_tests.py",
     "tests/test_hypothesis_staging_package.py",
     "tests/test_hypothesis_staging_preflight.py",
-    "tests/test_hypothesis_staging_release.py"
+    "tests/test_hypothesis_staging_release.py",
+    "tests/test_staging_test_reset.py"
   ],
   "contract_sha256": "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9",
   "api_schema_sha256": "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea",
   "interface_version": "1.2",
   "record_schema_version": "1.0",
   "git_checkpoint_at_manifest_generation": null,
-  "database_execution_authorized": false,
   "H01_H20": "NOT_EXECUTED",
   "files": [
     {
@@ -164,6 +169,12 @@
       "origin": "backend"
     },
     {
+      "path": "docs/RMS-HN-DISPOSABLE-STAGING-ADDENDUM.md",
+      "bytes": 14029,
+      "sha256": "66862bb2cc5ebbb93f9408f6287197d6a6d37106a6ba30d7b2019e8cdeb5ceb6",
+      "origin": "director"
+    },
+    {
       "path": "docs/RMS-HN-FRONTEND-R4-R5-CHECKS.py",
       "bytes": 6388,
       "sha256": "1333e206caebf5de029e84bdddb89e2218a6ebbf108801305002a1b2e03361f0",
@@ -173,6 +184,12 @@
       "path": "docs/RMS-HN-INTEGRATED-HANDOFF.md",
       "bytes": 12159,
       "sha256": "43e1e560ea1bd8454a5a67b2c44410ba40153cb74b293862ae25c8e9fb2df66a",
+      "origin": "director"
+    },
+    {
+      "path": "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
+      "bytes": 5191,
+      "sha256": "8070bfa944fd0e3e4af841a764e579eea7981d653a9046a0698230aa7e2e43c2",
       "origin": "director"
     },
     {
@@ -374,6 +391,12 @@
       "origin": "backend"
     },
     {
+      "path": "rms/management/commands/reset_rms_staging.py",
+      "bytes": 3259,
+      "sha256": "903c7e7d36983ae60b2e69d4228f248c586570d0f91eaaeb60ee0405ed6f2ced",
+      "origin": "director"
+    },
+    {
       "path": "rms/migrations/0001_initial.py",
       "bytes": 5645,
       "sha256": "f108abe2fb0ccdbd37bbc96d9e7359482859debc80d38153f646460794272acf",
@@ -470,6 +493,12 @@
       "origin": "backend"
     },
     {
+      "path": "rms/staging_test_reset.py",
+      "bytes": 7822,
+      "sha256": "837d375f5912db8513de9b856d55e5abdd18784120cfee14a8675d5d335951a7",
+      "origin": "director"
+    },
+    {
       "path": "rms/views.py",
       "bytes": 11824,
       "sha256": "68ec69d5ae2d6883929183f2f921507c5340730fbcad89174002ece7301978a8",
@@ -503,6 +532,12 @@
       "path": "scripts/check-rms-hn-source.py",
       "bytes": 2421,
       "sha256": "c9fb2c4aebb62e776ff3b79429c9c157a662b98033676a4ef5c6966e62a78148",
+      "origin": "director"
+    },
+    {
+      "path": "scripts/check-rms-staging-reset.py",
+      "bytes": 2221,
+      "sha256": "c381f975bd6ea7659a727b1f176db2b9a96f7c78a87bc3c86ec81c52f61aaf8e",
       "origin": "director"
     },
     {
@@ -1020,22 +1055,45 @@
       "bytes": 1592,
       "sha256": "d40cc7a76561c5eefaaa93884deb8b0a5a5b854116f17e709ab1e631ae42b16c",
       "origin": "backend"
+    },
+    {
+      "path": "tests/test_staging_test_reset.py",
+      "bytes": 13788,
+      "sha256": "282ca0a6321bbcfad95567bf270fd8c56602a9f079d891d83e02791bf95590ba",
+      "origin": "director"
     }
   ],
-  "source_inventory_sha256": "4dd7b077eddd64687c0053a93d4d85a2f5d5087fd1ac3bea5a1cd0ef06477061",
-  "revision": 3,
-  "supersedes_manifest_sha256": "78d0aeebf4dffeaeb4e3bd1d731e3d7e7578c7b7c0e59927b5151ed723ad3a6e",
+  "source_inventory_sha256": "9ca4ca04969f6fc1254fd07b482f9f4bade07f30e2aad72596a8625078474ae3",
+  "revision": 5,
+  "supersedes_manifest_sha256": "1cc9430a7033a3348ac8d4224dd9aa077fb8c95d4f629153a7e24dbc54c3e9a7",
   "parent_candidate": {
-    "commit": "8c58569e5ccb82c77309553763794e2d80e43396",
-    "tree": "5d0fc6aa2f6922b2a3fd7991fea2d644b9eed512",
-    "publication": "Operator-reported GitHub draft PR4; not independently refetched by Director"
+    "commit": "3d4d1d34513e4e081b1dc39a9d73d6f884274243",
+    "tree": "413d00914a5efe856eb2858ea8bcec4005a816ff",
+    "observation": "Local Git object observed during current packaging precheck; operator checkpoint of exact input correction. Publication not independently observed."
   },
   "source_changes_from_parent": [
-    "rms/navigation_views.py",
-    "tests/django_hypothesis_director_integration_tests.py"
+    "docs/RMS-HN-DISPOSABLE-STAGING-ADDENDUM.md",
+    "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
+    "rms/management/commands/reset_rms_staging.py",
+    "rms/staging_test_reset.py",
+    "scripts/check-rms-staging-reset.py",
+    "tests/test_staging_test_reset.py"
   ],
   "source_correction_comment": "/MAU/issues/MAU-140#comment-54796808-1b3a-41e3-8ef8-456192a94437",
   "independent_retest": "Pending MAU-144 on exact successor; Director reproduction is not an independent verdict",
   "source_inventory_digest_format": "sha256(files canonical JSON sort_keys=True,separators=comma/colon)",
-  "test_demo_packet": "Prior8c58569 proposal preserved; candidate/source/helper pins require successor amendment before release"
+  "test_demo_packet": "Active disposable-staging addendum; old full research-row preservation packet preserved as historical unapproved evidence",
+  "authority": {
+    "staging_disposable_rms_reset": "Founder authorized October3; comment4dc2c3b8-534c-4053-abfc-d22b62f34392",
+    "new_role_access": "NOT_AUTHORIZED",
+    "persistent_schema_app_release": "NOT_AUTHORIZED",
+    "database_operations_executed_in_receiving_run": false
+  },
+  "founder_data_policy_comment": "/MAU/issues/MAU-140#comment-4dc2c3b8-534c-4053-abfc-d22b62f34392",
+  "published_baseline": {
+    "commit": "8c58569e5ccb82c77309553763794e2d80e43396",
+    "tree": "5d0fc6aa2f6922b2a3fd7991fea2d644b9eed512",
+    "publication": "Operator-reported GitHub draft PR4; not independently refetched by Director"
+  },
+  "precheck_reconciliation": "Initial package precheck stopped before artifact writes when operator advanced HEAD from8c58569 to3d4d1d3; exact committed correction files and revision3 manifest matched."
 }
