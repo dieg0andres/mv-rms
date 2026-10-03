@@ -7,9 +7,9 @@
       {% for value, label in control.choices %}<option value="{{ value }}"{% if value == control.value %} selected{% endif %}>{{ label }}</option>{% endfor %}
     </select>
   {% elif control.kind == "text" %}
-    <input id="{{ control.id }}" name="{{ control.path }}" type="text" value="{{ control.value|default_if_none:"" }}" aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>
+    <input id="{{ control.id }}" name="{{ control.path }}" type="text" value="{{ control.value|default_if_none:"" }}"{% if control.readonly %} readonly{% endif %}{% if control.maxlength %} maxlength="{{ control.maxlength }}"{% endif %} aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>
   {% else %}
-    <textarea id="{{ control.id }}" name="{{ control.path }}" aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>{{ control.value|default_if_none:"" }}</textarea>
+    <textarea id="{{ control.id }}" name="{{ control.path }}"{% if control.maxlength %} maxlength="{{ control.maxlength }}"{% endif %} aria-describedby="{{ control.id }}-help{% if control.errors %} {{ control.id }}-errors{% endif %}"{% if control.errors %} aria-invalid="true"{% endif %}>{{ control.value|default_if_none:"" }}</textarea>
   {% endif %}
   <p id="{{ control.id }}-help" class="muted">{{ control.help }}</p>
   {% if control.errors %}<div id="{{ control.id }}-errors" class="field-error">{% for message in control.errors %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}

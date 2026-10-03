@@ -11,4 +11,6 @@ legend { font-weight: 700; }
 .field input, .field select, .field textarea { box-sizing: border-box; width: 100%; }
 .field-error { color: #912018; }
 .error-summary:focus { outline: 3px solid #e59f00; outline-offset: 2px; }
+.card:target { outline: 3px solid #e59f00; outline-offset: 2px; }
+.field label, .field p, .card li { overflow-wrap: anywhere; }
 @media (max-width: 40rem) { .site-header { padding: .75rem; } .primary-navigation { gap: .25rem; } }

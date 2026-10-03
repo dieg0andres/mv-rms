@@ -14,9 +14,10 @@
 {% if can_edit %}
   {% if heading == "Home" or heading == "Sources" %}<p><a href="/sources/new">Create source (existing screen)</a></p>{% endif %}
   {% if heading == "Home" or heading == "Ideas" %}<p><a href="/ideas/new">Create idea (existing screen)</a></p>{% endif %}
+  {% if heading == "Home" or heading == "Hypotheses" or heading == "Research context" %}<p><a href="/hypotheses/draft-preview">Inspect unsaved Hypothesis and context controls (source-only preview)</a></p>{% endif %}
 {% else %}
   <p>Viewer access is read-only. Creation and revision require server-authorized editor access.</p>
 {% endif %}
-<p>Hypothesis draft and research-context forms remain unavailable until the exact Backend schema is received and later integration is authorized.</p>
+<p>Hypothesis and Research context saves are not connected. Preview controls require the exact receipted Backend schema and Director registration of the prepared routes; this is not a released capability.</p>
 <p><a href="/">Return Home</a></p>
 {% endblock %}

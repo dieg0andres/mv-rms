@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from .navigation_views import NavigationPage
+from .navigation_views import HypothesisDraftPreviewPage, NavigationPage
 
 
 urlpatterns = [
@@ -10,5 +10,6 @@ urlpatterns = [
     path("sources", NavigationPage.as_view(section="sources"), name="rms-sources"),
     path("ideas", NavigationPage.as_view(section="ideas"), name="rms-ideas"),
     path("hypotheses", NavigationPage.as_view(section="hypotheses"), name="rms-hypotheses"),
+    path("hypotheses/draft-preview", HypothesisDraftPreviewPage.as_view(), name="rms-hypothesis-draft-preview"),
     path("research-context", NavigationPage.as_view(section="context"), name="rms-context"),
 ]
