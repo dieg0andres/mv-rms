@@ -27,7 +27,8 @@ def main():
             suite = unittest.defaultTestLoader.loadTestsFromName('tests.test_staging_test_reset')
             result = unittest.TextTestRunner(stream=log, verbosity=2).run(suite)
         source = ['rms/staging_test_reset.py', 'rms/management/commands/reset_rms_staging.py',
-                  'tests/test_staging_test_reset.py', 'scripts/check-rms-staging-reset.py']
+                  'tests/test_staging_test_reset.py', 'scripts/check-rms-staging-reset.py',
+                  'docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql']
         summary = {'run': os.environ.get('PAPERCLIP_RUN_ID'), 'tests': result.testsRun,
             'pass': result.wasSuccessful(), 'django_connection_attempts': django_guard.call_count,
             'psycopg_connection_attempts': psycopg_guard.call_count,

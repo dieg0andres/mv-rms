@@ -1,6 +1,6 @@
 {
-  "candidate_id": "RMS-HN-DISPOSABLE-STAGING-20261003-7046399a",
-  "receiving_run": "7046399a-521b-445b-97f9-eebad9b156fb",
+  "candidate_id": "RMS-HN-RESET-CORRECTIONS-20261003-e7c5d074",
+  "receiving_run": "e7c5d074-0e83-410e-8695-201f280f5215",
   "branch": "MAU-140-rms-increment-2-hypothesis-drafts-and-navigation-v1-0",
   "backend_git_object": "aab6d6dfde13fe03f184292f197ed3a56ce00b9d",
   "frontend_git_object": "fb9766f25cc723463ce15ae78feed282ab6163fc",
@@ -188,8 +188,8 @@
     },
     {
       "path": "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
-      "bytes": 5191,
-      "sha256": "8070bfa944fd0e3e4af841a764e579eea7981d653a9046a0698230aa7e2e43c2",
+      "bytes": 5342,
+      "sha256": "9acdd51d392d518ff16a3015be3d1c60f8735cf87600b15cd92c6e174880ea25",
       "origin": "director"
     },
     {
@@ -494,8 +494,8 @@
     },
     {
       "path": "rms/staging_test_reset.py",
-      "bytes": 7822,
-      "sha256": "837d375f5912db8513de9b856d55e5abdd18784120cfee14a8675d5d335951a7",
+      "bytes": 8083,
+      "sha256": "2e5a1bca0e426f9ded14ff7a757d3f53f123b6511e3f132c50dc014eaac30198",
       "origin": "director"
     },
     {
@@ -536,8 +536,8 @@
     },
     {
       "path": "scripts/check-rms-staging-reset.py",
-      "bytes": 2221,
-      "sha256": "c381f975bd6ea7659a727b1f176db2b9a96f7c78a87bc3c86ec81c52f61aaf8e",
+      "bytes": 2281,
+      "sha256": "f16de8ffb5dfe8aea0c666b8c1827fc264c4f9e933a7e4133b3e6ad3ea0f09a0",
       "origin": "director"
     },
     {
@@ -1058,31 +1058,29 @@
     },
     {
       "path": "tests/test_staging_test_reset.py",
-      "bytes": 13788,
-      "sha256": "282ca0a6321bbcfad95567bf270fd8c56602a9f079d891d83e02791bf95590ba",
+      "bytes": 17155,
+      "sha256": "cbf74afa3515b70bfa4757c6f5c791ab587718fadab6c064688ad34e545f9318",
       "origin": "director"
     }
   ],
-  "source_inventory_sha256": "9ca4ca04969f6fc1254fd07b482f9f4bade07f30e2aad72596a8625078474ae3",
-  "revision": 5,
-  "supersedes_manifest_sha256": "1cc9430a7033a3348ac8d4224dd9aa077fb8c95d4f629153a7e24dbc54c3e9a7",
+  "source_inventory_sha256": "3d72da3fea04412abbc65598c0bc1edc9e5d45131ce18e3648ab3da174000947",
+  "revision": 6,
+  "supersedes_manifest_sha256": "c9b06e6ab32fead3b23222138b639d8ce871f4b1d5aa43abfe8095ddbe3e3b54",
   "parent_candidate": {
-    "commit": "3d4d1d34513e4e081b1dc39a9d73d6f884274243",
-    "tree": "413d00914a5efe856eb2858ea8bcec4005a816ff",
-    "observation": "Local Git object observed during current packaging precheck; operator checkpoint of exact input correction. Publication not independently observed."
+    "commit": "e38b32378e35ce4dbe297152a978f0a19f39dfbc",
+    "tree": "f35149b71b4ae6c2c38cb87549f5b4296e4d8afa",
+    "publication": "Operator-reported draft PR4 at exact e38b323; comment f5c030a6-4593-4fa1-b712-90d419a5bac7"
   },
   "source_changes_from_parent": [
-    "docs/RMS-HN-DISPOSABLE-STAGING-ADDENDUM.md",
     "docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql",
-    "rms/management/commands/reset_rms_staging.py",
     "rms/staging_test_reset.py",
     "scripts/check-rms-staging-reset.py",
     "tests/test_staging_test_reset.py"
   ],
-  "source_correction_comment": "/MAU/issues/MAU-140#comment-54796808-1b3a-41e3-8ef8-456192a94437",
-  "independent_retest": "Pending MAU-144 on exact successor; Director reproduction is not an independent verdict",
+  "source_correction_comment": "/MAU/issues/MAU-140#comment-f5c030a6-4593-4fa1-b712-90d419a5bac7",
+  "independent_retest": "Pending receiving Test retest of reset descendant/column-INSERT successor. Prior F1 affected-source PASS on byte-identical application inputs remains closed.",
   "source_inventory_digest_format": "sha256(files canonical JSON sort_keys=True,separators=comma/colon)",
-  "test_demo_packet": "Active disposable-staging addendum; old full research-row preservation packet preserved as historical unapproved evidence",
+  "test_demo_packet": "e38b323 reset/proposed-role/package and 40228c7f decision packet withheld from approval/execution due independent source findings. Existing-credentials preview route remains a proposal; bind only reviewed corrected successor after independent retest.",
   "authority": {
     "staging_disposable_rms_reset": "Founder authorized October3; comment4dc2c3b8-534c-4053-abfc-d22b62f34392",
     "new_role_access": "NOT_AUTHORIZED",
@@ -1091,9 +1089,14 @@
   },
   "founder_data_policy_comment": "/MAU/issues/MAU-140#comment-4dc2c3b8-534c-4053-abfc-d22b62f34392",
   "published_baseline": {
-    "commit": "8c58569e5ccb82c77309553763794e2d80e43396",
-    "tree": "5d0fc6aa2f6922b2a3fd7991fea2d644b9eed512",
-    "publication": "Operator-reported GitHub draft PR4; not independently refetched by Director"
+    "commit": "e38b32378e35ce4dbe297152a978f0a19f39dfbc",
+    "tree": "f35149b71b4ae6c2c38cb87549f5b4296e4d8afa",
+    "publication": "Operator-reported draft PR4 at exact e38b323; comment f5c030a6-4593-4fa1-b712-90d419a5bac7"
   },
-  "precheck_reconciliation": "Initial package precheck stopped before artifact writes when operator advanced HEAD from8c58569 to3d4d1d3; exact committed correction files and revision3 manifest matched."
+  "reset_source_verification": {
+    "Director_checks": 19,
+    "unchanged_independent_cases_reproduced_by_Director": 2,
+    "database_connections": 0,
+    "independent_successor_verdict": "NOT_YET_REPORTED"
+  }
 }

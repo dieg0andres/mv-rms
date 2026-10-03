@@ -100,15 +100,53 @@ class ResetTests(unittest.TestCase):
         self.assertEqual(len(truncates), 1)
         self.assertTrue(truncates[0].endswith('CONTINUE IDENTITY RESTRICT'))
         self.assertEqual(set(truncates[0].split('"')[1::2]), set(reset.RMS_TABLES))
+        self.assertEqual(set(re.findall(r'ONLY public\."([^"]+)"', truncates[0])), set(reset.RMS_TABLES))
         self.assertFalse(any(word in '\n'.join(sql) for word in ('CASCADE', 'RESTART IDENTITY', 'DISABLE TRIGGER ALL', 'session_replication_role', 'CREATE ROLE', 'GRANT ', 'DELETE FROM')))
         alters = [statement for statement in sql if statement.startswith('ALTER TABLE')]
         self.assertEqual(len(alters), 24)
+        self.assertTrue(all(statement.startswith('ALTER TABLE ONLY ') for statement in alters))
         self.assertTrue(all(statement.endswith('TRIGGER hn_no_truncate') for statement in alters))
         self.assertFalse(set(reset.AUTH_TABLES).intersection(reset.RMS_TABLES))
         self.assertEqual(cursor.rows, 56)
         self.assertTrue(result['authentication_unchanged'])
         self.assertFalse(result['app_role_certification'])
         self.assertEqual(sql[-1], 'SET CONSTRAINTS ALL IMMEDIATE')
+
+    def test_inherited_descendants_are_excluded_from_every_named_operation(self):
+        class InheritanceCursor(Cursor):
+            def __init__(self):
+                super().__init__()
+                self.present.add('unrelated_archive')
+                self.descendants = {'rms_source': {'unrelated_archive': 9},
+                                    'rms_hypothesisversion': {'other_schema.partition': 6}}
+            def execute(self, sql, params=None):
+                super().execute(sql, params)
+                if sql.startswith('TRUNCATE TABLE'):
+                    for only, table in re.findall(r'(ONLY\s+)?public\."([^"]+)"', sql):
+                        if not only:
+                            for child in self.descendants.get(table, {}):
+                                self.descendants[table][child] = 0
+        cursor = InheritanceCursor()
+        before = deepcopy(cursor.descendants)
+        reset.reset_in_transaction(cursor)
+        self.assertEqual(cursor.descendants, before)
+        for sql, _ in cursor.calls:
+            if sql.startswith(('LOCK TABLE ', 'ALTER TABLE ', 'TRUNCATE TABLE ')):
+                targets = re.findall(r'(ONLY\s+)?public\."([^"]+)"', sql)
+                self.assertTrue(targets)
+                self.assertTrue(all(only.strip() == 'ONLY' for only, _ in targets))
+                self.assertNotIn('unrelated_archive', sql)
+
+    def test_auth_column_insert_check_is_scoped_to_live_protected_columns(self):
+        sql = (Path(__file__).resolve().parents[1] / 'docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql').read_text()
+        # Capture the actual protected-auth INSERT subquery, not a comment or an
+        # unrelated RMS-column check. Table and column grants are distinct paths.
+        auth = sql.split(') OR EXISTS (', 1)[1].split(') THEN RAISE', 1)[0]
+        self.assertIn('JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped', auth)
+        self.assertIn("c.relname LIKE 'auth\\_%'", auth)
+        self.assertIn("c.relname IN ('django_content_type','django_migrations')", auth)
+        self.assertIn("has_table_privilege('rms_hn_app', c.oid, 'INSERT')", auth)
+        self.assertIn("has_column_privilege('rms_hn_app', c.oid, a.attnum, 'INSERT')", auth)
 
     def test_current_source_idea_only_schema_can_reset_without_schema_update(self):
         cursor = Cursor(full=False)
@@ -245,6 +283,23 @@ class CommandTests(unittest.TestCase):
         self.assertTrue(self.rolled_back)
         self.assertTrue(all(value == 'O' for value in cursor.enabled.values()))
         self.seed_calls.assert_not_called()
+
+    def test_partitioned_parent_rejection_rolls_back_without_scope_expansion(self):
+        class PartitionCursor(Cursor):
+            def execute(self, sql, params=None):
+                if sql.startswith('TRUNCATE TABLE'):
+                    targets = re.findall(r'(ONLY\s+)?public\."([^"]+)"', sql)
+                    if any(only and table == 'rms_source' for only, table in targets):
+                        raise RuntimeError('cannot truncate only a partitioned table')
+                super().execute(sql, params)
+        cursor = PartitionCursor()
+        with self.assertRaisesRegex(CommandError, 'RESET_RESULT_UNCERTAIN'):
+            self.execute(cursor)
+        self.assertTrue(self.rolled_back)
+        self.assertEqual(cursor.rows, 80)
+        self.assertTrue(all(value == 'O' for value in cursor.enabled.values()))
+        self.seed_calls.assert_not_called()
+        self.assertEqual(self.out.getvalue(), '')
 
     def test_missing_editor_or_time_fails_before_cursor(self):
         for changes in ({'actor': None}, {'review_time': None}, {'review_time': 'tomorrow'}, {'review_time': '2026-10-03T00:00:00+00:00'}):

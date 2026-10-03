@@ -53,9 +53,11 @@ DO $$ DECLARE item regclass; BEGIN
    (a.attname='latest_version' AND c.relname IN ('rms_source','rms_idea','rms_researchfamily','rms_investigation','rms_priorresearchassessment','rms_hypothesis','rms_researchassociationidentity'))
  ) OR EXISTS (
   SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+  JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped
   WHERE n.nspname='public' AND c.relkind IN ('r','p') AND
    (c.relname LIKE 'auth\_%' ESCAPE '\' OR c.relname IN ('django_content_type','django_migrations')) AND
-   has_table_privilege('rms_hn_app', c.oid, 'INSERT')
+   (has_table_privilege('rms_hn_app', c.oid, 'INSERT') OR
+    has_column_privilege('rms_hn_app', c.oid, a.attnum, 'INSERT'))
  ) THEN RAISE EXCEPTION 'Unexpected auth INSERT or column UPDATE privilege'; END IF;
 END $$;
 COMMIT;

@@ -45,9 +45,9 @@ def validate_binding(settings, *, project, container):
     require(settings.get("USER") == "rms_staging", "wrong_maintenance_identity")
 
 
-def qualified(names):
+def qualified(names, *, only=False):
     require(bool(names) and set(names) <= set((*RMS_TABLES, *AUTH_TABLES, *OPTIONAL_PROTECTED)), "unreviewed_table")
-    return ", ".join('public."' + name + '"' for name in sorted(names))
+    return ", ".join(('ONLY ' if only else '') + 'public."' + name + '"' for name in sorted(names))
 
 
 def guards(cursor, tables):
@@ -101,8 +101,8 @@ def reset_in_transaction(cursor, *, reseed=None):
     protected = set(AUTH_TABLES) | (present & set(OPTIONAL_PROTECTED))
     # A brief exclusive maintenance slot is required; no app/test request overlaps
     # a reset. Auth readers can continue, but account mutations wait or time out.
-    cursor.execute("LOCK TABLE " + qualified(protected) + " IN SHARE MODE")
-    cursor.execute("LOCK TABLE " + qualified(rms) + " IN ACCESS EXCLUSIVE MODE")
+    cursor.execute("LOCK TABLE " + qualified(protected, only=True) + " IN SHARE MODE")
+    cursor.execute("LOCK TABLE " + qualified(rms, only=True) + " IN ACCESS EXCLUSIVE MODE")
     cursor.execute("""SELECT 1 FROM pg_constraint f
         JOIN pg_class target ON target.oid = f.confrelid
         JOIN pg_namespace tn ON tn.oid = target.relnamespace
@@ -117,12 +117,14 @@ def reset_in_transaction(cursor, *, reseed=None):
     expected_guards = [(table, 'O', 34, 'public', 'rms_reject_row_change') for table in sorted(hn)]
     require(before_guards == expected_guards, "history_guard_mismatch")
     for table in sorted(hn):
-        cursor.execute("ALTER TABLE " + qualified([table]) + " DISABLE TRIGGER hn_no_truncate")
+        cursor.execute("ALTER TABLE " + qualified([table], only=True) + " DISABLE TRIGGER hn_no_truncate")
     # No CASCADE, RESTART IDENTITY, auth deletion, session_replication_role or
-    # generic flush. Referencing RMS tables are included in this one statement.
-    cursor.execute("TRUNCATE TABLE " + qualified(rms) + " CONTINUE IDENTITY RESTRICT")
+    # generic flush. ONLY on EACH target excludes inherited/partition descendants.
+    # PostgreSQL rejects ONLY for a partitioned parent; the outer atomic block
+    # rolls back rather than expanding the allowlist to truncate its partitions.
+    cursor.execute("TRUNCATE TABLE " + qualified(rms, only=True) + " CONTINUE IDENTITY RESTRICT")
     for table in sorted(hn):
-        cursor.execute("ALTER TABLE " + qualified([table]) + " ENABLE TRIGGER hn_no_truncate")
+        cursor.execute("ALTER TABLE " + qualified([table], only=True) + " ENABLE TRIGGER hn_no_truncate")
     require((guards(cursor, hn) if hn else []) == before_guards, "history_guard_not_restored")
     if reseed is not None:
         reseed()  # Existing loader/service validation runs with every guard active.
