@@ -1,0 +1,3 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ resource.label }} history — RMS{% endblock %}
+{% block content %}<h1>{{ resource.label }} history</h1><p>Ordered immutable versions. Original and corrected snapshots retain their exact supporting records.</p><p><a href="{{ latest_url }}">Open latest record</a></p>{% for item in versions %}<p><a href="{{ item.detail_url }}">Open exact version {{ item.record.version }}</a></p>{% include "rms/includes/record_card.html" with record=item.record pinned_references=item.pinned_references pinned_associations=item.pinned_associations %}{% empty %}<p>No permitted versions were returned.</p>{% endfor %}{% endblock %}

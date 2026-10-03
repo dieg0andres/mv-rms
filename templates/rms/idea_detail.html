@@ -1,1 +1,11 @@
-{% extends "rms/base.html" %}{% block title %}Idea {{ detail.idea_id }} — RMS{% endblock %}{% block content %}<p class="notice"><strong>Synthetic-only record.</strong> Workflow intake is not validation, test approval, or trading approval.</p><h1>Idea detail</h1><section class="card"><dl><dt>Stable Idea ID</dt><dd><code>{{ detail.idea_id }}</code></dd><dt>Latest immutable version ID</dt><dd><code>{{ detail.latest_idea_version_id }}</code></dd><dt>Latest version</dt><dd>{{ detail.latest_version }}</dd></dl></section>{% include "rms/includes/idea_version.html" with version=detail.latest only %}{% endblock %}
+{% extends "rms/base.html" %}
+{% block title %}Idea {{ detail.idea_id }} — RMS{% endblock %}
+{% block content %}
+<p class="notice"><strong>Synthetic-only record.</strong> Workflow intake is not validation, test approval, or trading approval.</p><h1>Idea detail</h1>
+<section class="card"><dl><dt>Stable Idea ID</dt><dd><code>{{ detail.idea_id }}</code></dd><dt>Latest immutable version ID</dt><dd><code>{{ detail.latest_idea_version_id }}</code></dd><dt>Latest version</dt><dd>{{ detail.latest_version }}</dd></dl></section>
+<p><a href="/ideas/{{ detail.idea_id }}/history">Idea version history</a>{% if can_edit %} · <a href="/ideas/{{ detail.idea_id }}/correct">Revise idea</a> · <a href="/hypotheses/new?idea_id={{ detail.idea_id }}&amp;idea_version={{ detail.latest_version }}">Create hypothesis from Idea v{{ detail.latest_version }}</a>{% endif %}</p>
+{% include "rms/includes/idea_version.html" with version=detail.latest only %}
+<p><a href="/idea-family-associations?idea_version_id={{ detail.latest.idea_version_id|urlencode }}">Inspect classification for exact Idea v{{ detail.latest_version }}</a></p>
+<h2>Linked Hypotheses</h2>
+{% if hypotheses_unavailable %}<p>Linked-record services are unavailable; the count is unknown.</p>{% else %}<p>Permitted linked records: {{ hypotheses.count }}</p><ul>{% for record in hypotheses.results %}<li><a href="{{ record.browser_url }}">{{ record.fields.title }}</a> · v{{ record.version }} · draft</li>{% empty %}<li>No permitted linked Hypotheses returned.</li>{% endfor %}</ul>{% if hypotheses.next %}<p><a href="{{ hypotheses.next }}">More linked Hypotheses</a></p>{% endif %}{% endif %}
+{% endblock %}

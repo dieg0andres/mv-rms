@@ -1,1 +1,6 @@
-{% extends "rms/base.html" %}{% block title %}Idea {{ idea_id }} history — RMS{% endblock %}{% block content %}<p class="notice"><strong>Synthetic-only record.</strong> Original versions remain distinct from reasoned corrections.</p><h1>Idea history</h1>{% for version in versions %}{% include "rms/includes/idea_version.html" with version=version only %}{% empty %}<p class="warning">No readable versions are available.</p>{% endfor %}{% endblock %}
+{% extends "rms/base.html" %}
+{% block title %}Idea {{ idea_id }} history — RMS{% endblock %}
+{% block content %}
+<p class="notice"><strong>Synthetic-only record.</strong> Original versions remain distinct from reasoned corrections.</p><h1>Idea history</h1><p><a href="/ideas/{{ idea_id }}">Open latest Idea</a>{% if can_edit %} · <a href="/ideas/{{ idea_id }}/correct">Revise idea</a>{% endif %}</p>
+{% for version in versions %}<p><a href="/idea-family-associations?idea_version_id={{ version.idea_version_id|urlencode }}">Inspect classification for exact Idea v{{ version.version }}</a>{% if can_edit %} · <a href="/hypotheses/new?idea_id={{ idea_id }}&amp;idea_version={{ version.version }}">Create hypothesis from exact Idea v{{ version.version }}</a>{% endif %}</p>{% include "rms/includes/idea_version.html" with version=version only %}{% empty %}<p class="warning">No readable versions are available.</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,13 @@
+--- accepted_1bdfe176
++++ 529e638_identity_only
+@@ -7,8 +7,8 @@
+ import { fileURLToPath } from 'node:url';
+ import { stagingTarget, sameOriginRequest } from './staging-origin.mjs';
+ 
+-export const CANDIDATE = 'aead8ff52128859fbae8b0f3d8ed2de67aff5131';
+-export const TREE = '5880845c045af75e19c686cb5840b736a414abfa';
++export const CANDIDATE = '529e6382e0fc1ca212b20f2400bb83e9de7b5efc';
++export const TREE = '5b98b0b2e7de1cd27009b754089f801c770eb745';
+ export const ORIGIN_SHA = '180c15a36c1ad001f27b7f6b4ebd6d397283344936a45ff64bd5260165aa6bf0';
+ export const SEED = 'HYP-da014a8c-998c-48d8-872a-de15b5262cb3';
+ export const MARKER = '<img src=x onerror=alert(1)>';

@@ -1,0 +1,145 @@
+{
+  "schema": "rms-hn-final-independent-review-v1",
+  "receiving_run_id": "5b545015-2b23-4b2a-af16-4fd9d85ac50d",
+  "evaluated_at": "2026-10-03T21:45:20.466769+00:00",
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "operator_browser_run_id": "63e82628-1fe6-434a-a44b-ac371d77c142",
+  "raw_browser_result": "FAIL",
+  "raw_exit_code": 1,
+  "raw_assertion_pass": 12,
+  "raw_assertion_fail": 1,
+  "raw_assertions": [
+    {
+      "name": "installed_build",
+      "result": "PASS"
+    },
+    {
+      "name": "owned_record_resume",
+      "result": "PASS"
+    },
+    {
+      "name": "refresh_saved_incomplete",
+      "result": "PASS"
+    },
+    {
+      "name": "home_list_reopen",
+      "result": "PASS"
+    },
+    {
+      "name": "complete_reasoned_revision",
+      "result": "PASS"
+    },
+    {
+      "name": "stale_full_input_and_original_key_preserved",
+      "result": "FAIL",
+      "changed_paths": [
+        "idempotency_key"
+      ]
+    },
+    {
+      "name": "stale_owned_input",
+      "result": "PASS"
+    },
+    {
+      "name": "not_found_full_input_and_key_preserved",
+      "result": "PASS"
+    },
+    {
+      "name": "not_found_owned_input",
+      "result": "PASS"
+    },
+    {
+      "name": "history_original_current_parity",
+      "result": "PASS"
+    },
+    {
+      "name": "narrow_readable_escaped_text",
+      "result": "PASS"
+    },
+    {
+      "name": "return_home",
+      "result": "PASS"
+    },
+    {
+      "name": "bounded_transport",
+      "result": "PASS"
+    }
+  ],
+  "raw_failure_preserved": true,
+  "raw_failed_assertion_is_not_reclassified_pass": true,
+  "independent_product_disposition": "Completed narrowed development workflow is satisfactory for Director review; no demonstrated blocking product defect in supplied focused evidence",
+  "nonce_disposition": {
+    "only_changed_path": "idempotency_key",
+    "confirmed_status": 409,
+    "pre_execution_document_revision": "f2d119fc-b1db-46ba-9037-b2b2b45c6653",
+    "required_owned_input_retained": true,
+    "unknown_outcome_replay_browser_case": "NOT EXECUTED"
+  },
+  "viewer": "WAIVED BY FOUNDER / NOT EXECUTED",
+  "full_original_H01_H20": "INCONCLUSIVE / INCOMPLETE",
+  "risk_stage_acceptance": "NO TEST VERDICT ISSUED; existing independent records unchanged",
+  "methods": "Read-only evidence/source review, hash/length/consistency checks and visual screenshot inspection; no new product tests or live operations",
+  "authorship": {
+    "test_code": "Test Engineer",
+    "product_csrf_fix": "Director of Engineering",
+    "host_browser_execution": "Codex operator",
+    "receiving_result_review": "Test Engineer"
+  },
+  "input_manifests_verified": [
+    {
+      "source": "docs/verification/rms-hn-browser-continuation-63e82628",
+      "destination": "browser-result",
+      "indexed_files": 11,
+      "total_files": 12,
+      "manifest_sha256": "89d960230a6429d5e8eb1be21541c99ceab02a8e8be4ac316598e28938f0816e",
+      "all_hashes_and_lengths_match": true
+    },
+    {
+      "source": "docs/verification/rms-hn-browser-529e638-operator",
+      "destination": "original-529-operator",
+      "indexed_files": 10,
+      "total_files": 11,
+      "manifest_sha256": "55281aed52372f48f4175996921fb85d78399c62be47831feb178ef3f0fa1666",
+      "all_hashes_and_lengths_match": true
+    },
+    {
+      "source": "docs/verification/rms-hn-csrf-6bde9548",
+      "destination": "f2-original",
+      "indexed_files": 19,
+      "total_files": 20,
+      "manifest_sha256": "aaf48099977aa1adb76d5b0ab51d9d97ebaebe6c48fdb1d6b0eec1f0af4f9a85",
+      "all_hashes_and_lengths_match": true
+    },
+    {
+      "source": "docs/verification/rms-hn-csrf-retest-5926dd98",
+      "destination": "f2-retest",
+      "indexed_files": 21,
+      "total_files": 22,
+      "manifest_sha256": "afd00edb8f42185ba6b0873dc2ac5d55160b0a9248778f5e5003be8431142026",
+      "all_hashes_and_lengths_match": true
+    }
+  ],
+  "screenshots_visually_reviewed": 5,
+  "post_statuses": [
+    303,
+    303,
+    409,
+    404
+  ],
+  "http_requests": 15,
+  "artifact_limits": [
+    "No supplied API response bodies independently reconstructed",
+    "No fresh Test SQL/browser operations",
+    "No new browser-image inspection receipt",
+    "No least-privilege/admin-bypass proof",
+    "No observed assigned-XID concurrent pair",
+    "Broader full-matrix cases incomplete"
+  ],
+  "intake_utility_correction": "Initial expected 12 indexed members corrected to actual 11 indexed plus manifest; no evidence/requirement changed",
+  "prior_description_sha256": "e6aa486c629460109d5d5c08fcf7837711856c95e994172b958771ae14c4fb5c",
+  "next_owner_action": {
+    "Director": "Disposition existing MAU-144 native final review on exact product 529 and record development verdict on MAU-140",
+    "Codex": "Publish sanitized evidence and execute founder-directed merge after Director verdict, record final heads/product equality/merge identity"
+  }
+}

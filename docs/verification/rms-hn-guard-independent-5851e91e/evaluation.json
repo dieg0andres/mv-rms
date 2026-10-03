@@ -1,0 +1,178 @@
+{
+  "evaluated_at": "2026-10-03T20:56:26.177Z",
+  "run": "5851e91e-afde-4059-8054-9c1a51542899",
+  "method": "Independent offline evaluation of operator execution artifacts; no live DB/browser operation",
+  "manifest_entries": [
+    {
+      "file": "operator-note.txt",
+      "bytes": 351,
+      "sha256": "fe383783c697be370e5547642d6ad83cf3a3bbdaecf8466b813424605baa775f",
+      "result": "PASS"
+    },
+    {
+      "file": "probe.py",
+      "bytes": 4800,
+      "sha256": "923f08ea3789876f8f5cf39fe39c2035a2c92c67448bf4075f836e6744d419c4",
+      "result": "PASS"
+    },
+    {
+      "file": "receipt.json",
+      "bytes": 533,
+      "sha256": "be78ce7827dadbdfec41b4f4cd579fcf486dea6f6cdbce4310fcab043b55e6db",
+      "result": "PASS"
+    },
+    {
+      "file": "result.json",
+      "bytes": 6090,
+      "sha256": "6da5772002f89691ed3ea823cc020286f3c3bf7b95c4171679d4970a8e343748",
+      "result": "PASS"
+    },
+    {
+      "file": "stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "PASS"
+    }
+  ],
+  "receipt": {
+    "source_sha256": "923f08ea3789876f8f5cf39fe39c2035a2c92c67448bf4075f836e6744d419c4",
+    "argv": [
+      "docker",
+      "exec",
+      "-i",
+      "mv-rms-staging-app-1",
+      "/srv/adapter/entrypoint.sh",
+      "/usr/local/bin/python",
+      "-",
+      "--run"
+    ],
+    "started": "2026-10-03T20:53:32.473726+00:00",
+    "ended": "2026-10-03T20:53:33.608240+00:00",
+    "exit_code": 0,
+    "stdout_sha256": "6da5772002f89691ed3ea823cc020286f3c3bf7b95c4171679d4970a8e343748",
+    "stderr_bytes": 0,
+    "review_run": "0cee3641-133d-440a-85b3-410a6e0ce662"
+  },
+  "table_map": [
+    {
+      "table": "rms_researchfamily",
+      "row_id": "9bdeafe2-da0a-429c-b131-b2ef11e10ecd",
+      "expected_sqlstate": "P0001",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_investigation",
+      "row_id": "0e43d09a-a7d0-45e8-9d88-b366fe8c2697",
+      "expected_sqlstate": "P0001",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_priorresearchassessment",
+      "row_id": "7d28b1d8-7352-468e-bd84-b889c7a2c8b0",
+      "expected_sqlstate": "P0001",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_hypothesis",
+      "row_id": "4106648f-a62a-4145-a229-3c5d8a365629",
+      "expected_sqlstate": "P0001",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_researchassociationidentity",
+      "row_id": "0de61d77-4f06-419f-b2eb-c2f6bf869de4",
+      "expected_sqlstate": "P0001",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_researchfamilyversion",
+      "row_id": "e3636080-feef-4b05-9c8c-27d0bb3c5b28",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_investigationversion",
+      "row_id": "415740b7-6a5b-46c3-9002-0a73d623923c",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_priorresearchassessmentversion",
+      "row_id": "a8603c11-dd6c-493d-b212-5981337fa728",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_hypothesisversion",
+      "row_id": "48230e01-9dc9-4d46-b17e-65545e340343",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_researchassociation",
+      "row_id": "01aadb00-8bba-4f33-b940-9b15e20d5c9c",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    },
+    {
+      "table": "rms_assessmentexternalreference",
+      "result": "NOT EXECUTED",
+      "reason": "no existing synthetic row; no fixture added"
+    },
+    {
+      "table": "rms_hypothesiscorrectionimpact",
+      "row_id": "6e0b9c56-c0dc-4a68-a1f2-b1d5da8c062a",
+      "expected_sqlstate": "23000",
+      "operations": [
+        "UPDATE",
+        "DELETE"
+      ],
+      "result": "PASS"
+    }
+  ],
+  "denials": 22,
+  "populated_tables": 11,
+  "unexecuted_tables": 1,
+  "result": "SCOPED PASS",
+  "coverage_limit": "Sampled ordinary primary-key UPDATE/DELETE under privileged application binding. Fingerprint equality and rollback attributed to hash-verified exact probe; raw fingerprint values not emitted. No complete H14/H01-H20 claim."
+}

@@ -1,0 +1,11 @@
+{
+  "started_at": "2026-10-03T21:31:59.606944+00:00",
+  "run_id": "1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3",
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "checker_sha256": "ae8856c7fade4705a0b048b53a002831a9b62dc110578a99836e88103204e19a",
+  "max_posts": 5,
+  "viewer": "WAIVED_NOT_EXECUTED",
+  "existing_editor_binding": true,
+  "image": "mcr.microsoft.com/playwright@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a"
+}

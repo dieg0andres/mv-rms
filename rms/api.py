@@ -16,7 +16,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import ELIGIBLE_MARKETS, SOURCE_TYPES, WORKFLOW_STATUSES
-from .permissions import IsEditor
+from .permissions import IsEditor, IsRmsReader
+from .hypothesis_api import query_payload
+from .hypothesis_validation import HypothesisValidationError
+from .record_selection_services import list_ideas, list_sources
 from .services import (
     IdeaNotFound,
     ResourceNotFound,
@@ -107,6 +110,9 @@ def exception_handler(exc, context):
 class SourceCreateView(APIView):
     permission_classes = [IsAuthenticated, IsEditor]
 
+    def get(self, request):
+        return _selection_response(request, list_sources)
+
     def post(self, request):
         if request.content_type != "application/json":
             return _invalid()
@@ -161,7 +167,7 @@ class SourceCorrectionView(APIView):
 
 
 class SourceDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRmsReader]
 
     def get(self, request, source_id: str):
         source = _source_or_response(source_id)
@@ -171,7 +177,7 @@ class SourceDetailView(APIView):
 
 
 class SourceHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRmsReader]
 
     def get(self, request, source_id: str):
         source = _source_or_response(source_id)
@@ -181,7 +187,7 @@ class SourceHistoryView(APIView):
 
 
 class SourceManifestView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRmsReader]
 
     def get(self, request, source_id: str):
         source = _source_or_response(source_id)
@@ -215,6 +221,9 @@ class SourceManifestView(APIView):
 
 class IdeaCreateView(APIView):
     permission_classes = [IsAuthenticated, IsEditor]
+
+    def get(self, request):
+        return _selection_response(request, list_ideas)
 
     def post(self, request):
         if request.content_type != "application/json":
@@ -269,7 +278,7 @@ class IdeaCorrectionView(APIView):
 
 
 class IdeaDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRmsReader]
 
     def get(self, request, idea_id: str):
         idea = _idea_or_response(idea_id)
@@ -279,7 +288,7 @@ class IdeaDetailView(APIView):
 
 
 class IdeaHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRmsReader]
 
     def get(self, request, idea_id: str):
         idea = _idea_or_response(idea_id)
@@ -545,11 +554,22 @@ def _stored_response(stored):
 
 
 def _service_error_response(error: ServiceError) -> Response:
-    if isinstance(error, ResourceNotFound):
+    if hasattr(error, "http_status"):
+        http_status = error.http_status
+    elif isinstance(error, ResourceNotFound):
         http_status = 404
     else:
         http_status = 409
     return error_response(error.code, error.safe_message, http_status)
+
+
+def _selection_response(request, listing):
+    try:
+        return Response(listing(actor=request.user, query=query_payload(request.query_params)))
+    except HypothesisValidationError:
+        return _invalid()
+    except ServiceError as error:
+        return _service_error_response(error)
 
 
 def _invalid() -> Response:

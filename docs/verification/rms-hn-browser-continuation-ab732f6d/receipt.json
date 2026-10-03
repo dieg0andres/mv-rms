@@ -1,0 +1,43 @@
+{
+  "run_id": "ab732f6d-0146-4f44-aef7-b691bc838f28",
+  "candidate": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "checker_sha256": "6c2e791d09c6301df7ee3a9bd6d2becc8c3aee2b4ec0f66b2f9b05df57ad842f",
+  "original_sha256": "ae8856c7fade4705a0b048b53a002831a9b62dc110578a99836e88103204e19a",
+  "original_manifest_sha256": "df2587253a5e505c0b0710abef9ccbf8a365469d5119fc6f7b72da09cd3ba776",
+  "input_entries_verified": 9,
+  "created_row_addendum_sha256": "c9b15a75f3b1b1c1ac7e90cc2ecb5f6a3e1dbd2d8f99fe1c044ac0aa22c910b6",
+  "node": "v24.20.0",
+  "offline_command": "node --test tests/browser/hypothesis_editor_continuation.test.mjs",
+  "offline_tests": 4,
+  "offline_pass": 4,
+  "offline_exit": 0,
+  "syntax_exit": 0,
+  "unchanged_export_functions": [
+    "config",
+    "fullFields",
+    "flatten",
+    "immutable",
+    "checkSaved",
+    "checkPreserved"
+  ],
+  "original_stale_key_assertion_unchanged": true,
+  "no_live_execution": true,
+  "writes_if_executed": {
+    "new_hypothesis_identities": 0,
+    "owned_hypothesis": "HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd",
+    "new_versions": [
+      2,
+      3
+    ],
+    "association_version_appends": 4,
+    "successful_write_receipts": 2,
+    "native_post_budget": 4,
+    "expected_denials": [
+      "stale409",
+      "missing404"
+    ],
+    "impact_appends": "Existing source-generated per-version notices and their identities if pinned upstream is superseded; no direct impact/context writes"
+  },
+  "canonical_packaged_import": "PASS; no run invoked"
+}

@@ -1,0 +1,25 @@
+{
+  "source": "existing application access log",
+  "private_origin_query_referer_identity_omitted": true,
+  "requests": [
+    {
+      "time": "03/Oct/2026:21:32:09 +0000",
+      "method": "GET",
+      "path": "/hypotheses/new",
+      "status": 200
+    },
+    {
+      "time": "03/Oct/2026:21:32:11 +0000",
+      "method": "POST",
+      "path": "/hypotheses/new",
+      "status": 303
+    },
+    {
+      "time": "03/Oct/2026:21:32:12 +0000",
+      "method": "GET",
+      "path": "/hypotheses/HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd/versions/1",
+      "status": 200
+    }
+  ],
+  "operator_browser_read": "Exact v1 opened successfully on529e638 after saved-row readback; no new mutation"
+}

@@ -1,0 +1,33 @@
+{
+  "time": "2026-10-03T21:31:00.437771+00:00",
+  "commit": "529e6382e0fc1ca212b20f2400bb83e9de7b5efc",
+  "tree": "5b98b0b2e7de1cd27009b754089f801c770eb745",
+  "app_id": "3ffd77f144edb758413c5d3a926faada74462dd4907f6472d4ae1763646583b5",
+  "image_id": "sha256:bcebcfa61d51121ce8e18d4ed9d8e34da79913f491413b26f5adac15c0ce4f48",
+  "healthy": true,
+  "database_id": "a226d90a286a1701dd077fc82ef3cbc9b5af0ad72d824a7a29cf5f2de4796546",
+  "database_start": "2026-09-26T20:28:23.190901462Z",
+  "checks": {
+    "image": true,
+    "db_identity": true,
+    "db_start": true,
+    "db_mounts": true,
+    "auth_all_tables": true,
+    "app_env": true,
+    "app_mounts": true,
+    "host_PortBindings": true,
+    "host_SecurityOpt": true,
+    "host_CapAdd": true,
+    "host_CapDrop": true,
+    "host_Privileged": true,
+    "host_ReadonlyRootfs": true,
+    "host_NetworkMode": true,
+    "app_user": true,
+    "installed_commit_tree": true
+  },
+  "protected_table_count": 7,
+  "existing_users": 3,
+  "migrations_executed": false,
+  "data_reset": false,
+  "authorization": "Direct founder exact529 app-only approval"
+}

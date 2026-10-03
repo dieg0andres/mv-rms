@@ -1,0 +1,9 @@
+test_foreign_origin_still_denied_with_matching_cookie_and_token (__main__.CsrfBootstrapTests.test_foreign_origin_still_denied_with_matching_cookie_and_token) ... ok
+test_matching_cookie_control_reaches_mocked_save (__main__.CsrfBootstrapTests.test_matching_cookie_control_reaches_mocked_save) ... ok
+test_missing_token_still_denied_with_matching_cookie_and_origin (__main__.CsrfBootstrapTests.test_missing_token_still_denied_with_matching_cookie_and_origin) ... ok
+test_normal_get_to_native_post_saves_without_manual_cookie (__main__.CsrfBootstrapTests.test_normal_get_to_native_post_saves_without_manual_cookie) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.285s
+
+OK

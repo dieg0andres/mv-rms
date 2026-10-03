@@ -1,0 +1,21 @@
+.site-header { max-width: 70rem; margin: 0 auto; padding: 1rem; }
+.brand { font-weight: 700; font-size: 1.25rem; }
+.primary-navigation, .record-links { display: flex; flex-wrap: wrap; gap: .5rem 1rem; padding: 0; list-style: none; }
+.primary-navigation a { display: inline-block; padding: .45rem .6rem; }
+.primary-navigation a[aria-current="page"] { font-weight: 700; border-bottom: .2rem solid #004b8d; }
+.skip-link { position: absolute; top: -10rem; left: 1rem; background: #fff; padding: .6rem; z-index: 1; }
+.skip-link:focus { top: .5rem; }
+main:focus { outline: 3px solid #e59f00; outline-offset: 2px; }
+fieldset { border: 1px solid #82909c; margin: 1rem 0; min-width: 0; }
+legend { font-weight: 700; }
+.field input, .field select, .field textarea { box-sizing: border-box; width: 100%; }
+.field-error { color: #912018; }
+.error-summary:focus { outline: 3px solid #e59f00; outline-offset: 2px; }
+.card:target { outline: 3px solid #e59f00; outline-offset: 2px; }
+.field label, .field p, .card li { overflow-wrap: anywhere; }
+.record-list { list-style: none; padding: 0; }
+.card, fieldset { overflow-wrap: anywhere; }
+.card dl dl { display: block; }
+.card table { display: block; overflow-x: auto; }
+input[type="checkbox"] { width: auto; }
+@media (max-width: 40rem) { .site-header { padding: .75rem; } .primary-navigation { gap: .25rem; } }

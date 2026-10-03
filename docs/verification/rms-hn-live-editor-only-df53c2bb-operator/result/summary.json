@@ -1,0 +1,303 @@
+{
+  "H10_H11_full": "INCONCLUSIVE: PostgreSQL transaction/session overlap unobserved",
+  "H12": "INCOMPLETE / INCONCLUSIVE: viewer checks NOT EXECUTED",
+  "H14": "NOT EXECUTED: separate ordinary-role access required",
+  "candidate": "aead8ff52128859fbae8b0f3d8ed2de67aff5131",
+  "cases": [
+    {
+      "actual": "explicit editor-only mode; viewer binding unavailable",
+      "case": "H12.viewer_write_denied",
+      "expected": {
+        "error": null,
+        "status": 403
+      },
+      "result": "NOT EXECUTED"
+    },
+    {
+      "actual": "explicit editor-only mode; viewer binding unavailable",
+      "case": "H12.viewer_read_parity",
+      "expected": "same representation under viewer",
+      "result": "NOT EXECUTED"
+    },
+    {
+      "actual": 200,
+      "case": "deployed_commit_label",
+      "expected": "aead8ff52128859fbae8b0f3d8ed2de67aff5131",
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": null,
+        "status": 201
+      },
+      "case": "H10.create_request_0",
+      "expected": {
+        "error": null,
+        "status": 201
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": null,
+        "status": 201
+      },
+      "case": "H10.create_request_1",
+      "expected": {
+        "error": null,
+        "status": 201
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": [
+        "7a0a073993ab4735cb2130a75ec7a094e03bb7e525574ff2ea0fd1fc0f19a21f",
+        "7a0a073993ab4735cb2130a75ec7a094e03bb7e525574ff2ea0fd1fc0f19a21f"
+      ],
+      "case": "H10.same_key_exact_response",
+      "expected": "identical response bytes",
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "classification": "synthetic",
+        "draft_completeness": "incomplete",
+        "status": "draft",
+        "version": 1
+      },
+      "case": "H03.minimal_draft",
+      "expected": "synthetic incomplete draft v1",
+      "result": "PASS"
+    },
+    {
+      "actual": "compared every returned field",
+      "case": "H03.no_invented_defaults",
+      "expected": "title retained; every other draft field null",
+      "result": "PASS"
+    },
+    {
+      "actual": "IDEV-0eb786a3-b9c4-49be-b273-9cb55f25bd99",
+      "case": "H02.exact_idea",
+      "expected": "IDEV-0eb786a3-b9c4-49be-b273-9cb55f25bd99",
+      "result": "PASS"
+    },
+    {
+      "actual": "INVV-8a7e3cf8-a61a-4d81-879e-40c63df95a5c",
+      "case": "H02.exact_investigation",
+      "expected": "INVV-8a7e3cf8-a61a-4d81-879e-40c63df95a5c",
+      "result": "PASS"
+    },
+    {
+      "actual": "IFAV-ac0055ea-88bc-4286-9fa1-26e0032267d3",
+      "case": "H02.exact_idea_family_association",
+      "expected": "IFAV-ac0055ea-88bc-4286-9fa1-26e0032267d3",
+      "result": "PASS"
+    },
+    {
+      "actual": 201,
+      "case": "H10.serial_replay_bytes",
+      "expected": "original 201 and bytes",
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": "idempotency_conflict",
+        "status": 409
+      },
+      "case": "H10.changed_payload_rejection",
+      "expected": {
+        "error": "idempotency_conflict",
+        "status": 409
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": [
+        201,
+        409
+      ],
+      "case": "H11.competing_revision_statuses",
+      "expected": [
+        201,
+        409
+      ],
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": "stale_version",
+        "status": 409
+      },
+      "case": "H11.loser_stale",
+      "expected": {
+        "error": "stale_version",
+        "status": 409
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "changed_fields": [
+          "/fields/title"
+        ],
+        "corrects_version": 1,
+        "supersedes_version_id": "HYPV-8400cfee-fd71-48e0-9385-82ce79c0f9fc",
+        "version": 2
+      },
+      "case": "H08.reasoned_v2",
+      "expected": "one v2 linked to unchanged v1 and intended full snapshot",
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": null,
+        "status": 200
+      },
+      "case": "H11.no_change",
+      "expected": {
+        "error": null,
+        "status": 200
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": null,
+        "status": 401
+      },
+      "case": "H12.anonymous_read_denied",
+      "expected": {
+        "error": null,
+        "status": 401
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": true,
+      "case": "H12.anonymous_challenge",
+      "expected": "WWW-Authenticate",
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": "validation_error",
+        "status": 400
+      },
+      "case": "H04.invalid_title",
+      "expected": {
+        "error": "validation_error",
+        "status": 400
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": {
+        "error": "validation_error",
+        "status": 400
+      },
+      "case": "H12.forged_metadata",
+      "expected": {
+        "error": "validation_error",
+        "status": 400
+      },
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses/HYP-ababb245-23f4-4f4f-b5f8-9df67e2579c5/history",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": [
+        "HYPV-8400cfee-fd71-48e0-9385-82ce79c0f9fc",
+        "HYPV-312e16b1-4da7-4097-8ee0-e4f63d83b4fb"
+      ],
+      "case": "H08.H11.no_extra_version",
+      "expected": [
+        "HYPV-8400cfee-fd71-48e0-9385-82ce79c0f9fc",
+        "HYPV-312e16b1-4da7-4097-8ee0-e4f63d83b4fb"
+      ],
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses/HYP-ababb245-23f4-4f4f-b5f8-9df67e2579c5/versions/1",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": "compared every returned field",
+      "case": "H08.v1_preserved",
+      "expected": "exact original API representation",
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses/HYP-da014a8c-998c-48d8-872a-de15b5262cb3/versions/1",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": "compared every returned field",
+      "case": "H13.seed_unchanged",
+      "expected": "seed exact version unchanged",
+      "result": "PASS"
+    },
+    {
+      "actual": 200,
+      "case": "read:/api/v1/hypotheses",
+      "expected": 200,
+      "result": "PASS"
+    },
+    {
+      "actual": 3,
+      "case": "H10.H12.one_new_identity",
+      "expected": 3,
+      "result": "PASS"
+    }
+  ],
+  "client_concurrency_result": "PASS",
+  "create_client_requests_overlap": true,
+  "created_hypothesis_id": "HYP-ababb245-23f4-4f4f-b5f8-9df67e2579c5",
+  "database_transaction_overlap": "NOT OBSERVED; client overlap cannot establish it",
+  "db_connections": 0,
+  "ended_at": "2026-10-03T20:27:10.410184+00:00",
+  "execution_mode": "EDITOR_ONLY",
+  "fixture": "HN-TE-1.0/runtime-smoke-v1",
+  "full_H01_H20_acceptance": "INCOMPLETE / INCONCLUSIVE; browser and SQL NOT EXECUTED",
+  "intended_create_payload": {
+    "fields": {
+      "title": "Independent runtime df53c2bb-3a93-4abb-8986-f420170f0ddc"
+    },
+    "idea_family_binding": {
+      "association_version_id": "IFAV-ac0055ea-88bc-4286-9fa1-26e0032267d3",
+      "mode": "existing"
+    },
+    "investigation_version_id": "INVV-8a7e3cf8-a61a-4d81-879e-40c63df95a5c",
+    "origin_rationale": "Independent invented runtime smoke; no research authority.",
+    "originating_idea_version_id": "IDEV-0eb786a3-b9c4-49be-b273-9cb55f25bd99"
+  },
+  "receipt_sha256": "97f1907fb446d35aaa55c9ddc9e6899aa36d18799655a6200b8b71e6400a3ea4",
+  "release_evidence_ref": "MAU140 installed receipt sha256:8cdf2441244484bf588a2432cfb0c6284df52497bc81616b8560fa00133b2d38 and Director bounded successor review",
+  "request_count": 17,
+  "requests_sha256": "a96b718864bfe1b5b79bfd0f8ec4c1621ebaa169a742525a28699d6f6a7fb777",
+  "result": "HTTP_EDITOR_ONLY_SMOKE_PASS",
+  "revision_client_requests_overlap": true,
+  "run_id": "df53c2bb-3a93-4abb-8986-f420170f0ddc",
+  "seed_version_id": "HYPV-bd7acc27-eaa8-4dcf-ba22-e7f8b52cdb09",
+  "started_at": "2026-10-03T20:27:01.584107+00:00",
+  "tree": "5880845c045af75e19c686cb5840b736a414abfa"
+}

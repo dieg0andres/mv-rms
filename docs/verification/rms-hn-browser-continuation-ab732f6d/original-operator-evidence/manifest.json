@@ -1,0 +1,52 @@
+[
+  {
+    "path": "app-update-postcheck.json",
+    "bytes": 1100,
+    "sha256": "0c75a3753f31b10ea49ffaf2d7e55fdfcc6b6f64e9cde294f0932afb266b4e47"
+  },
+  {
+    "path": "app-update-result.json",
+    "bytes": 71,
+    "sha256": "41019e50e6de0953273a9b598220a95c2fec70058ffddb85cef0be4746bd20b0"
+  },
+  {
+    "path": "browser-checker.mjs",
+    "bytes": 26419,
+    "sha256": "ae8856c7fade4705a0b048b53a002831a9b62dc110578a99836e88103204e19a"
+  },
+  {
+    "path": "browser-created-row-readonly.json",
+    "bytes": 435,
+    "sha256": "c9b15a75f3b1b1c1ac7e90cc2ecb5f6a3e1dbd2d8f99fe1c044ac0aa22c910b6"
+  },
+  {
+    "path": "browser-operator-finish.json",
+    "bytes": 126,
+    "sha256": "5d2cc00e127e5f6dc6d4860c8d91e7ac9c12197b662aa35a5ee79ceb0c8547ff"
+  },
+  {
+    "path": "browser-operator-start.json",
+    "bytes": 511,
+    "sha256": "448ceb099320108bfb1c64bcaef5fbb9941ef3e348eec99a51658f6bd03efe98"
+  },
+  {
+    "path": "browser-request-trace.json",
+    "bytes": 686,
+    "sha256": "12f7b1350a8c8d0fc0049561f9bac8a18edf4eb701641700f769325506685aa5"
+  },
+  {
+    "path": "browser-stderr.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "browser-stdout.log",
+    "bytes": 48,
+    "sha256": "2501e19c4aac94e0ce17b9869caff7fbeb985f3decd517acb12a5a26600d038a"
+  },
+  {
+    "path": "browser-summary.json",
+    "bytes": 5446,
+    "sha256": "3fce0b6727a1d49babd1cc4336856cd6777da4926ba021c2edc62a619c9e5e8d"
+  }
+]

@@ -1,0 +1,275 @@
+--- accepted_ae8856c7
++++ owned_record_continuation
+@@ -11,6 +11,7 @@
+ export const TREE = '5b98b0b2e7de1cd27009b754089f801c770eb745';
+ export const ORIGIN_SHA = '180c15a36c1ad001f27b7f6b4ebd6d397283344936a45ff64bd5260165aa6bf0';
+ export const SEED = 'HYP-da014a8c-998c-48d8-872a-de15b5262cb3';
++export const OWNED = Object.freeze({ id: 'HYP-8df724d5-53a9-4a62-9cce-839b03ab91bd', version_id: 'HYPV-2ce72c93-f095-4a69-b515-dfc0e8b3de1a', title: 'BROWSER-1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3 incomplete keyboard' });
+ export const MARKER = '<img src=x onerror=alert(1)>';
+ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+ const sha = value => createHash('sha256').update(value).digest('hex');
+@@ -98,18 +99,53 @@
+   assert.deepEqual(after, before, 'owned_input_and_key_preserved');
+ }
+ 
+-export function allowedPost(url, origin, recordId, count, boundIdea = null) {
+-  if (!sameOriginRequest(url, origin) || count >= 5) return false;
+-  const parsed = new URL(url);
+-  if (parsed.pathname === '/hypotheses/new') {
+-    if (!parsed.search) return true;
+-    if (!boundIdea) return false;
+-    const query = parsed.searchParams;
+-    return [...query].length === 2 &&
+-      query.getAll('idea_id').length === 1 && query.getAll('idea_version').length === 1 &&
+-      query.get('idea_id') === boundIdea.idea_id && query.get('idea_version') === boundIdea.idea_version;
++// Continuation has no create operation except its single missing-reference denial.
++export function allowedPost(url, origin, recordId, count, allowMissingCreate = false) {
++  if (!sameOriginRequest(url, origin) || count >= 4 || recordId !== OWNED.id) return false;
++  const u = new URL(url);
++  if (u.search) return false;
++  return u.pathname === `/hypotheses/${OWNED.id}/revise` ||
++    (allowMissingCreate && u.pathname === '/hypotheses/new');
++}
++
++export function savedDestination(raw, origin, location) {
++  if (!/^\/hypotheses\/HYP-[0-9a-f-]{36}\/versions\/[1-3]$/.test(location || '') ||
++      !sameOriginRequest(String(raw), origin)) return false;
++  const u = new URL(String(raw));
++  return u.pathname === location && !u.search &&
++    (!u.hash || ['#hypothesis-fields', '#research-context'].includes(u.hash));
++}
++
++export function safeLocal(raw, origin) {
++  let u;
++  try {
++    u = new URL(String(raw));
++    if (!sameOriginRequest(u.href, origin)) throw new Error('other_origin');
++  } catch {
++    return { current_local_url: '[other-or-no-origin]', origin_equals_expected: false };
+   }
+-  return Boolean(!parsed.search && recordId && parsed.pathname === `/hypotheses/${recordId}/revise`);
++  const permitted = /^\/(?:api\/v1\/)?(?:hypotheses|ideas)(?:\/(?:HYP|IDE)-[0-9a-f-]{36}(?:\/(?:versions\/[1-3]|history|revise))?|\/new)?$/.test(u.pathname) ||
++    ['/', '/__staging/version', '/research-context'].includes(u.pathname);
++  const fragment = !u.hash ? '' : ['#hypothesis-fields', '#research-context', '#draft-errors'].includes(u.hash) ? u.hash : '#redacted';
++  return { current_local_url: permitted ? u.pathname + fragment : '[redacted-local-path]', origin_equals_expected: true };
++}
++
++export function networkCategory(text) {
++  if (String(text).includes('ERR_ABORTED')) return 'ABORTED';
++  if (String(text).includes('ERR_NAME_NOT_RESOLVED')) return 'DNS';
++  if (/ERR_(CERT|SSL)/.test(String(text))) return 'TLS';
++  if (/ERR_(CONNECTION|TIMED_OUT)/.test(String(text))) return 'CONNECTION';
++  return 'OTHER_NETWORK';
++}
++
++export function assertOwnedBaseline(first, latest, history) {
++  assert.equal(first.hypothesis_id, OWNED.id, 'bound_owned_identity');
++  assert.equal(first.version_id, OWNED.version_id, 'bound_owned_version');
++  assert.equal(first.version, 1, 'bound_owned_v1');
++  assert.equal(first.fields.title, OWNED.title, 'bound_original_title');
++  assert.equal(first.classification, 'synthetic', 'bound_synthetic');
++  assert.deepEqual(immutable(latest), immutable(first), 'owned_still_at_v1_before_writes');
++  assert.deepEqual(history.results.map(r => r.version_id), [OWNED.version_id], 'only_owned_v1_before_writes');
+ }
+ 
+ export async function run(c) {
+@@ -118,11 +154,13 @@
+   const result = {
+     candidate: CANDIDATE, tree: TREE, origin_sha256: sha(c.origin), run_id: c.runId,
+     started_at: new Date().toISOString(), node: process.version,
+-    result: 'INCONCLUSIVE', assertions: [], requests: [], screenshots: [], committed: [], preservation: [],
++    result: 'INCONCLUSIVE', assertions: [], requests: [], screenshots: [], committed: [], preservation: [], diagnostics: [], accepted_redirects: [], request_failures: [],
++    continuation_of: '1c17699a-c11b-4ceb-bcb8-c7a8d68d0bd3', preexisting_record: OWNED,
+     viewer_checks: 'WAIVED BY FOUNDER / NOT EXECUTED', full_H01_H20: 'INCOMPLETE',
+     limitations: ['Focused editor browser smoke only', 'No ordinary SQL-role H14 proof', 'No DB transaction-overlap claim', 'No merge, Stage 1 or Risk acceptance']
+   };
+-  let browser, step = 'runtime', recordId = null, postCount = 0, unsafe = 0, boundCreateIdea = null;
++  let browser, step = 'runtime', recordId = OWNED.id, postCount = 0, unsafe = 0, allowMissingCreate = false, currentPage = null, phase = 'runtime';
++  const checkpoint = (label, p = currentPage) => { phase = label; currentPage = p; if (result.diagnostics.length < 200) result.diagnostics.push({ step, phase, ...safeLocal(p?.url() || '', c.origin) }); };
+   const pass = name => result.assertions.push({ name, result: 'PASS' });
+   const check = (name, action) => { action(); pass(name); };
+   try {
+@@ -142,7 +180,7 @@
+       const request = route.request();
+       if (!sameOriginRequest(request.url(), c.origin) ||
+           (request.method() !== 'GET' && request.method() !== 'HEAD' &&
+-           (request.method() !== 'POST' || !allowedPost(request.url(), c.origin, recordId, postCount, boundCreateIdea)))) {
++           (request.method() !== 'POST' || !allowedPost(request.url(), c.origin, recordId, postCount, allowMissingCreate)))) {
+         unsafe += 1;
+         await route.abort();
+       } else {
+@@ -150,6 +188,7 @@
+         await route.continue();
+       }
+     });
++    context.on('requestfailed', r => { if (result.request_failures.length < 20) result.request_failures.push({ ...safeLocal(r.url(), c.origin), category: networkCategory(r.failure()?.errorText || '') }); });
+     context.on('page', p => p.on('dialog', async dialog => { unsafe += 1; await dialog.dismiss(); }));
+     const page = await context.newPage();
+     const local = raw => {
+@@ -157,6 +196,7 @@
+       const u = new URL(raw); return u.pathname; // Never record private origin or query.
+     };
+     const api = async route => {
++      checkpoint('api_read:' + route);
+       assert(route.startsWith('/') && !route.startsWith('//'), 'local_api_path');
+       const r = await context.request.get(c.origin + route, { maxRedirects: 0, timeout: 20000 });
+       const bytes = await r.body();
+@@ -165,16 +205,19 @@
+       return JSON.parse(bytes.toString('utf8'));
+     };
+     const navigate = async (p, route) => {
++      checkpoint('navigate', p);
+       const r = await p.goto(c.origin + route, { waitUntil: 'domcontentloaded' });
+       assert.equal(r.status(), 200, 'page_status'); assert.equal(local(p.url()), route, 'page_destination');
+     };
+     const click = async (p, locator) => {
++      checkpoint('click_link', p);
+       const href = await locator.getAttribute('href');
+       const destination = new URL(href, p.url());
+       assert(sameOriginRequest(destination.href, c.origin), 'same_origin_link');
+       await Promise.all([p.waitForURL(destination.href, { waitUntil: 'domcontentloaded' }), locator.click()]);
+     };
+     const fill = async (p, name, value) => {
++      checkpoint('fill:' + name, p);
+       const el = control(p, name); assert.equal(await el.count(), 1, 'implemented_control');
+       if (await el.evaluate(e => e.tagName) === 'SELECT') await el.selectOption(value);
+       else await el.fill(value);
+@@ -194,19 +237,29 @@
+       }
+     };
+     const post = async (p, expectedStatus) => {
+-      const promise = p.waitForResponse(r => r.request().method() === 'POST' && sameOriginRequest(r.url(), c.origin));
+-      await p.locator('button[name="operation"][value="save"]').click();
+-      const r = await promise;
+-      result.requests.push({ method: 'POST', path: local(r.url()), status: r.status() });
++      checkpoint('native_submit', p);
++      const [r] = await Promise.all([
++        p.waitForResponse(r => r.request().method() === 'POST' && sameOriginRequest(r.url(), c.origin)),
++        p.locator('button[name="operation"][value="save"]').click(),
++      ]);
++      checkpoint('native_status', p);
++      const requestEvidence = { method: 'POST', path: local(r.url()), status: r.status() };
++      result.requests.push(requestEvidence);
+       assert.equal(r.status(), expectedStatus, 'native_post_status');
+       if (expectedStatus === 303) {
+         const location = await r.headerValue('location');
+-        assert.match(location || '', /^\/hypotheses\/HYP-[0-9a-f-]{36}\/versions\/[1-3]$/, 'exact_saved_redirect');
+-        await p.waitForURL(c.origin + location, { waitUntil: 'domcontentloaded' });
+-        recordId ??= location.split('/')[2];
++        assert.match(location || '', /^\/hypotheses\/HYP-[0-9a-f-]{36}\/versions\/[23]$/, 'exact_saved_redirect');
++        assert.equal(location.split('/')[2], OWNED.id, 'owned_saved_redirect');
++        requestEvidence.redirect_path = location;
++        result.accepted_redirects.push({ id: OWNED.id, version: Number(location.split('/').at(-1)), path: location, state: 'SERVER_ACCEPTED_API_NOT_YET_VERIFIED' });
++        checkpoint('redirect_destination', p);
++        await p.waitForURL(url => savedDestination(url, c.origin, location), { waitUntil: 'domcontentloaded' });
++        checkpoint('redirect_arrived', p);
+       } else {
++        checkpoint('error_summary', p);
+         await p.locator('[data-error-summary]').waitFor();
+         await p.waitForFunction(() => document.activeElement?.id === 'draft-errors');
++        checkpoint('error_summary_focused', p);
+       }
+     };
+     const escaped = async p => {
+@@ -220,6 +273,7 @@
+       result.screenshots.push({ file: name + '.png', sha256: sha(bytes) });
+     };
+     const displayed = async (p, r) => {
++      checkpoint('displayed_version_' + r.version, p);
+       const card = p.locator(`#record-version-${r.version}`);
+       await card.waitFor();
+       assert.equal((await card.locator('h2').innerText()), `${r.fields.title} — version ${r.version}`, 'title_page_api_parity');
+@@ -237,52 +291,22 @@
+     const seedPath = `/api/v1/hypotheses/${SEED}/versions/1`;
+     const seed = await api(seedPath);
+     assert.equal(seed.classification, 'synthetic'); assert.equal(seed.version, 1);
+-    boundCreateIdea = Object.freeze({ idea_id: seed.origin.idea.stable_id, idea_version: String(seed.origin.idea.version) });
+     const pins = { idea: seed.origin.idea.version_id, case: seed.research_context.investigation.version_id, binding: seed.research_context.idea_family_association.version_id };
+     result.pins = pins;
+     const prefix = `BROWSER-${c.runId}`;
+-    const initialTitle = `${prefix} incomplete`;
+     const fields = fullFields(prefix);
+     result.expected_complete_fields = fields;
+     const rationale = `${prefix} direct invented origin; no research authority.`;
+-    step = 'home_idea_create';
+-    await navigate(page, '/');
+-    await click(page, page.getByRole('navigation', { name: 'Primary', exact: true }).getByRole('link', { name: 'Ideas', exact: true }));
+-    // Follow normal list/pagination links; never substitute a guessed Idea URL.
+-    for (let n = 0; n < 20; n++) {
+-      const link = page.locator(`a[href="/ideas/${seed.origin.idea.stable_id}"]`);
+-      if (await link.count()) { await click(page, link); break; }
+-      const next = page.getByRole('link', { name: 'Next page', exact: true });
+-      assert.equal(await next.count(), 1, 'seed_idea_reachable'); await click(page, next);
+-    }
+-    assert.equal(local(page.url()), `/ideas/${seed.origin.idea.stable_id}`, 'normal_idea_path');
+-    await click(page, page.getByRole('link', { name: 'Idea version history', exact: true }));
+-    await click(page, page.getByRole('link', { name: `Create hypothesis from exact Idea v${seed.origin.idea.version}`, exact: true }));
+-    assert.equal(await control(page, '/originating_idea_version_id').inputValue(), pins.idea, 'chosen_exact_idea_prefilled');
+-    await fill(page, '/fields/title', initialTitle);
+-    await fill(page, '/originating_idea_version_id', pins.idea);
+-    await fill(page, '/origin_rationale', rationale);
+-    await fill(page, '/investigation_version_id', pins.case);
+-    await fill(page, '/idea_family_binding/mode', 'existing');
+-    await fill(page, '/idea_family_binding/association_version_id', pins.binding);
+-    // All incompatible first-assignment inputs must stay empty.
+-    for (const name of ['/idea_family_binding/family_version_id', '/idea_family_binding/rationale']) await fill(page, name, '');
+-    // Usable label and keyboard editing, not just a CSS selector.
+-    await page.locator('#hypothesis-fields').getByLabel('Title (required to save)', { exact: true }).focus();
+-    await page.keyboard.press('End'); await page.keyboard.type(' keyboard');
+-    await page.keyboard.press('Tab');
+-    assert.notEqual(await page.evaluate(() => document.activeElement?.id), 'draft-fields-title', 'keyboard_can_leave_title');
+-    const title1 = initialTitle + ' keyboard';
+-    // Existing context inspection/return is read-only and retains the unfinished input.
+-    const unsaved = await snapshot(page);
+-    await page.getByRole('link', { name: 'Set up Research context and keep draft input' }).click();
+-    await page.getByRole('link', { name: 'Return to unfinished draft with input intact' }).click();
+-    check('inline_context_return_preserves_input', () => assert.equal(unsafe, 0));
+-    await preserved(page, unsaved, 'inline_context_snapshot_preserved');
+-    await post(page, 303);
++    step = 'owned_record_resume';
+     const recordPath = `/api/v1/hypotheses/${recordId}`;
+-    const first = await api(recordPath + '/versions/1'); result.committed.push({ id: recordId, version: 1, version_id: first.version_id });
+-    checkSaved(first, { title: title1 }, 1, pins);
++    const first = await api(recordPath + '/versions/1');
++    const latestBefore = await api(recordPath);
++    const historyBefore = await api(recordPath + '/history');
++    assertOwnedBaseline(first, latestBefore, historyBefore);
++    // Original create succeeded per operator readback. Do not create or replay it.
++    result.preexisting_verified = { id: recordId, version: 1, version_id: first.version_id };
++    await navigate(page, `/hypotheses/${recordId}/versions/1`);
++    checkSaved(first, { title: OWNED.title }, 1, pins);
+     assert.equal(first.draft_completeness, 'incomplete');
+     for (const [key, value] of Object.entries(first.fields)) if (key !== 'title') assert.equal(value, null, 'no_invented_defaults');
+     await displayed(page, first); pass(step);
+@@ -327,6 +351,7 @@
+     await escaped(loser); await screenshot(loser, loser.locator('[data-error-summary]'), 'stale-error');
+     await screenshot(loser, control(loser, '/fields/title'), 'stale-owned-title'); pass(step);
+     step = 'not_found_owned_input';
++    allowMissingCreate = true;
+     const missing = await context.newPage();
+     await navigate(missing, '/hypotheses/new');
+     await fill(missing, '/fields/title', `${prefix} missing-reference draft`);
+@@ -336,7 +361,7 @@
+     await fill(missing, '/investigation_version_id', pins.case);
+     await fill(missing, '/idea_family_binding/mode', 'existing');
+     await fill(missing, '/idea_family_binding/association_version_id', pins.binding);
+-    const missingInput = await snapshot(missing); await post(missing, 404);
++    const missingInput = await snapshot(missing); await post(missing, 404); allowMissingCreate = false;
+     await preserved(missing, missingInput, 'not_found_full_input_and_key_preserved'); await escaped(missing);
+     assert.equal(await missing.locator('.status').innerText(), 'No new save confirmed.'); pass(step);
+     await screenshot(missing, control(missing, '/fields/claim'), 'not-found-owned-claim');
+@@ -357,12 +382,12 @@
+     await displayed(page, second); await screenshot(page, page.locator('#record-version-2 > h2'), 'narrow-owned-title'); pass(step);
+     await click(page, page.getByRole('navigation', { name: 'Primary', exact: true }).getByRole('link', { name: 'Home', exact: true }));
+     await page.getByRole('heading', { name: 'Home', exact: true }).waitFor(); pass('return_home');
+-    check('bounded_transport', () => { assert.equal(postCount, 5); assert.equal(unsafe, 0); });
++    check('bounded_transport', () => { assert.equal(postCount, 4); assert.equal(unsafe, 0); });
+     result.result = result.assertions.some(a => a.result === 'FAIL') ? 'FAIL' : 'EDITOR_BROWSER_SMOKE_PASS';
+     if (result.result === 'FAIL') process.exitCode = 1;
+   } catch (error) {
+     const label = String(error.message || '').split('\n')[0];
+-    result.result = 'FAIL'; result.failure = { step, kind: error.name, assertion: /^[A-Za-z0-9_.:/-]{1,120}$/.test(label) ? label : 'assertion_or_transport_failed_details_redacted' };
++    result.result = 'FAIL'; result.failure = { step, phase, ...safeLocal(currentPage?.url() || '', c.origin), error_category: error.name === 'TimeoutError' ? (phase === 'redirect_destination' ? 'REDIRECT_TIMEOUT' : 'UI_OR_REQUEST_TIMEOUT') : error.name === 'AssertionError' ? 'ASSERTION_FAILED' : 'OTHER_ERROR', kind: ['TimeoutError', 'AssertionError', 'Error'].includes(error.name) ? error.name : 'Error', assertion: /^[A-Za-z0-9_.:/-]{1,120}$/.test(label) ? label : 'assertion_or_transport_failed_details_redacted' };
+     result.assertions.push({ name: step, result: 'FAIL' }); process.exitCode = 1;
+   } finally {
+     if (browser) await browser.close().catch(() => { result.close_error = true; if (result.result !== 'FAIL') result.result = 'INCONCLUSIVE'; process.exitCode = 1; });

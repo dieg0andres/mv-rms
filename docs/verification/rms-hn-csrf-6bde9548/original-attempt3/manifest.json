@@ -1,0 +1,27 @@
+[
+  {
+    "path": "launch-attempt3-started.json",
+    "bytes": 621,
+    "sha256": "f52bbc325ba974c4968860ced6262266e5fa3bf109f364eecf08084e46ebb966"
+  },
+  {
+    "path": "operator-attempt3-receipt.json",
+    "bytes": 736,
+    "sha256": "f251604b6ac99a67f9eda79ae24198e251d2baaeaf1282696d14a0050e404441"
+  },
+  {
+    "path": "console-attempt3.log",
+    "bytes": 48,
+    "sha256": "2501e19c4aac94e0ce17b9869caff7fbeb985f3decd517acb12a5a26600d038a"
+  },
+  {
+    "path": "stderr-attempt3.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "summary.json",
+    "bytes": 5420,
+    "sha256": "ac1cfcc9f27bd89fc38ab15ca15bf4bd8688a66ce5871bf7398ea4cb087c352b"
+  }
+]

@@ -1,0 +1,3 @@
+{% extends "rms/base.html" %}
+{% block title %}Service unavailable — RMS{% endblock %}
+{% block content %}<h1>Service unavailable</h1><p class="error" role="alert">{% if heading %}{{ heading }} selection is unavailable. Records and counts are unknown. Try this page again or return Home.{% else %}Record services are unavailable. Records and counts are unknown. No save or completeness confirmation is available.{% endif %}</p>{% if unsaved_input %}<h2>Unsaved submitted input</h2><p>The schema could not be verified. Copy this escaped input before leaving; no guessed editable controls are supplied.</p><pre>{{ unsaved_input }}</pre>{% endif %}<p><a href="/">Return Home</a></p>{% endblock %}

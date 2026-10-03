@@ -1,0 +1,22 @@
+{
+  "operator-note.txt": {
+    "bytes": 351,
+    "sha256": "fe383783c697be370e5547642d6ad83cf3a3bbdaecf8466b813424605baa775f"
+  },
+  "probe.py": {
+    "bytes": 4800,
+    "sha256": "923f08ea3789876f8f5cf39fe39c2035a2c92c67448bf4075f836e6744d419c4"
+  },
+  "receipt.json": {
+    "bytes": 533,
+    "sha256": "be78ce7827dadbdfec41b4f4cd579fcf486dea6f6cdbce4310fcab043b55e6db"
+  },
+  "result.json": {
+    "bytes": 6090,
+    "sha256": "6da5772002f89691ed3ea823cc020286f3c3bf7b95c4171679d4970a8e343748"
+  },
+  "stderr.log": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

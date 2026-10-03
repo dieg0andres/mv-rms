@@ -1,6 +1,6 @@
-"""The frozen RMS-VS-1 API routes and read-only history page."""
+"""Integrated Hypothesis/navigation routes and preserved Source/Idea routes."""
 
-from django.urls import path
+from django.urls import include, path
 
 from rms import api, views
 
@@ -63,4 +63,6 @@ urlpatterns = [
         name="idea-history",
     ),
     path("api/v1/readiness", api.ReadinessView.as_view(), name="readiness"),
+    path("", include("rms.hypothesis_api_urls")),
+    path("", include("rms.navigation_urls")),
 ]

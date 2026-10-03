@@ -1,0 +1,12 @@
+✔ normal inherited form fragment defeats old exact wait but matches exact saved resource (1.082512ms)
+✔ continuation admits only owned query-free revisions and one bounded missing-reference route (1.339164ms)
+✔ actual owned v1 identity and unchanged latest/history are required before writes (2.464587ms)
+✔ diagnostics strip origins, query values and arbitrary fragments and emit network enums only (0.620857ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.333246

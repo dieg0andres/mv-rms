@@ -1,0 +1,76 @@
+{
+  "run_id": "2ba615a6-6532-4627-a229-c3eaf01aa68e",
+  "issue": "MAU-142",
+  "base_commit": "ac5b0291d6f12d75c54175a54cc224abc4876081",
+  "branch": "MAU-142-hypothesis-navigation-backend-records-lineage-and-draft-api",
+  "candidate_kind": "uncommitted changed source; Git staging denied by read-only metadata",
+  "source_manifest_sha256": "df2500731f0a22750aa1ba34dd70209d3c6fd088b9e591b59120de7738ff1997",
+  "binding_format": "UTF-8 json.dumps(files, sort_keys=True, separators=(comma, colon)), no newline",
+  "files": [
+    {
+      "path": "docs/RMS-HN-API-1.md",
+      "bytes": 16513,
+      "sha256": "c03f57baf0386876caee9fd80ba2bc9ab3a7fecd7b9e796bb65ca5bef8530471"
+    },
+    {
+      "path": "rms/api.py",
+      "bytes": 19102,
+      "sha256": "7edf1d53fa35a066441ac9a68c725aa60605e10f9185af99d55b8a48753fb5b0"
+    },
+    {
+      "path": "rms/hypothesis_schema.json",
+      "bytes": 29915,
+      "sha256": "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea"
+    },
+    {
+      "path": "rms/hypothesis_validation.py",
+      "bytes": 11109,
+      "sha256": "19598fcfd4f6de0202fa452fff589a3d8f3835fb962fda3e3d42930358e7d748"
+    },
+    {
+      "path": "rms/permissions.py",
+      "bytes": 1083,
+      "sha256": "7fd92ab477eeeb3b1c1dbcfb9562878786e4de133a1917b8a47109427ab87d57"
+    },
+    {
+      "path": "rms/record_selection_services.py",
+      "bytes": 3357,
+      "sha256": "ee2805b566b78496ea08d925cb700c64bdcc6e495ee303a392bcdc24c261a608"
+    },
+    {
+      "path": "rms/research_context_common.py",
+      "bytes": 8187,
+      "sha256": "a378a6876d5224f4a9719c2ff9a057e0e3a308edbf6ea69cd51a6b6096452580"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_source_tests.py",
+      "bytes": 10694,
+      "sha256": "8a07d09a1c19149754c8d20a3252195e4ee9ef7732d4b8d3b51fa252e90619f3"
+    },
+    {
+      "path": "tests/django_hypothesis_backend_validation_tests.py",
+      "bytes": 15041,
+      "sha256": "3d3109e36b2abb3ae603985a715c6ec312bc1ec8f0d312066148dbe1691f0450"
+    },
+    {
+      "path": "tests/django_record_selection_backend_tests.py",
+      "bytes": 24603,
+      "sha256": "fe6d90f6fcce3504de3ab92da653a16a2ec5992214e05fcdbd377f321c36f2b3"
+    }
+  ],
+  "interface_version": "1.2",
+  "record_schema_version": "1.0",
+  "contract_bytes": 58395,
+  "contract_sha256": "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9",
+  "verification": {
+    "tests": 30,
+    "passed": true,
+    "database_connection_attempts": 0,
+    "output": "docs/RMS-HN-API-1-R4-R5-2ba615a6-tests.txt"
+  },
+  "publication": {
+    "new_commit": null,
+    "push": false,
+    "paperclip_write_attempted": false
+  }
+}

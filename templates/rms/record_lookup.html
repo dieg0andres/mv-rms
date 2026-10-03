@@ -1,0 +1,8 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ heading }} — RMS{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+<form method="get"><div class="field"><label for="record-id">Saved {{ heading }} ID</label><input id="record-id" name="record_id" type="text" required></div><button type="submit">Find permitted record</button></form>
+{% if selected_record %}<section class="card"><h2>{{ selected_record.latest.title }}</h2><p>Latest version {{ selected_record.latest_version }}</p><p><a href="{{ selected_url }}">Open record and saved versions</a></p></section>{% else %}<p>Enter a saved record ID to reopen its detail and history. A collection reader for these existing records is not supplied by the adopted service interface; available counts are unknown.</p>{% endif %}
+{% if can_edit %}{% if heading == "Sources" %}<p><a href="/sources/new">Create source</a></p>{% else %}<p><a href="/ideas/new">Create idea</a></p>{% endif %}{% else %}<p>Viewer access is read-only.</p>{% endif %}
+{% endblock %}

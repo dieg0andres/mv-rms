@@ -1,0 +1,17 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<header class="site-header">
+  <p class="brand">Research Management System</p>
+  <nav aria-label="Primary">
+    <ul class="primary-navigation">
+      {% if navigation %}
+        {% for item in navigation %}<li><a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.label }}</a></li>{% endfor %}
+      {% else %}
+        <li><a href="/">Home</a></li><li><a href="/sources">Sources</a></li><li><a href="/ideas">Ideas</a></li><li><a href="/hypotheses">Hypotheses</a></li><li><a href="/research-context">Research context</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  <p class="muted">Role: {{ role_label|default:"Not supplied" }} · Build: {{ build_label|default:"Not supplied — not a deployed release" }}</p>
+  <p class="notice">Synthetic software prototype only. Authority information is not permission, research approval, or execution authority.</p>
+  {% if detail.source_id and can_edit %}<p><a href="/sources/{{ detail.source_id }}/correct">Revise source</a></p>{% endif %}
+  {% if repository_preview %}<p class="warning">Repository-only preparation. Record services are not connected; no save or integrated acceptance is available.</p>{% endif %}
+</header>
