@@ -17,7 +17,10 @@ def git(*args):
     return subprocess.check_output(["git", *args])
 
 
-def build(output, commit, tree):
+def build(output, commit, tree, *,
+          manifest_path="docs/RMS-HN-INTEGRATED-SOURCE-MANIFEST.json",
+          summary="Hypothesis drafts and navigation; invented software records only.",
+          extra_required=()):
     if not all(re.fullmatch(r"[0-9a-f]{40}", value) for value in (commit, tree)):
         raise ValueError("Supply full reviewed commit and tree identities")
     if git("rev-parse", commit + "^{tree}").decode().strip() != tree:
@@ -35,10 +38,10 @@ def build(output, commit, tree):
             if not member.isfile() or path.is_absolute() or ".." in path.parts:
                 raise ValueError("Unsupported product archive member")
             files[member.name] = contents.extractfile(member).read()
-    for required in ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py", "docs/RMS-HN-INTEGRATED-SOURCE-MANIFEST.json", *(url.lstrip("/") for url in ASSETS)):
+    for required in ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py", manifest_path, *extra_required, *(url.lstrip("/") for url in ASSETS)):
         if required not in files:
             raise ValueError("Integrated product input missing")
-    product_manifest = json.loads(files["docs/RMS-HN-INTEGRATED-SOURCE-MANIFEST.json"])
+    product_manifest = json.loads(files[manifest_path])
     for item in product_manifest["files"]:
         data = files[item["path"]]
         if len(data) != item["bytes"] or sha256(data).hexdigest() != item["sha256"]:
@@ -46,8 +49,8 @@ def build(output, commit, tree):
     recipe = {name: files["staging/" + name] for name in ("compose.yaml", "entrypoint.sh", "requirements-staging.lock", "runtime.py", "request_policy.py", "release_identity.py", "create-principals.py", "README.md")}
     recipe["Dockerfile"] = files["staging/Dockerfile.hn"]
     metadata = {"package_version": 2, "integrated_navigation": True, "commit": commit, "tree": tree,
-                "summary": "Hypothesis drafts and navigation; invented software records only.",
-                "source_manifest_sha256": sha256(files["docs/RMS-HN-INTEGRATED-SOURCE-MANIFEST.json"]).hexdigest(),
+                "summary": summary,
+                "source_manifest_sha256": sha256(files[manifest_path]).hexdigest(),
                 "file_sha256": {path: sha256(data).hexdigest() for path, data in sorted(files.items())}}
     output.mkdir(parents=True)
     compressed = gzip.compress(archive, mtime=0)
