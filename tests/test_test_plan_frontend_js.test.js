@@ -94,3 +94,25 @@ test('nested inactive prototypes follow parent reindex without losing their own 
   assert.equal(nested.content.querySelector('input').getAttribute('name'),'/data_requirements/0/fields/field_schema/__row1__/name');
   assert.equal(nested.dataset.token,'__row1__');
 });
+test('retained row errors stay associated with their input after reorder and removal',()=>{
+  const p=repeatPage();p.click(p.add);p.click(p.add);
+  for(const [index,item] of p.list.children.entries()) {
+    const input=item.querySelector('input');input.value='Invented row '+index;
+    const errorId=input.getAttribute('id')+'-errors';
+    input.setAttribute('aria-describedby',errorId+' tp-shared-help');
+    const errors=new Element('ul',{id:errorId});errors.textContent='Invented error '+index;
+    item.append(errors);
+  }
+  const second=p.list.children[1];p.click(second.querySelectorAll('button')[0]);
+  function assertOwnError(item,index) {
+    const input=item.querySelector('input');
+    const errors=item.children.find(child=>child.tagName==='UL');
+    assert.equal(input.getAttribute('aria-describedby'),errors.getAttribute('id')+' tp-shared-help');
+    assert.equal(errors.getAttribute('id'),'tp/data_requirements/'+index+'/fields/name-errors');
+    assert.equal(errors.textContent,'Invented error '+input.value.slice(-1));
+  }
+  p.list.children.forEach(assertOwnError);
+  p.click(p.list.children[0].querySelectorAll('button')[2]);
+  assert.equal(p.list.children[0].querySelector('input').value,'Invented row 0');
+  assertOwnError(p.list.children[0],0);
+});

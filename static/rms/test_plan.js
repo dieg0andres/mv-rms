@@ -15,7 +15,7 @@
   window.addEventListener('pageshow', () => { submitting = false; announce('No new save confirmed.'); });
   const rewrite = (root, oldPrefix, newPrefix) => {
     const visit = element => {
-      for (const attribute of ['name', 'id', 'for', 'data-tp-array', 'data-tp-item']) {
+      for (const attribute of ['name', 'id', 'for', 'aria-describedby', 'data-tp-array', 'data-tp-item']) {
         const value = element.getAttribute(attribute);
         if (value && value.includes(oldPrefix)) element.setAttribute(attribute, value.replaceAll(oldPrefix, newPrefix));
       }
