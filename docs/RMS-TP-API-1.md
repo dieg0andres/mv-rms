@@ -66,6 +66,8 @@ Both migrations are atomic PostgreSQL operations. If either fails, its transacti
 
 Supersedes the first unpublished candidate hash `81b351f0b9c31af9f3b3b09fa6c325e6f9405b6abd6f066a2828c50403e2d129`; its receipt and independent failures remain historical. Independent TP-SRC-01 identified context rounding in decimal duplicate detection; comparison now uses exact Decimal identity. TP-SRC-02 identified out-of-order completeness; missing paths now follow Purpose, Strategy, Data, Test design and Evaluation, preserving child order. This revision publishes the read envelope and pin-preview service, and separates child content hashes from audit row hashes.
 
+TP-SRC-03 implementation correction keeps this exact revision 1.1 schema/hash. A structurally valid criterion may contain objective-rule text while its `rule_type` is null or omitted. Completeness now reports `/criteria/<position>/fields/rule_type` as `required_for_completeness`, preserves the supplied text and snapshot, and does not infer a type or raise an exception. Selecting `objective_rule` can make the definition complete when every other requirement is satisfied. Structural validation still rejects numeric-only content mixed with objective text. The fix removes a duplicate validation branch from completeness; it changes no endpoint, request/response schema, stored field, digest recipe or migration. Regression coverage exercises create and correction snapshots, null/omitted types, unchanged input and incompatible numeric content. These are source checks; independent retest and staging persistence remain separate.
+
 Builder source checks (no DB):
 
 ```sh

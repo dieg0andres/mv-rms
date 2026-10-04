@@ -121,6 +121,39 @@ class Validation(unittest.TestCase):
         p=complete_fixture();p['criteria'][0]['fields']['mandatory']=None
         self.assertEqual(draft_completeness(validate_request('PlanCreate',p))['draft_completeness'],'incomplete')
 
+    def test_partial_objective_criterion_reports_missing_rule_type(self):
+        for omitted in [False, True]:
+            p=complete_fixture()
+            c=p['criteria'][0]['fields']
+            c.update(rule_type=None,operator=None,threshold=None,upper_threshold=None,
+                     objective_rule='Invented output table is reproducible.')
+            if omitted: del c['rule_type']
+            created=validate_request('PlanCreate',p)
+            corrected=deepcopy(created)
+            corrected.update(expected_latest_version=1,correction_reason='Invented partial revision')
+            corrected=validate_request('PlanCorrection',corrected)
+            for request,snapshot in [('PlanCreate',created),('PlanCorrection',corrected)]:
+                with self.subTest(omitted=omitted,request=request):
+                    before=deepcopy(snapshot)
+                    result=draft_completeness(snapshot)
+                    self.assertEqual(result['draft_completeness'],'incomplete')
+                    self.assertEqual([(x['path'],x['code']) for x in result['missing_fields']],
+                                     [('/criteria/0/fields/rule_type','required_for_completeness')])
+                    self.assertEqual(snapshot,before)
+                    complete=deepcopy(snapshot)
+                    complete['criteria'][0]['fields']['rule_type']='objective_rule'
+                    self.assertEqual(draft_completeness(validate_request(request,complete))['draft_completeness'],'complete')
+
+    def test_partial_objective_criterion_still_rejects_numeric_fields(self):
+        for name,value in [('operator','gt'),('threshold','0'),('upper_threshold','1')]:
+            with self.subTest(field=name):
+                p=complete_fixture()
+                c=p['criteria'][0]['fields']
+                c.update(rule_type=None,operator=None,threshold=None,upper_threshold=None,
+                         objective_rule='Invented output table is reproducible.')
+                c[name]=value
+                self.invalid(p,'/criteria/0/fields/'+name)
+
     def test_data_methods_and_inert_snippets(self):
         p=complete_fixture();d=p['data_requirements'][0]['fields'];d['retrieval_instructions']='<script>invented()</script>\nNever execute this fixture.'
         self.assertEqual(validate_request('PlanCreate',p)['data_requirements'][0]['fields']['retrieval_instructions'],d['retrieval_instructions'])

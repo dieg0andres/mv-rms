@@ -1,19 +1,19 @@
 {
-  "candidate_id": "RMS-TP-HOME-b83740b0",
-  "receiving_run": "b83740b0-a011-45c4-bb01-068eb3c53607",
+  "candidate_id": "RMS-TP-REPAIR-57d4ee85",
+  "receiving_run": "57d4ee85-bbcd-4ff7-acb4-12d8844c35cb",
   "branch": "MAU-150-rms-increment-3-strategy-specification-and-test-plan-v1-0",
   "base": "e166539d507cf9b05fcf1d44373f172883ee386b",
   "interface": "RMS-TP-API-1/1.1",
   "schema_sha256": "17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e",
-  "backend_source_kind": "uncommitted snapshot",
-  "frontend_source_kind": "uncommitted snapshot",
+  "backend_source_kind": "reviewed source correction; three files matched preserved archive",
+  "frontend_source_kind": "one regression file matched preserved archive",
   "receipt": "docs/RMS-TP-SLICE-INTEGRATION-RECEIPT.json",
-  "independent_acceptance": "pending",
+  "independent_acceptance": "pending exact successor retest; TP01-TP24 not executed",
   "files": [
     {
       "path": "docs/RMS-TP-API-1.md",
-      "bytes": 12830,
-      "sha256": "9889a6d0d77e33b185a361edbb8f460e36cd205c0fb4cb23429be00fe638274a"
+      "bytes": 13764,
+      "sha256": "9f0f6d6e6e509ae4fbfcc3b376d79f26adef6a6ecbb7b6949b5c7cb433872b5b"
     },
     {
       "path": "docs/RMS_STRATEGY_SPECIFICATION_AND_TEST_PLAN_DESIGN_CONTRACT_V1_0.md",
@@ -267,8 +267,8 @@
     },
     {
       "path": "rms/test_plan_validation.py",
-      "bytes": 19146,
-      "sha256": "1ed47fddacf34b7d7c77b12cb1101e59d64482c8af202e3f4cf03d2b09d88e46"
+      "bytes": 18993,
+      "sha256": "6cfc01db9ecb093e703b882a76947c5ee2b29f28e910e8a70a48760e76f0e0aa"
     },
     {
       "path": "rms/test_plan_views.py",
@@ -592,8 +592,8 @@
     },
     {
       "path": "tests/django_test_plan_frontend_render_tests.py",
-      "bytes": 22677,
-      "sha256": "d5f970c98e06802fbbe72c3e3d09aa9de1f7f1b8bc1966edb68a73b1724c8cf0"
+      "bytes": 26614,
+      "sha256": "153f8b232b8b0d9d7f86e777db35b36e3f6bfa82a27a01be53c8b0fd1e17baed"
     },
     {
       "path": "tests/test_staging_test_reset.py",
@@ -602,8 +602,8 @@
     },
     {
       "path": "tests/test_test_plan_backend_validation.py",
-      "bytes": 15774,
-      "sha256": "604ba7d1d6238636836b815a9c0eb5521d7444c04ababe77f9477ad39c898d00"
+      "bytes": 17835,
+      "sha256": "4189261684524f9b05b96595dee432369fba24581f66760fdf6e367c983af4a7"
     },
     {
       "path": "tests/test_test_plan_frontend_js.test.js",
@@ -612,5 +612,6 @@
     }
   ],
   "prior_candidate": "0722202644251f327eb1a52bd0ec2993651195ba",
-  "change_summary": "Repair legacy source-only Home reader fixtures; verify final frozen handoff bytes. Product/API source unchanged."
+  "change_summary": "Repair legacy source-only Home reader fixtures; verify final frozen handoff bytes. Product/API source unchanged.",
+  "supersedes_commit": "3700521031a8c77b208b63048dbe8f0f48cbddfe"
 }

@@ -310,6 +310,66 @@ class TestPlanRenderingTests(SimpleTestCase):
             self.fail('Shared validator unexpectedly accepted invalid trial budget')
         self.assertEqual(errors(decode_form(self.schema,self.schema['$defs']['PlanCreate'],self.submitted(p))),errors(p))
 
+    def test_partial_objective_rule_survives_save_detail_and_reopen_without_inferred_type(self):
+        from urllib.parse import parse_qs, urlsplit
+        from rms.test_plan_validation import validate_request, draft_completeness
+
+        text = 'Invented output rule: <script>never_execute()</script>'
+        proposed = self.snapshot()
+        proposed['criteria'] = [{'criterion_id': None, 'criterion_version_id': None,
+            'fields': {'name': 'Invented objective criterion', 'rule_type': None,
+                       'objective_rule': text, 'mandatory': True}}]
+        normalized = validate_request('PlanCreate', proposed)
+        existing = {**self.record(), **deepcopy(normalized)}
+        existing['criteria'][0].update(
+            criterion_id='CRT-00000000-0000-4000-8000-000000000001',
+            criterion_version_id='CRTV-00000000-0000-4000-8000-000000000001')
+
+        for plan_id, kind in [(None, 'PlanCreate'), (PLAN, 'PlanCorrection')]:
+            with self.subTest(request=kind):
+                payload = deepcopy(normalized) if plan_id is None else revision_payload(existing)
+                if plan_id:
+                    payload['correction_reason'] = 'Invented incomplete-rule revision'
+                before = deepcopy(payload)
+                saved = {}
+
+                def shared_save(operation, **kwargs):
+                    self.assertEqual(operation, 'create_test_plan' if plan_id is None else 'correct_test_plan')
+                    from_html = validate_request(kind, kwargs['payload'])
+                    self.assertEqual(from_html, validate_request(kind, payload))
+                    saved.update(self.record(), **deepcopy(from_html))
+                    saved.update(draft_completeness(from_html))
+                    return StoredResponse(201, json.dumps(saved).encode())
+
+                # Persistence is mocked; the adopted validator/completeness and
+                # POST, signed receipt, detail and editor templates are real.
+                with patch('rms.test_plan_views.plan_service', side_effect=shared_save):
+                    response = TestPlanEditorPage.as_view()(
+                        self.request('post', self.submitted(payload)), plan_id=plan_id)
+                self.assertEqual(response.status_code, 303)
+                self.assertEqual(payload, before)
+                self.assertIsNone(saved['criteria'][0]['fields']['rule_type'])
+                self.assertEqual(saved['criteria'][0]['fields']['objective_rule'], text)
+                self.assertIn('/criteria/0/fields/rule_type', [item['path'] for item in saved['missing_fields']])
+
+                receipt = parse_qs(urlsplit(response['Location']).query)['receipt'][0]
+                with patch('rms.test_plan_views.plan_service', return_value=saved):
+                    detail = TestPlanDetailPage.as_view()(
+                        self.request(data={'receipt': receipt}), plan_id=PLAN, version_id=VERSION)
+                    reopened = TestPlanEditorPage.as_view()(self.request(), plan_id=PLAN)
+                detail.render(); reopened.render()
+                self.assertEqual(detail.status_code, 200)
+                self.assertIn(b'Draft saved.', detail.content)
+                self.assertIn(b'Draft incomplete', detail.content)
+                self.assertIn(b'/criteria/0/fields/rule_type', detail.content)
+                self.assertIn(b'Not checked', detail.content)
+                for rendered in [detail.content, reopened.content]:
+                    self.assertIn(b'&lt;script&gt;never_execute()&lt;/script&gt;', rendered)
+                    self.assertNotIn(b'<script>never_execute()', rendered)
+                self.assertIsNone(reopened.context_data['payload']['criteria'][0]['fields']['rule_type'])
+                select = reopened.content.decode().split('name="/criteria/0/fields/rule_type"', 1)[1].split('</select>', 1)[0]
+                self.assertNotIn(' selected', select)
+
     def test_explicit_reapply_updates_current_child_references_and_retains_definitions(self):
         record=self.record()
         record['criteria']=[{'criterion_id':'CRT-invented1','criterion_version_id':'CRTV-old','fields':{'name':'My proposal'}}, {'criterion_id':'CRT-removed','criterion_version_id':'CRTV-removed','fields':{'name':'My removed-item proposal'}}]

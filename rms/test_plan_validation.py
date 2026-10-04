@@ -257,8 +257,6 @@ def draft_completeness(snapshot):
         if c['rule_type']=='numeric':
             need(c,['units','operator','threshold'],path)
             if c['operator']=='between_inclusive': need(c,['upper_threshold'],path)
-        if c['rule_type'] is None and c['objective_rule'] is not None:
-            _irrelevant(c,['operator','threshold','upper_threshold'],path,errors)
         if c['rule_type']=='objective_rule': need(c,['objective_rule'],path)
     if not snapshot['data_requirements']: missing.append(issue('/data_requirements','required_for_completeness','Include a data requirement.'))
     for i,child in enumerate(snapshot['data_requirements']):
