@@ -16,7 +16,13 @@ HN_TABLES = (
     "rms_researchassociation", "rms_assessmentexternalreference",
     "rms_hypothesiscorrectionimpact",
 )
-RMS_TABLES = tuple(sorted((*BASE_TABLES, *HN_TABLES)))
+TP_TABLES = (
+    "rms_testplan", "rms_testplanversion", "rms_criterionprofile",
+    "rms_criterionprofileversion", "rms_datarequirement",
+    "rms_datarequirementversion", "rms_testplanassociation", "rms_dataaccesscheck",
+)
+HYPOTHESIS_TABLES = tuple(sorted((*BASE_TABLES, *HN_TABLES)))
+RMS_TABLES = tuple(sorted((*HYPOTHESIS_TABLES, *TP_TABLES)))
 AUTH_TABLES = (
     "auth_user", "auth_group", "auth_permission", "auth_user_groups",
     "auth_user_user_permissions", "auth_group_permissions", "django_content_type",
@@ -24,6 +30,7 @@ AUTH_TABLES = (
 OPTIONAL_PROTECTED = ("django_session",)
 BASE_MIGRATIONS = {"0001_initial", "0002_source_invariants", "0003_source_idea_contract"}
 HN_MIGRATIONS = {"0004_hypothesis_records", "0005_hypothesis_history_guards"}
+TP_MIGRATIONS = {"0006_test_plan_records", "0007_test_plan_history_guards"}
 POLICY_REF = "4dc2c3b8-534c-4053-abfc-d22b62f34392"
 
 
@@ -50,13 +57,14 @@ def qualified(names, *, only=False):
     return ", ".join(('ONLY ' if only else '') + 'public."' + name + '"' for name in sorted(names))
 
 
-def guards(cursor, tables):
+def guards(cursor, tables, trigger="hn_no_truncate"):
+    require(trigger in ("hn_no_truncate", "tp_no_truncate"), "unreviewed_guard")
     cursor.execute("""SELECT c.relname, t.tgenabled, t.tgtype, pn.nspname, p.proname
         FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
         JOIN pg_namespace n ON n.oid = c.relnamespace
         JOIN pg_proc p ON p.oid = t.tgfoid JOIN pg_namespace pn ON pn.oid = p.pronamespace
         WHERE n.nspname = 'public' AND c.relname = ANY(%s)
-          AND t.tgname = 'hn_no_truncate' AND NOT t.tgisinternal ORDER BY c.relname""", [list(tables)])
+          AND t.tgname = %s AND NOT t.tgisinternal ORDER BY c.relname""", [list(tables), trigger])
     return cursor.fetchall()
 
 
@@ -91,12 +99,13 @@ def reset_in_transaction(cursor, *, reseed=None):
     present = {row[0] for row in cursor.fetchall()}
     rms = present.intersection(RMS_TABLES)
     require({name for name in present if name.startswith('rms_')} == rms, "unreviewed_rms_table")
-    require(rms in (set(BASE_TABLES), set(RMS_TABLES)), "incomplete_rms_schema")
+    require(rms in (set(BASE_TABLES), set(HYPOTHESIS_TABLES), set(RMS_TABLES)), "incomplete_rms_schema")
     require(set(AUTH_TABLES) <= present, "authentication_schema_missing")
-    require(reseed is None or rms == set(RMS_TABLES), "hypothesis_schema_required_for_reseed")
+    require(reseed is None or set(HYPOTHESIS_TABLES) <= rms, "hypothesis_schema_required_for_reseed")
     cursor.execute("SELECT name FROM public.django_migrations WHERE app = 'rms'")
     migrations = {row[0] for row in cursor.fetchall()}
-    expected = BASE_MIGRATIONS | (HN_MIGRATIONS if rms == set(RMS_TABLES) else set())
+    expected = (BASE_MIGRATIONS | (HN_MIGRATIONS if set(HYPOTHESIS_TABLES) <= rms else set())
+                | (TP_MIGRATIONS if rms == set(RMS_TABLES) else set()))
     require(migrations == expected, "unexpected_rms_migrations")
     protected = set(AUTH_TABLES) | (present & set(OPTIONAL_PROTECTED))
     # A brief exclusive maintenance slot is required; no app/test request overlaps
@@ -112,23 +121,31 @@ def reset_in_transaction(cursor, *, reseed=None):
           AND NOT (onsp.nspname = 'public' AND origin.relname = ANY(%s)) LIMIT 1""", [sorted(rms), sorted(rms)])
     require(cursor.fetchone() is None, "external_reference_into_rms")
     before_auth = auth_fingerprints(cursor, protected)
-    hn = rms & set(HN_TABLES)
-    before_guards = guards(cursor, hn) if hn else []
-    expected_guards = [(table, 'O', 34, 'public', 'rms_reject_row_change') for table in sorted(hn)]
-    require(before_guards == expected_guards, "history_guard_mismatch")
-    for table in sorted(hn):
-        cursor.execute("ALTER TABLE " + qualified([table], only=True) + " DISABLE TRIGGER hn_no_truncate")
+    guard_groups = [(rms & set(HN_TABLES), "hn_no_truncate"),
+                    (rms & set(TP_TABLES), "tp_no_truncate")]
+    before_guards = {}
+    for tables, trigger in guard_groups:
+        before_guards[trigger] = guards(cursor, tables, trigger) if tables else []
+        expected_guards = [(table, 'O', 34, 'public', 'rms_reject_row_change') for table in sorted(tables)]
+        require(before_guards[trigger] == expected_guards, "history_guard_mismatch")
+    for tables, trigger in guard_groups:
+        for table in sorted(tables):
+            cursor.execute("ALTER TABLE " + qualified([table], only=True) + " DISABLE TRIGGER " + trigger)
     # No CASCADE, RESTART IDENTITY, auth deletion, session_replication_role or
     # generic flush. ONLY on EACH target excludes inherited/partition descendants.
     # PostgreSQL rejects ONLY for a partitioned parent; the outer atomic block
     # rolls back rather than expanding the allowlist to truncate its partitions.
     cursor.execute("TRUNCATE TABLE " + qualified(rms, only=True) + " CONTINUE IDENTITY RESTRICT")
-    for table in sorted(hn):
-        cursor.execute("ALTER TABLE " + qualified([table], only=True) + " ENABLE TRIGGER hn_no_truncate")
-    require((guards(cursor, hn) if hn else []) == before_guards, "history_guard_not_restored")
+    for tables, trigger in guard_groups:
+        for table in sorted(tables):
+            cursor.execute("ALTER TABLE " + qualified([table], only=True) + " ENABLE TRIGGER " + trigger)
+        require((guards(cursor, tables, trigger) if tables else []) == before_guards[trigger],
+                "history_guard_not_restored")
     if reseed is not None:
         reseed()  # Existing loader/service validation runs with every guard active.
-    require((guards(cursor, hn) if hn else []) == before_guards, "history_guard_changed_by_fixture")
+    for tables, trigger in guard_groups:
+        require((guards(cursor, tables, trigger) if tables else []) == before_guards[trigger],
+                "history_guard_changed_by_fixture")
     require(auth_fingerprints(cursor, protected) == before_auth, "authentication_changed")
     cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")  # Deferred fixture failures precede success.
     return {"target": "mv-rms-staging-db-1/rms_staging", "maintenance_role": "rms_staging",

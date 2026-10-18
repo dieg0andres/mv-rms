@@ -1,0 +1,1 @@
+<dl class="tp-definition">{% for node in definition %}<dt>{{ node.label }}</dt><dd>{% if node.children %}{% include "rms/includes/test_plan_definition.html" with definition=node.children %}{% else %}<pre>{{ node.value }}</pre>{% endif %}</dd>{% endfor %}</dl>

@@ -20,7 +20,7 @@ class NavigationShellTests(SimpleTestCase):
 
     def test_primary_navigation_and_current_location(self):
         html = self.render_page()
-        for label in ("Home", "Sources", "Ideas", "Hypotheses", "Research context"):
+        for label in ("Home", "Sources", "Ideas", "Hypotheses", "Research context", "Test Plans"):
             self.assertIn(label, html)
         self.assertIn("Skip to main content", html)
         self.assertIn("id=\"main-content\"", html)
@@ -66,10 +66,14 @@ class NavigationShellTests(SimpleTestCase):
                 user = SimpleNamespace(is_authenticated=True, is_active=True, groups=groups)
                 request = RequestFactory().get("/")
                 force_authenticate(request, user=user)
-                with patch("rms.navigation_views.shared_service", return_value={"count": 0}) as reader:
+                with patch("rms.navigation_views.shared_service", return_value={"count": 0}) as reader, \
+                        patch("rms.test_plan_views.plan_service", return_value={"count": 0}) as plan_reader:
                     response = NavigationPage.as_view()(request)
                 if expected == 403:
                     reader.assert_not_called()
+                    plan_reader.assert_not_called()
+                else:
+                    plan_reader.assert_called_once_with("list_test_plans", actor=user, query={"page": 1, "page_size": 1})
                 self.assertEqual(response.status_code, expected)
                 response.render()
                 if expected == 403:

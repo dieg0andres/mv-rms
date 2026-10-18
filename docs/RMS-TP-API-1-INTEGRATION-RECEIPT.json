@@ -1,0 +1,22 @@
+{
+  "run_id": "001edfa4-120a-4de9-9526-c0dbc66d9cfc",
+  "source_run": "6b02bb29-16d0-461a-bb58-e9673271ec5a",
+  "source_branch": "MAU-151-rms-increment-3-backend-shared-schema-and-versioned-test-plan-services",
+  "source_base": "e166539d507cf9b05fcf1d44373f172883ee386b",
+  "kind": "uncommitted_source_snapshot",
+  "files": {
+    "rms/test_plan_schema.json": "bcd72eb27e932f8778a7fa09bd47dafb40550364490c459839d5f04a84e23900",
+    "rms/test_plan_models.py": "2d60ce342f7c6fef2f0140fd500454a2e86c95379f1f1487e4ea3ca002940226",
+    "rms/test_plan_validation.py": "f27c115ab6547770c94037c9e482d64da3556bf312522091b25b59bb6808a6e7",
+    "rms/test_plan_services.py": "f3809407f6b0ddce6334ee0087faa6bc3d20e7d85dc3b154bcec273b7d352db9",
+    "rms/test_plan_api.py": "4a1e484624b16acbb83e75941a433db20ad7ac823dddb8a66f1a1adb7caa4cfd",
+    "rms/test_plan_api_urls.py": "4f6c64706af8c7c98474699b86ede30f6f72ad66661184180e5102423b303a98",
+    "rms/models.py": "939390aebdc9b6e3da0a6452414f4aaa767c20922a9db65d938b17b0bc304b36",
+    "rms/migrations/0006_test_plan_records.py": "60b4685f08045d3468da5dac5336fa27008be56b7c2e82b8aacf4052f08b7d4b",
+    "rms/migrations/0007_test_plan_history_guards.py": "cb359da8415d9a6c0e58cc6df62896ad297682d359dd34e4e17a252700a054da",
+    "docs/RMS-TP-API-1.md": "45207e497f3a0cc8c8b70daeb92922298b09ab886ff3016e5765d670f209d0ea"
+  },
+  "source_changed_since_copy": [],
+  "advertised_schema_sha256": "81b351f0b9c31af9f3b3b09fa6c325e6f9405b6abd6f066a2828c50403e2d129",
+  "actual_schema_sha256": "bcd72eb27e932f8778a7fa09bd47dafb40550364490c459839d5f04a84e23900"
+}

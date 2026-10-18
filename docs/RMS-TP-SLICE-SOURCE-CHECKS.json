@@ -1,0 +1,50 @@
+{
+  "run_id": "001edfa4-120a-4de9-9526-c0dbc66d9cfc",
+  "source_manifest_sha256": "cb5d99a914d7f65af0202c5e199955b7fa3489c0422f7d1884d45c4d24920d59",
+  "schema_sha256": "17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e",
+  "checks": [
+    {
+      "command": ".venv/bin/python -B manage.py check",
+      "exit_code": 0,
+      "result": "no issues"
+    },
+    {
+      "command": ".venv/bin/python -B manage.py test tests.test_staging_test_reset -v 2",
+      "exit_code": 0,
+      "passed": 22,
+      "database": "skipped"
+    },
+    {
+      "command": ".venv/bin/python -B manage.py test tests.django_test_plan_frontend_render_tests tests.test_test_plan_backend_validation -v 2",
+      "exit_code": 0,
+      "passed": 45,
+      "database": "skipped"
+    },
+    {
+      "command": "node --test tests/test_test_plan_frontend_js.test.js",
+      "exit_code": 0,
+      "passed": 6
+    },
+    {
+      "command": ".venv/bin/python -B -m unittest tests.test_hypothesis_staging_package tests.test_hypothesis_staging_release -v",
+      "exit_code": 0,
+      "passed": 11
+    },
+    {
+      "command": "django reverse/resolve focused root bindings",
+      "exit_code": 0,
+      "api_routes": 9,
+      "browser_routes": 9,
+      "database": "not accessed"
+    }
+  ],
+  "database_connected": false,
+  "migrations_applied": false,
+  "reset_performed": false,
+  "deployed": false,
+  "independent_acceptance": "pending",
+  "limitations": [
+    "Builder/source checks include mocked persistence; actual PostgreSQL and private-origin browser behavior remain unverified.",
+    "Independent Test retains its original failures and 24 NOT EXECUTED acceptance cases pending its own execution."
+  ]
+}

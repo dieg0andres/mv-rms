@@ -1,0 +1,29 @@
+{% extends "rms/base.html" %}
+{% block title %}Strategy Specification and Test Plan — RMS{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="/static/rms/test_plan.css">
+<h1>{% if check_form %}Record external data check{% else %}Strategy Specification and Test Plan{% endif %}</h1>
+<p>{% if check_form %}Record only a check already performed elsewhere. Evidence must be sanitized and synthetic. This form makes no provider request.{% else %}Save an incomplete synthetic draft explicitly. Definition completeness grants no research or execution authority.{% endif %}</p>
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+{% if issues %}<div class="error" role="alert" tabindex="-1" id="tp-errors"><h2>Draft not confirmed saved</h2><ul>{% for issue in issues %}<li><a href="#tp{{ issue.path }}">{{ issue.label|default:issue.path }}</a>: {{ issue.message }}</li>{% endfor %}</ul></div>{% endif %}
+{% if conflict %}<p class="warning">Keep this proposal. <a href="{{ latest_url }}" target="_blank" rel="noopener">Compare latest in another tab</a>. {% if not check_form %}Then explicitly adopt the latest head below, review and reapply. Older content is preserved.{% else %}Inspect the latest report before explicitly recording a new superseding report.{% endif %}</p>{% endif %}
+{% if hypothesis %}<section class="card"><h2>Pinned Hypothesis — read-only</h2><p>Version {{ hypothesis.version }} · <code>{{ payload.hypothesis_version_id }}</code></p><p>{{ hypothesis.fields.title }}</p><p>{{ hypothesis.fields.claim }}</p><h3>Intended Hypothesis benchmark</h3><p>{{ hypothesis.fields.intended_benchmark_name|default:"Not supplied" }}</p><pre>{{ hypothesis.fields.intended_benchmark_definition|default:"Not supplied" }}</pre><p>Inherited completeness: {{ hypothesis.draft_completeness|default:"Unknown" }}. Shown separately from this plan.</p></section>{% endif %}
+<nav aria-label="Form sections" class="tp-sections">{% for group in groups %}<a href="#tp-section-{{ forloop.counter }}">{{ group.label }}</a>{% endfor %}<a href="#tp-review">Review</a></nav>
+<form method="post" data-test-plan-form data-retained="{% if issues %}true{% else %}false{% endif %}" class="tp-form">{% csrf_token %}
+<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+{% if retry_token %}<input type="hidden" name="retry_token" value="{{ retry_token }}">{% endif %}
+{% if unknown %}<fieldset disabled><legend>Locked proposal for unchanged retry</legend>{% endif %}
+{% if not check_form and not plan_id %}<input type="hidden" name="/hypothesis_version_id" value="{{ payload.hypothesis_version_id }}"><p>Exact Hypothesis pin: <code>{{ payload.hypothesis_version_id }}</code></p>{% endif %}
+{% for group in groups %}<section id="tp-section-{{ forloop.counter }}"><h2>{{ group.label }}</h2>{% if group.label == "Strategy specification" %}<p>Implementation target: QuantConnect/LEAN. Pseudocode is inert documentation.</p>{% elif group.label == "Test design" %}<p>One baseline and the individually listed variations. No generated combinations or parameter search. Trial budget has no default.</p>{% elif group.label == "Data" %}<p>Fill applicable LEAN SDK, REST API or existing-file fields only; leave other method fields blank. Examples must be visibly invented. Credential aliases contain no secret values.</p>{% elif group.label == "Evaluation" %}<p>Clear numeric-only fields for objective rules and objective-rule text for numeric rules. Thresholds and samples have no scientific default.</p>{% endif %}{% for node in group.nodes %}{% include "rms/includes/test_plan_node.html" %}{% endfor %}</section>{% endfor %}
+<section id="tp-review"><h2>Review</h2><p>Missing definition content, upstream notices and reported checks are separate indicators on the saved detail. Review the exact pin and all item order before saving.</p>
+{% if plan_id and not check_form %}<div class="field"><label for="expected-head">Expected latest version</label><input id="expected-head" name="/expected_latest_version" value="{{ payload.expected_latest_version }}" readonly></div><div class="field"><label for="tp/correction_reason">Reason for revision (required)</label><textarea id="tp/correction_reason" name="/correction_reason">{{ payload.correction_reason }}</textarea></div><div class="field"><label for="adopt-hypothesis">Explicit Hypothesis version adoption</label><input id="adopt-hypothesis" name="/hypothesis_version_id" value="{{ payload.hypothesis_version_id }}"><p>Only another exact version of the same Hypothesis may be adopted, with the reason above. A different Hypothesis needs a new plan.</p></div>{% endif %}
+</section>
+{% if unknown %}</fieldset>{% endif %}
+{% if conflict and not check_form %}<button type="submit" name="operation" value="reapply_latest">Keep definition and explicitly adopt latest head/child references</button>{% endif %}
+<button type="submit" name="operation" value="save">{% if unknown %}Retry unchanged draft{% elif check_form %}Record external data check{% else %}Save draft{% endif %}</button>
+<p role="status" aria-live="polite" data-tp-status>No new save confirmed.</p>
+</form>
+{% if issues %}<details open><summary>Preserved unsaved proposal</summary><pre>{{ preserved_payload }}</pre>{% if raw_input %}<pre>{{ raw_input }}</pre>{% endif %}</details>{% endif %}
+<p><a href="/test-plans">Test Plans</a> · <a href="/">Home</a></p>
+{% endblock %}
+{% block scripts %}<script src="/static/rms/test_plan.js" defer></script>{% endblock %}

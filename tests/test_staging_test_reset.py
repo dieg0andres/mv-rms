@@ -20,15 +20,17 @@ SETTINGS = {'ENGINE': 'django.db.backends.postgresql', 'NAME': 'rms_staging',
 
 
 class Cursor:
-    def __init__(self, full=True):
+    def __init__(self, full=True, test_plan=True):
         self.db = SimpleNamespace(in_atomic_block=True)
         self.full = full
-        self.present = set(reset.RMS_TABLES if full else reset.BASE_TABLES) | set(reset.AUTH_TABLES) | {'django_session'}
-        self.migrations = reset.BASE_MIGRATIONS | (reset.HN_MIGRATIONS if full else set())
+        product_tables = reset.RMS_TABLES if test_plan else reset.HYPOTHESIS_TABLES
+        self.present = set(product_tables if full else reset.BASE_TABLES) | set(reset.AUTH_TABLES) | {'django_session'}
+        self.migrations = (reset.BASE_MIGRATIONS | (reset.HN_MIGRATIONS if full else set())
+                           | (reset.TP_MIGRATIONS if full and test_plan else set()))
         self.identity = ('rms_staging', 'rms_staging', 'rms_staging', 'off', 5432)
         self.admin = True
         self.external_fk = False
-        self.enabled = {table: 'O' for table in reset.HN_TABLES} if full else {}
+        self.enabled = {table: 'O' for table in (*reset.HN_TABLES, *(reset.TP_TABLES if test_plan else ()))} if full else {}
         self.auth_hash = 'unchanged-protected-state'
         self.rows = 80  # Disposable research state; its contents are not hashed.
         self.calls = []
@@ -77,7 +79,7 @@ class Cursor:
 class ResetTests(unittest.TestCase):
     def test_allowlist_matches_actual_registered_product_models(self):
         self.assertEqual({model._meta.db_table for model in apps.get_app_config('rms').get_models()}, set(reset.RMS_TABLES))
-        self.assertEqual(len(reset.RMS_TABLES), 19)
+        self.assertEqual(len(reset.RMS_TABLES), 27)
 
     def test_wrong_configurations_fail_before_connection(self):
         reset.validate_binding(SETTINGS, project='mv-rms-staging', container='mv-rms-staging-db-1')
@@ -103,9 +105,12 @@ class ResetTests(unittest.TestCase):
         self.assertEqual(set(re.findall(r'ONLY public\."([^"]+)"', truncates[0])), set(reset.RMS_TABLES))
         self.assertFalse(any(word in '\n'.join(sql) for word in ('CASCADE', 'RESTART IDENTITY', 'DISABLE TRIGGER ALL', 'session_replication_role', 'CREATE ROLE', 'GRANT ', 'DELETE FROM')))
         alters = [statement for statement in sql if statement.startswith('ALTER TABLE')]
-        self.assertEqual(len(alters), 24)
+        self.assertEqual(len(alters), 40)
         self.assertTrue(all(statement.startswith('ALTER TABLE ONLY ') for statement in alters))
-        self.assertTrue(all(statement.endswith('TRIGGER hn_no_truncate') for statement in alters))
+        for statement in alters:
+            table = statement.split('"')[1]
+            trigger = 'tp_no_truncate' if table in reset.TP_TABLES else 'hn_no_truncate'
+            self.assertTrue(statement.endswith('TRIGGER ' + trigger))
         self.assertFalse(set(reset.AUTH_TABLES).intersection(reset.RMS_TABLES))
         self.assertEqual(cursor.rows, 56)
         self.assertTrue(result['authentication_unchanged'])
@@ -155,6 +160,23 @@ class ResetTests(unittest.TestCase):
         self.assertFalse(result['reseeded'])
         self.assertFalse(any(sql.startswith('ALTER TABLE') for sql, _ in cursor.calls))
 
+    def test_hypothesis_schema_remains_supported_before_test_plan_migrations(self):
+        cursor = Cursor(test_plan=False)
+        result = reset.reset_in_transaction(cursor)
+        self.assertEqual(set(result['tables_reset']), set(reset.HYPOTHESIS_TABLES))
+        self.assertFalse(any('tp_no_truncate' in sql for sql, _ in cursor.calls))
+
+    def test_partial_test_plan_schema_or_missing_guards_prevents_any_mutation(self):
+        for kind in ('missing_table', 'missing_migration', 'missing_guard', 'disabled_guard'):
+            cursor = Cursor()
+            if kind == 'missing_table': cursor.present.remove('rms_dataaccesscheck')
+            if kind == 'missing_migration': cursor.migrations.remove('0007_test_plan_history_guards')
+            if kind == 'missing_guard': del cursor.enabled['rms_testplanversion']
+            if kind == 'disabled_guard': cursor.enabled['rms_testplanassociation'] = 'D'
+            with self.subTest(kind=kind), self.assertRaises(reset.ResetRejected):
+                reset.reset_in_transaction(cursor)
+            self.assertFalse(any(sql.startswith(('ALTER TABLE', 'TRUNCATE TABLE')) for sql, _ in cursor.calls))
+
     def test_incomplete_unreviewed_schema_migrations_or_guards_stop_before_mutation(self):
         for kind in ('missing_table', 'new_table', 'new_migration', 'missing_guard', 'disabled_guard', 'external_fk', 'wrong_database', 'non_admin', 'reseed_old_schema'):
             cursor = Cursor(full=kind != 'reseed_old_schema')
@@ -187,7 +209,7 @@ class ResetTests(unittest.TestCase):
     def test_proposed_grants_bind_actual_tables_and_only_identity_watermarks(self):
         sql = (Path(__file__).resolve().parents[1] / 'docs/RMS-HN-ORDINARY-ROLE-PROPOSAL.sql').read_text()
         match = re.search(r'GRANT SELECT, INSERT ON (.*?) TO rms_hn_app;', sql)
-        self.assertEqual({item.strip().removeprefix('public.') for item in match[1].split(',')}, set(reset.RMS_TABLES))
+        self.assertEqual({item.strip().removeprefix('public.') for item in match[1].split(',')}, set(reset.HYPOTHESIS_TABLES))
         update_tables = set(re.findall(r'GRANT UPDATE \(latest_version\) ON public\.(\w+) TO', sql))
         self.assertEqual(update_tables, {'rms_source','rms_idea','rms_researchfamily','rms_investigation','rms_priorresearchassessment','rms_hypothesis','rms_researchassociationidentity'})
         self.assertIn('PASSWORD NULL', sql)
@@ -268,6 +290,16 @@ class CommandTests(unittest.TestCase):
         cursor = Cursor()
         def corrupt(*args, **kwargs):
             cursor.enabled['rms_hypothesisversion'] = 'D'
+        with self.assertRaisesRegex(CommandError, 'history_guard_changed_by_fixture'):
+            self.execute(cursor, seed=corrupt)
+        self.assertTrue(self.rolled_back)
+        self.assertEqual(cursor.rows, 80)
+        self.assertTrue(all(value == 'O' for value in cursor.enabled.values()))
+
+    def test_fixture_cannot_leave_test_plan_history_guards_disabled(self):
+        cursor = Cursor()
+        def corrupt(*args, **kwargs):
+            cursor.enabled['rms_testplanassociation'] = 'D'
         with self.assertRaisesRegex(CommandError, 'history_guard_changed_by_fixture'):
             self.execute(cursor, seed=corrupt)
         self.assertTrue(self.rolled_back)

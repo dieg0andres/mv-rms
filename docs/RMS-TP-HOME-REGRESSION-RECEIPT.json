@@ -1,0 +1,28 @@
+{
+  "run_id": "b83740b0-a011-45c4-bb01-068eb3c53607",
+  "base_candidate": "0722202644251f327eb1a52bd0ec2993651195ba",
+  "changes": [
+    "tests/django_hypothesis_frontend_navigation_tests.py",
+    "tests/django_hypothesis_frontend_shell_tests.py"
+  ],
+  "reason": "The delivered Home page adds a sixth permission-scoped Test Plans reader; legacy DB-free fixtures supplied only five readers.",
+  "preserved_failure": "Initial focused run: 45 tests, two shell authorization subtests failed with 400 instead of 200; no DB setup. Original four navigation fixture failures preserved in Frontend evidence.",
+  "check": {
+    "command": ".venv/bin/python -B manage.py test tests.django_hypothesis_frontend_navigation_tests tests.django_hypothesis_frontend_shell_tests tests.django_hypothesis_frontend_schema_tests --verbosity 1",
+    "exit_code": 0,
+    "passed": 45,
+    "database": "not accessed"
+  },
+  "files": [
+    {
+      "path": "tests/django_hypothesis_frontend_navigation_tests.py",
+      "sha256": "f67b6b1520bfbf65d444e70b2fad662514bd2d7746568d1b3cfd39e74cc7ca57"
+    },
+    {
+      "path": "tests/django_hypothesis_frontend_shell_tests.py",
+      "sha256": "ae6110b0f97bf80c96edc92e66949bbb1d0ca1247f9cb6f3cbdf3acb40b54dc7"
+    }
+  ],
+  "product_behavior_changed": false,
+  "schema_changed": false
+}

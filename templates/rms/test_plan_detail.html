@@ -1,0 +1,13 @@
+{% extends "rms/base.html" %}{% block title %}Strategy Specification and Test Plan — RMS{% endblock %}{% block content %}
+<link rel="stylesheet" href="/static/rms/test_plan.css">
+<h1>Strategy Specification and Test Plan</h1>{% if save_notice %}<p class="notice" role="status">{{ save_notice }}</p>{% endif %}
+<h2>{{ record.fields.title }}</h2><p>{% if historical %}Exact historical definition{% else %}Current definition{% endif %} · Version {{ record.version }} · <code>{{ record.plan_version_id }}</code> · {{ record.classification }}</p>
+<p><a href="{{ latest_url }}">Current definition</a> · <a href="{{ history_url }}">History</a> · <a href="{{ checks_url }}?plan_version_id={{ record.plan_version_id }}">Checks for this exact version</a>{% if can_edit %} · <a href="{{ revision_url }}">Revise plan</a>{% endif %}</p>
+<p>Saved {{ record.created_at }} by {{ record.created_by }}. Definition digest: <code>{{ record.config_digest }}</code></p>
+<section><h2>Pinned lineage</h2><ul>{% for link in lineage %}<li><a href="{{ link.url }}">{{ link.label }}</a> · <code>{{ link.version_id }}</code></li>{% endfor %}</ul><h3>Intended Hypothesis benchmark — separate from evaluation benchmark</h3><pre>{{ record.hypothesis.fields.intended_benchmark_name|default:"Not supplied" }}
+{{ record.hypothesis.fields.intended_benchmark_definition|default:"Not supplied" }}</pre><p>Inherited Hypothesis completeness: {{ record.hypothesis.draft_completeness|default:"Unknown" }}</p></section>
+{% include "rms/includes/test_plan_indicators.html" %}
+<section><h2>Baseline and individually listed variations</h2><p>Server-resolved configurations and digests:</p><pre>{{ record.configurations }}</pre></section>
+<section><h2>Exact saved definition</h2>{% include "rms/includes/test_plan_definition.html" %}</section>
+{% if can_edit %}<section><h2>Record an externally performed check</h2>{% for requirement in record.data_requirements %}<h3>{{ requirement.fields.name|default:requirement.fields.key }}</h3>{% for configuration in requirement.fields.used_by_configurations %}<p><a href="{{ latest_url }}/data-checks/new?plan_version_id={{ record.plan_version_id }}&amp;data_requirement_version_id={{ requirement.data_requirement_version_id }}&amp;configuration_key={{ configuration }}">Record external data check — {{ configuration }}</a></p>{% endfor %}{% empty %}<p>No data requirement supplied in this version.</p>{% endfor %}</section>{% endif %}
+<p><a href="/test-plans">Test Plans</a></p>{% endblock %}

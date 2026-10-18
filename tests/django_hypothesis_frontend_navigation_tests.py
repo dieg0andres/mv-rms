@@ -12,7 +12,7 @@ from django.test import RequestFactory, SimpleTestCase
 from django.urls import resolve
 from rest_framework.test import force_authenticate
 
-from rms import api, record_selection_services as selection, hypothesis_services, research_context_services
+from rms import api, record_selection_services as selection, hypothesis_services, research_context_services, test_plan_views
 from rms.hypothesis_validation import validate_request
 from rms.navigation_views import NavigationPage, SchemaUnavailable
 from rms.permissions import has_rms_read_access, has_rms_write_access
@@ -203,9 +203,10 @@ class NavigationFrontendTests(SimpleTestCase):
         readers = []
         for module, name in ((selection, "list_sources"), (selection, "list_ideas"), (hypothesis_services, "list_hypotheses"), (research_context_services, "list_research_families"), (research_context_services, "list_investigations")):
             readers.append(stack.enter_context(patch.object(module, name, return_value={"count": 0})))
+        readers.append(stack.enter_context(patch.object(test_plan_views, "plan_service", return_value={"count": 0})))
         return readers
 
-    def test_home_counts_use_all_five_authorized_readers_with_minimum_slice(self):
+    def test_home_counts_use_all_six_authorized_readers_with_minimum_slice(self):
         for role in ("editor", "founder_viewer"):
             actor = invented_actor(role)
             with self.subTest(role=role), ExitStack() as stack:
@@ -213,12 +214,14 @@ class NavigationFrontendTests(SimpleTestCase):
                 response = self.page("home", "/", actor)
                 html = self.render(response)
                 self.assertEqual(response.status_code, 200)
-                for reader in readers:
+                for reader in readers[:-1]:
                     reader.assert_called_once_with(actor=actor, query={"page": 1, "page_size": 1})
-                self.assertEqual(html.count("Permitted records: 0"), 5)
+                readers[-1].assert_called_once_with("list_test_plans", actor=actor, query={"page": 1, "page_size": 1})
+                self.assertEqual(html.count("Permitted records: 0"), 6)
                 self.assertNotIn("Count unavailable", html)
                 self.assertIn('href="/research-context#collection-family"', html)
                 self.assertIn('href="/research-context#collection-case"', html)
+                self.assertIn('href="/test-plans"', html)
 
     def test_home_partial_and_total_failure_leave_unknown_distinct_from_zero(self):
         for all_failed in (False, True):
@@ -228,8 +231,8 @@ class NavigationFrontendTests(SimpleTestCase):
                     reader.side_effect = selection.SelectionUnavailable()
                 response = self.page("home", "/")
                 html = self.render(response)
-                self.assertEqual(html.count("Count unavailable (unknown, not zero)"), 5 if all_failed else 1)
-                self.assertEqual(html.count("Permitted records: 0"), 0 if all_failed else 4)
+                self.assertEqual(html.count("Count unavailable (unknown, not zero)"), 6 if all_failed else 1)
+                self.assertEqual(html.count("Permitted records: 0"), 0 if all_failed else 5)
                 self.assertEqual(response.status_code, 200)
 
     def test_home_backend_denial_does_not_render_partial_metadata(self):

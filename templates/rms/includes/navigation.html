@@ -6,7 +6,7 @@
       {% if navigation %}
         {% for item in navigation %}<li><a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.label }}</a></li>{% endfor %}
       {% else %}
-        <li><a href="/">Home</a></li><li><a href="/sources">Sources</a></li><li><a href="/ideas">Ideas</a></li><li><a href="/hypotheses">Hypotheses</a></li><li><a href="/research-context">Research context</a></li>
+        <li><a href="/">Home</a></li><li><a href="/sources">Sources</a></li><li><a href="/ideas">Ideas</a></li><li><a href="/hypotheses">Hypotheses</a></li><li><a href="/test-plans">Test Plans</a></li><li><a href="/research-context">Research context</a></li>
       {% endif %}
     </ul>
   </nav>

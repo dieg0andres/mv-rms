@@ -1,0 +1,21 @@
+{% if node.kind == "hidden" %}<input type="hidden" id="{{ node.id }}" name="{{ node.path }}" value="{{ node.value }}">
+{% elif node.kind == "object" %}
+<div class="tp-object" id="{{ node.id }}">{% for child in node.children %}{% include "rms/includes/test_plan_node.html" with node=child %}{% endfor %}</div>
+{% elif node.kind == "repeat" %}
+<fieldset id="{{ node.id }}" data-tp-array="{{ node.path }}"><legend>{{ node.label }}</legend>
+<p>Items retain their order. Remove an item only from this proposal; saved history remains unchanged.</p>
+<div data-tp-items>{% for item in node.items %}<fieldset data-tp-item="{{ item.path }}"><legend>{{ node.label }} item {{ forloop.counter }}</legend>{% include "rms/includes/test_plan_node.html" with node=item %}<div class="actions"><button type="button" data-tp-move="up">Move up</button><button type="button" data-tp-move="down">Move down</button><button type="button" data-tp-remove>Remove item</button></div></fieldset>{% endfor %}</div>
+<template data-tp-prototype data-token="{{ node.token }}"><fieldset data-tp-item="{{ node.prototype.path }}"><legend>{{ node.label }} item</legend>{% include "rms/includes/test_plan_node.html" with node=node.prototype %}<div class="actions"><button type="button" data-tp-move="up">Move up</button><button type="button" data-tp-move="down">Move down</button><button type="button" data-tp-remove>Remove item</button></div></fieldset></template>
+<button type="button" data-tp-add>Add {{ node.label|lower }} item</button>
+</fieldset>
+{% else %}
+<div class="field"><label for="{{ node.id }}">{{ node.label }}</label>
+{% if node.kind == "select" %}<select{% if node.issues %} aria-invalid="true" aria-describedby="{{ node.id }}-errors"{% endif %} id="{{ node.id }}" name="{{ node.path }}"><option value="">Not supplied</option>{% if node.unknown_choice %}<option value="{{ node.value }}" selected>Submitted: {{ node.value }}</option>{% endif %}{% for choice in node.choices %}<option value="{{ choice.value }}"{% if choice.value == node.value %} selected{% endif %}>{{ choice.label }}</option>{% endfor %}</select>
+{% elif node.kind == "text" %}<input type="text"{% if node.issues %} aria-invalid="true" aria-describedby="{{ node.id }}-errors"{% endif %} id="{{ node.id }}" name="{{ node.path }}" value="{{ node.value }}">
+{% else %}<textarea{% if node.issues %} aria-invalid="true" aria-describedby="{{ node.id }}-errors"{% endif %} id="{{ node.id }}" name="{{ node.path }}"{% if node.kind == "map" %} class="tp-code"{% endif %}>{{ node.value }}</textarea>{% endif %}
+{% if node.kind == "lines" %}<p class="muted">One item per line, in the intended order. Blank means no items.</p>{% elif node.kind == "map" %}<p class="muted">List only declared parameter overrides as a JSON object. Use quoted decimal/string values, integers, or true/false to match the parameter type. Example: {"invented_lookback": 40}. Baseline values are in Strategy specification above. No combinations are generated.</p>{% endif %}
+{% if node.maxlength %}<p class="muted">Maximum {{ node.maxlength }} characters. Oversize input is retained for correction.</p>{% endif %}
+</div>
+{% endif %}
+
+{% if node.issues %}<ul class="error" id="{{ node.id }}-errors">{% for message in node.issues %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
