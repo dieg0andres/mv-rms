@@ -1,0 +1,51 @@
+{% extends "rms/base.html" %}
+{% block title %}Runs and Results — RMS{% endblock %}
+{% block content %}
+<h1>Runs and Results</h1>
+<p><a href="{{ plan_url }}">Back to exact Test Plan version</a></p>
+<p>Version: <code>{{ listing.plan_version_id }}</code></p>
+<p>Invented fixtures only. A registration reports an external attempt; it does not approve, execute, complete, or qualify research.</p>
+{% if form %}
+<section aria-labelledby="register-run-title">
+  <h2 id="register-run-title">Register an external synthetic attempt</h2>
+  <details>
+    <summary>Resolved configuration digests</summary>
+    <dl>
+    {% for config in listing.configurations %}
+      <dt>{{ config.key }}</dt><dd><code>{{ config.digest }}</code></dd>
+    {% endfor %}
+    </dl>
+  </details>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button type="submit">Register synthetic attempt</button>
+  </form>
+</section>
+{% endif %}
+<section aria-labelledby="reported-runs-title">
+  <h2 id="reported-runs-title">Registered attempts</h2>
+  {% for run in listing.runs %}
+    <article>
+      <h3>{{ run.external_reference }}</h3>
+      <p><code>{{ run.run_id }}</code> · {{ run.configuration_key }} · {{ run.reported_by }} · {{ run.recorded_at }}</p>
+      <details>
+        <summary>Reported identities and registration digest</summary>
+        <dl>
+          <dt>Code commit</dt><dd><code>{{ run.code_commit }}</code></dd>
+          <dt>Code manifest</dt><dd><code>{{ run.code_manifest_digest }}</code></dd>
+          <dt>Dependencies</dt><dd><code>{{ run.dependency_lock_digest }}</code></dd>
+          <dt>Data manifest</dt><dd><code>{{ run.dataset_manifest_digest }}</code></dd>
+          <dt>Parameters</dt><dd><code>{{ run.parameter_digest }}</code></dd>
+          <dt>Environment</dt><dd><code>{{ run.environment_digest }}</code></dd>
+          <dt>Registration digest</dt><dd><code>{{ run.row_digest }}</code></dd>
+        </dl>
+      </details>
+    </article>
+  {% empty %}
+    <p>No external attempts recorded on this page.</p>
+  {% endfor %}
+  {% if listing.previous_offset is not None %}<a href="?offset={{ listing.previous_offset }}">Previous attempts</a>{% endif %}
+  {% if listing.next_offset is not None %}<a href="?offset={{ listing.next_offset }}">More attempts</a>{% endif %}
+</section>
+{% endblock %}

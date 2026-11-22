@@ -63,6 +63,7 @@ urlpatterns = [
         name="idea-history",
     ),
     path("api/v1/readiness", api.ReadinessView.as_view(), name="readiness"),
+    path("", include("rms.run_attempt_urls")),
     path("api/v1/", include("rms.test_plan_api_urls")),
     path("", include("rms.test_plan_navigation_urls")),
     path("", include("rms.hypothesis_api_urls")),
