@@ -27,7 +27,7 @@
   <h2 id="reported-runs-title">Registered attempts</h2>
   {% for run in listing.runs %}
     <article>
-      <h3>{{ run.external_reference }}</h3>
+      <h3><a href="{% url 'rms-run-detail' listing.plan_id listing.plan_version_id run.run_id %}">{{ run.external_reference }}</a></h3>
       <p><code>{{ run.run_id }}</code> · {{ run.configuration_key }} · {{ run.reported_by }} · {{ run.recorded_at }}</p>
       <details>
         <summary>Reported identities and registration digest</summary>

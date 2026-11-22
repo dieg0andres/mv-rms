@@ -1,0 +1,36 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ action.label }} — RMS{% endblock %}
+{% block content %}
+<article class="run-record">
+  <p><a href="{{ action.return_url }}">{{ action.return_label }}</a></p>
+  <h1>{{ action.label }}</h1>
+  <p class="notice">Record invented evidence only. This form does not execute runs or grant any approval.</p>
+  <dl>
+    <dt>Exact Test Plan version</dt><dd><code>{{ scope.plan_version_id }}</code></dd>
+    {% if scope.run_id %}<dt>Run attempt</dt><dd><code>{{ scope.run_id }}</code></dd>{% endif %}
+    {% if scope.result_id %}<dt>Exact result version</dt><dd><code>{{ scope.result_id }}</code></dd>{% endif %}
+  </dl>
+  {% if form.errors or save_error %}
+    <section class="error" tabindex="-1" data-run-error-summary aria-labelledby="run-error-heading">
+      <h2 id="run-error-heading">{{ error_heading|default:"The update could not be saved" }}</h2>
+      {% if save_error %}<p>{{ save_error }}</p>{% endif %}
+      {% if form.errors %}
+        <ul>
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in form %}{% for error in field.errors %}<li>{% if field.is_hidden %}{{ error }}{% else %}<a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a>{% endif %}</li>{% endfor %}{% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+  {% endif %}
+  <form method="post" action="{{ action.url }}" class="card run-form">
+    {% csrf_token %}
+    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    {% for field in form.visible_fields %}<div class="field">{{ field.as_field_group }}</div>{% endfor %}
+    <button type="submit">{{ action.submit_label }}</button>
+  </form>
+</article>
+{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="/static/rms/run_workflow.css">
+<script src="/static/rms/run_workflow.js" defer></script>
+{% endblock %}
