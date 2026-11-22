@@ -73,6 +73,15 @@ class PackageTests(unittest.TestCase):
             self.builder.build(self.output, "a" * 40, "b" * 40)
         self.assertEqual(sentinel.read_bytes(), b"Preserved evidence")
 
+    def test_current_release_inventory_covers_every_git_archive_member(self):
+        with patch.object(self.builder, "git", side_effect=self.git):
+            metadata = self.builder.build(self.output, "a" * 40, "b" * 40, manifest_path=None)
+        self.assertEqual(metadata["source_manifest_kind"], "git-tree-file-sha256")
+        expected = {name: sha256(data).hexdigest() for name, data in self.files.items()}
+        self.assertEqual(metadata["file_sha256"], expected)
+        inventory = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
+        self.assertEqual(metadata["source_manifest_sha256"], sha256(inventory).hexdigest())
+
     def test_moving_or_partial_git_refs_are_rejected_before_git(self):
         with patch.object(self.builder, "git") as git, self.assertRaises(ValueError):
             self.builder.build(self.output, "HEAD", "b" * 40)

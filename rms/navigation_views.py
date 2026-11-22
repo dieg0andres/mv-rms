@@ -297,13 +297,28 @@ class NavigationPage(RmsPage):
         if self.section in ("sources", "ideas", "hypotheses", "context"):
             return connected_selection(self, request, context)
         context["home_counts"] = []
+        context["latest_records"] = []
         for kind in ("source", "idea", "hypothesis", "family", "case"):
             config = RESOURCES[kind]
             item = {"label": config["label"], "url": "/" + config["route"], "count": None}
             if kind in ("family", "case"):
                 item["url"] = "/research-context#collection-" + kind
             try:
-                item["count"] = shared_service(kind, "list", actor=request.user, query={"page": 1, "page_size": 1})["count"]
+                listing = shared_service(kind, "list", actor=request.user, query={"page": 1, "page_size": 1})
+                item["count"] = listing["count"]
+                if listing.get("results"):
+                    record = listing["results"][0]
+                    if kind in ("source", "idea"):
+                        title, version = record["title"], record["latest_version"]
+                        url = record["links"]["selected_version"]
+                    else:
+                        title = record["fields"].get("title") or record["fields"].get("name")
+                        version = record["version"]
+                        url = browser_url(kind, record[config["id"]], version)
+                    context["latest_records"].append({
+                        "collection": item["label"], "title": title or "Untitled record",
+                        "url": url, "version": version,
+                    })
             except (SchemaUnavailable, DatabaseError):
                 pass
             except ServiceError as error:
@@ -313,7 +328,15 @@ class NavigationPage(RmsPage):
         from .test_plan_views import plan_service
         plan_count = {"label": "Test Plans", "url": "/test-plans", "count": None}
         try:
-            plan_count["count"] = plan_service("list_test_plans", actor=request.user, query={"page": 1, "page_size": 1})["count"]
+            listing = plan_service("list_test_plans", actor=request.user, query={"page": 1, "page_size": 1})
+            plan_count["count"] = listing["count"]
+            if listing.get("results"):
+                record = listing["results"][0]
+                context["latest_records"].append({
+                    "collection": plan_count["label"], "title": record["fields"].get("title") or "Untitled plan",
+                    "url": f"/test-plans/{record['plan_id']}/versions/{record['plan_version_id']}",
+                    "version": record["version"],
+                })
         except (SchemaUnavailable, DatabaseError):
             pass
         except ServiceError as error:
