@@ -1,26 +1,68 @@
 {% extends "rms/base.html" %}
-{% block title %}{{ heading }} — RMS{% endblock %}
+{% block title %}{{ heading }} · Research Management System{% endblock %}
 {% block content %}
-<h1>{{ heading }}</h1>
 {% if heading == "Home" %}
-  <p>Choose a record type to review research descriptions and their exact saved versions.</p>
-  <h2>Permitted saved records</h2>
-  <ul class="record-list">{% for item in home_counts %}<li class="card"><a href="{{ item.url }}">{{ item.label }}</a> — {% if item.count == None %}Count unavailable (unknown, not zero){% else %}Permitted records: {{ item.count }}{% endif %}</li>{% endfor %}</ul>
-  <p>Counts describe saved synthetic software records, not research progress.</p>
-{% elif heading == "Research context" %}
-  <h2>Research family</h2><p>A proposed grouping rationale, not a certification of scientific novelty.</p>
-  <h2>Research case</h2><p>State: proposed. A manual prior-research assessment must record its checked scope and limitations. No assessment or family assignment is inferred.</p>
+  <header class="page-intro">
+    <div>
+      <h1>Research overview</h1>
+      <p>Explore saved research and trace each record to its exact version.</p>
+    </div>
+    {% if can_edit %}<a class="button-primary" href="/sources/new">Create source</a>{% endif %}
+  </header>
+  <section aria-labelledby="collections-title">
+    <h2 id="collections-title">Collections</h2>
+    <ul class="collection-grid">
+      {% for item in home_counts %}
+        <li><a class="collection-tile" href="{{ item.url }}">
+          <span class="collection-name">{{ item.label }}</span>
+          {% if item.count == None %}
+            <span class="count-unknown" aria-label="Count unavailable (unknown, not zero)">Unavailable</span>
+          {% else %}
+            <span class="collection-count"><span class="sr-only">Permitted records: {{ item.count }}</span><span aria-hidden="true">{{ item.count }}</span></span>
+          {% endif %}
+        </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  <div class="home-panels">
+    <section class="panel" aria-labelledby="latest-title">
+      <h2 id="latest-title">Latest additions by collection</h2>
+      {% if latest_records %}
+        <ul class="latest-list">
+          {% for record in latest_records %}
+            <li>
+              <div><small>{{ record.collection }}</small><a href="{{ record.url }}">{{ record.title }}</a></div>
+              <span class="version-label">v{{ record.version }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No records are available to display.</p>
+      {% endif %}
+    </section>
+    <section class="panel quick-actions" aria-labelledby="actions-title">
+      <h2 id="actions-title">{% if can_edit %}Create a record{% else %}Explore records{% endif %}</h2>
+      {% if can_edit %}
+        <a href="/ideas/new">Create idea</a>
+        <a href="/hypotheses/new">Create hypothesis draft</a>
+        <a href="/research-families/new">Create research family</a>
+        <a href="/investigations/new">Create research case</a>
+      {% else %}
+        <a href="/test-plans">Browse test plans</a>
+        <a href="/research-context">Browse research context</a>
+        <a href="/idea-family-associations">Find an idea-family classification</a>
+      {% endif %}
+    </section>
+  </div>
 {% else %}
-  <p class="notice">Record selection is not connected in this source-only preparation. Available records and counts are unknown, not zero.</p>
+  <h1>{{ heading }}</h1>
+  {% if heading == "Research context" %}
+    <h2>Research family</h2><p>A proposed grouping rationale.</p>
+    <h2>Research case</h2><p>State: proposed. A manual prior-research assessment records its checked scope and limitations. No assessment or family assignment is inferred.</p>
+  {% else %}
+    <p class="notice">Record selection is unavailable. Record counts are unknown.</p>
+  {% endif %}
+  {% if can_edit and heading == "Research context" %}<p><a href="/research-families/new">Create research family</a> · <a href="/investigations/new">Create research case with manual assessment</a></p>{% endif %}
+  <p><a href="/">Return Home</a></p>
 {% endif %}
-{% if can_edit %}
-  {% if heading == "Home" or heading == "Sources" %}<p><a href="/sources/new">Create source (existing screen)</a></p>{% endif %}
-  {% if heading == "Home" or heading == "Ideas" %}<p><a href="/ideas/new">Create idea (existing screen)</a></p>{% endif %}
-  {% if heading == "Home" or heading == "Hypotheses" %}<p><a href="/hypotheses/new">Create hypothesis draft</a></p>{% endif %}
-  {% if heading == "Home" or heading == "Research context" %}<p><a href="/research-families/new">Create research family</a> · <a href="/investigations/new">Create research case with manual assessment</a></p>{% endif %}
-{% else %}
-  <p>Viewer access is read-only. Creation and revision require server-authorized editor access.</p>
-{% endif %}
-<p>Research descriptions remain synthetic. Hypothesis completeness and proposed case setup grant no research or execution authority.</p>
-<p><a href="/">Return Home</a></p>
 {% endblock %}

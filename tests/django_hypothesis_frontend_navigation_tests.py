@@ -235,6 +235,26 @@ class NavigationFrontendTests(SimpleTestCase):
                 self.assertEqual(html.count("Permitted records: 0"), 0 if all_failed else 5)
                 self.assertEqual(response.status_code, 200)
 
+    def test_home_latest_additions_link_to_the_exact_returned_versions(self):
+        with ExitStack() as stack:
+            readers = self.home_readers(stack)
+            source = invented_selection("sources")
+            readers[0].return_value = source
+            readers[2].return_value = {"count": 1, "results": [{
+                "hypothesis_id": "HYP-example", "version": 3, "fields": {"title": "Invented hypothesis"},
+            }]}
+            readers[-1].return_value = {"count": 1, "results": [{
+                "plan_id": "TPL-example", "plan_version_id": "TPLV-example", "version": 2,
+                "fields": {"title": "Invented plan"},
+            }]}
+            html = self.render(self.page("home", "/"))
+        links = [link["href"] for link in LinkStructure(html).links]
+        self.assertIn(source["results"][0]["links"]["selected_version"], links)
+        self.assertIn("/hypotheses/HYP-example/versions/3", links)
+        self.assertIn("/test-plans/TPL-example/versions/TPLV-example", links)
+        self.assertIn("Invented plan", html)
+        self.assertIn("&lt;script&gt;unsafe()&lt;/script&gt;", html)
+
     def test_home_backend_denial_does_not_render_partial_metadata(self):
         with ExitStack() as stack:
             readers = self.home_readers(stack)
