@@ -1,17 +1,31 @@
 <a class="skip-link" href="#main-content">Skip to main content</a>
 <header class="site-header">
-  <p class="brand">Research Management System</p>
+  <a class="brand" href="/" aria-label="Mauriegio Ventures research workspace">
+    <span class="monogram" aria-hidden="true">MV</span>
+    <span>Mauriegio Ventures<small>Research Management System</small></span>
+  </a>
   <nav aria-label="Primary">
     <ul class="primary-navigation">
       {% if navigation %}
-        {% for item in navigation %}<li><a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.label }}</a></li>{% endfor %}
+        {% for item in navigation %}
+          <li><a href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+        {% endfor %}
       {% else %}
-        <li><a href="/">Home</a></li><li><a href="/sources">Sources</a></li><li><a href="/ideas">Ideas</a></li><li><a href="/hypotheses">Hypotheses</a></li><li><a href="/test-plans">Test Plans</a></li><li><a href="/research-context">Research context</a></li>
+        <li><a href="/">Home</a></li><li><a href="/sources">Sources</a></li>
+        <li><a href="/ideas">Ideas</a></li><li><a href="/hypotheses">Hypotheses</a></li>
+        <li><a href="/test-plans">Test Plans</a></li><li><a href="/research-context">Research context</a></li>
       {% endif %}
     </ul>
   </nav>
-  <p class="muted">Role: {{ role_label|default:"Not supplied" }} · Build: {{ build_label|default:"Not supplied — not a deployed release" }}</p>
-  <p class="notice">Synthetic software prototype only. Authority information is not permission, research approval, or execution authority.</p>
-  {% if detail.source_id and can_edit %}<p><a href="/sources/{{ detail.source_id }}/correct">Revise source</a></p>{% endif %}
-  {% if repository_preview %}<p class="warning">Repository-only preparation. Record services are not connected; no save or integrated acceptance is available.</p>{% endif %}
+  <div class="workspace-access">
+    <p class="workspace-mode">Synthetic workspace</p>
+    <p class="account-role">Role: {{ role_label|default:"Not supplied" }}</p>
+    <details class="build-info">
+      <summary>Workspace details</summary>
+      <p>Synthetic software prototype only. Research and execution require separate authorization.</p>
+      <p>Build <code>{{ build_label|default:"Not supplied — not a deployed release" }}</code></p>
+    </details>
+    {% if detail.source_id and can_edit %}<p><a href="/sources/{{ detail.source_id }}/correct">Revise source</a></p>{% endif %}
+    {% if repository_preview %}<p class="warning">Repository preview. Record services are disconnected.</p>{% endif %}
+  </div>
 </header>

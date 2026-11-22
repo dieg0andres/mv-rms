@@ -38,20 +38,32 @@ def build(output, commit, tree, *,
             if not member.isfile() or path.is_absolute() or ".." in path.parts:
                 raise ValueError("Unsupported product archive member")
             files[member.name] = contents.extractfile(member).read()
-    for required in ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py", manifest_path, *extra_required, *(url.lstrip("/") for url in ASSETS)):
+    required_paths = ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py",
+                      *extra_required, *(url.lstrip("/") for url in ASSETS))
+    for required in required_paths:
         if required not in files:
             raise ValueError("Integrated product input missing")
-    product_manifest = json.loads(files[manifest_path])
-    for item in product_manifest["files"]:
-        data = files[item["path"]]
-        if len(data) != item["bytes"] or sha256(data).hexdigest() != item["sha256"]:
-            raise ValueError("Committed source differs from integrated manifest")
+    file_sha256 = {path: sha256(data).hexdigest() for path, data in sorted(files.items())}
+    if manifest_path is not None:
+        if manifest_path not in files:
+            raise ValueError("Integrated product input missing")
+        manifest_bytes = files[manifest_path]
+        for item in json.loads(manifest_bytes)["files"]:
+            data = files[item["path"]]
+            if len(data) != item["bytes"] or file_sha256[item["path"]] != item["sha256"]:
+                raise ValueError("Committed source differs from integrated manifest")
+    else:
+        # The selected Git tree is the release manifest for subsequent releases.
+        # The runtime verifies every unpacked member against this inventory.
+        manifest_bytes = json.dumps(file_sha256, sort_keys=True, separators=(",", ":")).encode()
     recipe = {name: files["staging/" + name] for name in ("compose.yaml", "entrypoint.sh", "requirements-staging.lock", "runtime.py", "request_policy.py", "release_identity.py", "create-principals.py", "README.md")}
     recipe["Dockerfile"] = files["staging/Dockerfile.hn"]
     metadata = {"package_version": 2, "integrated_navigation": True, "commit": commit, "tree": tree,
                 "summary": summary,
-                "source_manifest_sha256": sha256(files[manifest_path]).hexdigest(),
-                "file_sha256": {path: sha256(data).hexdigest() for path, data in sorted(files.items())}}
+                "source_manifest_sha256": sha256(manifest_bytes).hexdigest(),
+                "file_sha256": file_sha256}
+    if manifest_path is None:
+        metadata["source_manifest_kind"] = "git-tree-file-sha256"
     output.mkdir(parents=True)
     compressed = gzip.compress(archive, mtime=0)
     (output / "product.tar.gz").write_bytes(compressed)
