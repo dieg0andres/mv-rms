@@ -20,6 +20,7 @@ from rms.research_context_common import StaleVersion
 from rms.run_result_services import RunConflict, publish_result, retry_run
 from rms.test_plan_services import correct_test_plan, create_test_plan
 from tests.committed_database import CommittedDatabaseTestCase
+from tests.synthetic_read_scope import SyntheticPlanReaders
 from tests.test_test_plan_backend_validation import complete_fixture
 
 
@@ -35,12 +36,18 @@ def fixture(suffix):
 
 
 class Workflow:
-    def setup_workflow(self, suffix):
+    def setup_workflow(self, suffix, *, seed_read_scope=True):
         self.editor, self.plan = fixture(suffix)
+        if seed_read_scope:
+            self.readers = SyntheticPlanReaders(self, self.plan)
+            self.scope_for(self.editor)
         self.client = APIClient()
         self.client.force_authenticate(self.editor)
         self.root = f"/api/v1/test-plans/{self.plan['plan_id']}/versions/{self.plan['plan_version_id']}/runs"
         self.suffix = suffix
+
+    def scope_for(self, actor):
+        self.readers.allow(actor)
 
     def post(self, url, key, payload, status=201):
         response = self.client.post(url, payload, format='json', HTTP_IDEMPOTENCY_KEY=key)
@@ -88,6 +95,7 @@ class RunResultTests(Workflow, TestCase):
 
         viewer = User.objects.create_user('invented-capability-viewer')
         viewer.groups.add(Group.objects.create(name='founder_viewer'))
+        self.scope_for(viewer)
         self.client.force_authenticate(viewer)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -179,6 +187,7 @@ class RunResultTests(Workflow, TestCase):
         self.post(f'{wrong_root}/{run}/results', 'not-consumed', payload, 404)
         viewer = User.objects.create_user('invented-viewer')
         viewer.groups.add(Group.objects.create(name='founder_viewer'))
+        self.scope_for(viewer)
         self.client.force_authenticate(viewer)
         self.assertEqual(self.client.get(f'{self.root}/{run}').status_code, 200)
         self.post(url, 'not-consumed', payload, 403)
