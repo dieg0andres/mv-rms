@@ -1,9 +1,11 @@
 from django.urls import include, path
+from .rr14_api import RR14OriginsView
 from .test_plan_api import TestPlanView
 
 urlpatterns=[
     path('',include('rms.run_result_api')),
     path('',include('rms.run_assurance_api')),
+    path('test-plans/<str:plan_id>/versions/<str:version_id>/rr14-origins',RR14OriginsView.as_view(),name='rr14-origins'),
     path('test-plans',TestPlanView.as_view(action='collection'),name='test-plan-list'),
     path('test-plans/<str:plan_id>',TestPlanView.as_view(action='detail'),name='test-plan-detail'),
     path('test-plans/<str:plan_id>/versions',TestPlanView.as_view(action='history'),name='test-plan-history'),

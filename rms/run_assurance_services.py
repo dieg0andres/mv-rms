@@ -179,7 +179,7 @@ def _write(action, *, actor, plan_id, version_id, run_id, result_version_id, ide
     request_digest = digest({'actor': str(actor.pk), 'method': 'POST', 'path': path, 'payload': payload})
     with transaction.atomic():
         _lock_idempotency_key(storage_key)
-        _run(plan_id, version_id, run_id, lock=True)
+        _run(actor, plan_id, version_id, run_id, lock=True)
         result = get_result_version(actor=actor, plan_id=plan_id, version_id=version_id, run_id=run_id,
                                     result_version_id=result_version_id)
         require_capability(action, actor, result)

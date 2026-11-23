@@ -13,6 +13,7 @@ from .hypothesis_models import AUTHORITY_REFERENCE, ResearchVersion
 from .hypothesis_validation import HypothesisValidationError, validate_request
 from .models import IdempotencyRecord, IdeaVersion, SourceVersion
 from .permissions import has_rms_read_access, has_rms_write_access
+from .rr14_scope import ReadScope
 from .services import (
     IdempotencyConflict, ResourceNotFound, ServiceError, StoredResponse,
     _lock_idempotency_key, _replay_or_conflict, canonical_json_bytes,
@@ -93,10 +94,13 @@ def append(model, *, actor, record, predecessor=None, changed_fields=(), **value
     return item
 
 
-def envelope(item):
+def envelope(item, *, scope=None):
     predecessor_id = None
     if item.corrects_version is not None:
-        predecessor_id = type(item).objects.get(record=item.record, version=item.corrects_version).public_id
+        previous = type(item).objects.filter(record=item.record, version=item.corrects_version)
+        if scope is not None:
+            previous = scope.versions(previous)
+        predecessor_id = previous.values_list('public_id', flat=True).first()
     return {
         "stable_id": item.record.public_id, "version_id": item.public_id,
         "version": item.version, "schema_version": item.schema_version,
@@ -104,8 +108,10 @@ def envelope(item):
         "recorded_at": wire(item.recorded_at), "classification": item.classification,
         "authority_reference": item.authority_reference, "state": item.state,
         "row_digest": item.row_digest, "impact_status": item.impact_status,
-        "corrects_version": item.corrects_version, "correction_reason": item.correction_reason,
-        "changed_fields": item.changed_fields, "supersedes_version_id": predecessor_id,
+        "corrects_version": item.corrects_version if predecessor_id else None,
+        "correction_reason": item.correction_reason if predecessor_id else None,
+        "changed_fields": item.changed_fields if predecessor_id or not item.corrects_version else [],
+        "supersedes_version_id": predecessor_id,
         "effective_at": None,
     }
 
@@ -176,13 +182,14 @@ def paginated(*, actor, model, query, route, render, filter_queryset=None):
     query = validate_request("ListQuery", query)
     if route != "hypotheses" and "originating_idea_id" in query:
         field_error("/originating_idea_id", "unknown_field")
-    qs = visible(model).order_by("-created_at", "public_id")
+    scope = ReadScope(actor)
+    qs = scope.heads(visible(model)).order_by("-created_at", "public_id")
     if filter_queryset:
         qs = filter_queryset(qs, query)
     count = qs.count()
     start = (query["page"] - 1) * query["page_size"]
     selected = [] if start >= count else qs[start:start + query["page_size"]]
-    results = [render(record.versions.get(version=record.latest_version)) for record in selected]
+    results = [render(scope.exact(model, record.public_id, record.latest_version), scope=scope) for record in selected]
     def page_link(page):
         from urllib.parse import urlencode
         return f"/api/v1/{route}?" + urlencode({**query, "page": page})

@@ -46,7 +46,8 @@ class TestPlanView(ResearchRecordView):
     def post(self,request,plan_id=None,version_id=None,check_id=None):
         if self.action not in ('collection','correction','checks'): raise exceptions.MethodNotAllowed('POST')
         if request.query_params: raise TestPlanValidationError([issue('','unknown_field')])
-        kwargs={'actor':request.user,'idempotency_key':request.headers.get('Idempotency-Key'),'payload':request.data}
+        kwargs={'actor':request.user,'idempotency_key':request.headers.get('Idempotency-Key'),
+                'payload':request.data,'scoped':True}
         if self.action=='collection': stored=service.create_test_plan(**kwargs)
         elif self.action=='correction': stored=service.correct_test_plan(**kwargs,plan_id=plan_id)
         elif self.action=='checks': stored=service.record_data_access_check(**kwargs,plan_id=plan_id)

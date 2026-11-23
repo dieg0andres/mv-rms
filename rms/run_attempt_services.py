@@ -5,13 +5,13 @@ from django.db import transaction
 
 from .models import IdempotencyRecord
 from .research_context_common import require_actor, wire
+from .rr14_scope import ReadScope, read_one
 from .run_attempt_models import RunAttempt
 from .services import (
     ServiceError, StoredResponse, _lock_idempotency_key, _replay_or_conflict,
     canonical_json_bytes,
 )
-from .test_plan_models import TestPlanVersion
-from .test_plan_services import _error, _get, digest
+from .test_plan_services import _error, digest
 from .test_plan_validation import validate_json_size
 
 
@@ -39,8 +39,8 @@ class RunListPageInvalid(ServiceError):
     http_status = 400
 
 
-def _version(plan_id, version_id):
-    return _get(TestPlanVersion, version_id, record__public_id=plan_id, record__synthetic=True)
+def _version(actor, plan_id, version_id):
+    return read_one(ReadScope(actor).plans(), public_id=version_id, record__public_id=plan_id)
 
 
 def _render(attempt, plan_version):
@@ -62,7 +62,7 @@ def list_attempts(*, actor, plan_id, version_id, offset='0'):
     if not isinstance(offset, str) or re.fullmatch(r'[0-9]{1,8}', offset) is None:
         raise RunListPageInvalid
     offset = int(offset)
-    plan_version = _version(plan_id, version_id)
+    plan_version = _version(actor, plan_id, version_id)
     page = list(plan_version.run_attempts.all()[offset:offset + 51])
     return {
         'plan_id': plan_id,
@@ -111,7 +111,7 @@ def register_attempt(*, actor, plan_id, version_id, idempotency_key, payload):
     storage_key = 'RUN:' + digest([str(actor.pk), idempotency_key])
     path = f'/api/v1/test-plans/{plan_id}/versions/{version_id}/runs'
     with transaction.atomic():
-        plan_version = _version(plan_id, version_id)
+        plan_version = _version(actor, plan_id, version_id)
         request_digest = digest({'actor': str(actor.pk), 'method': 'POST', 'path': path, 'payload': fields})
         _lock_idempotency_key(storage_key)
         replay = _replay_or_conflict(storage_key, request_digest)

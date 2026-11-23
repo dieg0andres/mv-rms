@@ -37,8 +37,8 @@ class ResultIntegrityError(ServiceError):
     safe_message = 'This synthetic result cannot be verified and is unavailable.'
 
 
-def _run(plan_id, version_id, run_id, *, lock=False):
-    plan_version = _version(plan_id, version_id)
+def _run(actor, plan_id, version_id, run_id, *, lock=False):
+    plan_version = _version(actor, plan_id, version_id)
     attempts = RunAttempt.objects.filter(plan_version=plan_version, public_id=run_id)
     if lock:
         attempts = attempts.select_for_update()
@@ -69,7 +69,7 @@ def _event_render(event):
 
 def read_event_evidence(*, actor, plan_id, version_id, run_id, event_id):
     require_actor(actor)
-    run = _run(plan_id, version_id, run_id)
+    run = _run(actor, plan_id, version_id, run_id)
     try:
         event = run.lifecycle_events.select_related('previous_event').get(public_id=event_id)
     except RunLifecycleEvent.DoesNotExist as exc:
@@ -116,7 +116,7 @@ def _can_publish_result(state):
 
 def read_run(*, actor, plan_id, version_id, run_id):
     require_actor(actor)
-    run = _run(plan_id, version_id, run_id)
+    run = _run(actor, plan_id, version_id, run_id)
     events = list(run.lifecycle_events.select_related('previous_event'))
     state = events[-1].state if events else 'registered'
     links = _links(run)
@@ -146,7 +146,7 @@ def list_results(*, actor, plan_id, version_id, run_id, offset='0'):
     if not isinstance(offset, str) or re.fullmatch(r'[0-9]{1,8}', offset) is None:
         _error('/offset', 'invalid_format')
     start = int(offset)
-    run = _run(plan_id, version_id, run_id)
+    run = _run(actor, plan_id, version_id, run_id)
     page = list(run.result_versions.select_related('completed_event', 'supersedes').order_by('-version')[start:start + 51])
     for result in page[:50]:
         result.run = run
@@ -176,7 +176,7 @@ def _verify_result(result):
 def get_result_version(*, actor, plan_id, version_id, run_id, result_version_id):
     """Resolve an authorized exact result for consumers, including independent review."""
     require_actor(actor)
-    run = _run(plan_id, version_id, run_id)
+    run = _run(actor, plan_id, version_id, run_id)
     try:
         result = run.result_versions.select_related('completed_event', 'supersedes').get(public_id=result_version_id)
     except RunResultVersion.DoesNotExist as exc:
@@ -210,7 +210,7 @@ def _write(actor, plan_id, version_id, run_id, key, payload, suffix, operation):
     request_digest = digest({'actor': str(actor.pk), 'method': 'POST', 'path': path, 'payload': payload})
     with transaction.atomic():
         _lock_idempotency_key(storage_key)
-        run = _run(plan_id, version_id, run_id, lock=True)
+        run = _run(actor, plan_id, version_id, run_id, lock=True)
         replay = _replay_or_conflict(storage_key, request_digest)
         if replay is not None:
             return replay

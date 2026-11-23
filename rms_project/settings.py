@@ -15,7 +15,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rms.apps.RmsConfig",
 ]
-MIDDLEWARE = []
+MIDDLEWARE = ['rms.rr14_scope.scope_response']
+RMS_RR14_SCOPE_FILE = os.environ.get('RMS_RR14_SCOPE_FILE', '')
 ROOT_URLCONF = "rms_project.urls"
 TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [BASE_DIR / "templates"], "APP_DIRS": True, "OPTIONS": {"context_processors": []}}]
 WSGI_APPLICATION = "rms_project.wsgi.application"

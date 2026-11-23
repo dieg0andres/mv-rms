@@ -124,22 +124,31 @@ class TestPlanEditorPage(RmsPage):
                         raw['/' + collection + '/' + str(index) + '/' + version_identity] = item[version_identity] or ''
                 return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, notice='Latest head and child input references explicitly adopted. Your definition, item order and Hypothesis proposal remain unchanged. Removed children are proposed as new items. Review all differences and give a revision reason before Save draft.')
             operation = 'record_data_access_check' if self.check_form else 'correct_test_plan' if plan_id else 'create_test_plan'
-            stored = plan_service(operation, actor=request.user, payload=payload, idempotency_key=key, **({'plan_id': plan_id} if plan_id else {}))
+            stored = plan_service(operation, actor=request.user, payload=payload, idempotency_key=key,
+                                  scoped=True, **({'plan_id': plan_id} if plan_id else {}))
         except signing.BadSignature:
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=400, issues=[{'path': '', 'message': 'Retry receipt is invalid. No save attempted.'}])
         except (SchemaUnavailable, DatabaseError):
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=503, key=key, unknown=True, issues=[{'path': '', 'message': 'Save outcome unknown. The proposal is locked for unchanged retry with its original key. Inspect the record before editing.'}])
         except ServiceError as error:
             status = getattr(error, 'http_status', 404 if isinstance(error, ResourceNotFound) else 409)
-            if status in (401, 403):
+            if status in (401, 403) or (status == 404 and plan_id):
                 return service_failure(self, request, error)
-            return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=status, issues=[{'path': '', 'message': 'Referenced record unavailable. Missing and restricted references use this same response.' if status == 404 else getattr(error, 'safe_message', 'Proposal conflicts with current state.')}])
+            message = ('Referenced record unavailable. Missing and restricted references use this same response.'
+                       if status == 404 else getattr(error, 'safe_message', 'Proposal conflicts with current state.'))
+            return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=status, issues=[{'path': '', 'message': message}])
         except Exception as error:
             if not hasattr(error, 'issues'):
                 raise
             payload = getattr(error, 'proposal', None) or payload
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=400, issues=error.issues)
         saved = json.loads(stored.body)
+        if saved == {'saved': True}:
+            if self.check_form:
+                response = HttpResponseRedirect(plan_url(plan_id) + '/data-checks')
+                response.status_code = 303
+                return response
+            return TemplateResponse(request._request, 'rms/test_plan_saved.html', page_context(request), status=201)
         version_id = saved.get('plan_version_id') or payload.get('plan_version_id')
         identity = saved.get('plan_id', plan_id)
         receipt = signing.dumps({'actor': str(request.user.pk), 'plan': identity, 'version': version_id, 'status': stored.status}, salt='test-plan-saved')
