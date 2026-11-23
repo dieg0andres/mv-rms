@@ -384,19 +384,22 @@ else:
 
     def test_late_worker_completion_without_session_proof_remains_unknown(self):
         script = """
-from time import monotonic, sleep
+from threading import Event
+from time import monotonic
 from types import SimpleNamespace
 from rms.hypothesis_preserving_harness import BoundedSupervisor, inventory_digest, preserving_failure_handoff
-supervisor = BoundedSupervisor(monotonic() + 0.04, session_refs=("invented-A", "invented-B"))
-future = supervisor.submit("invented_delayed", lambda: sleep(0.08))
+release_worker = Event()
+supervisor = BoundedSupervisor(monotonic() + 0.2, session_refs=("invented-A", "invented-B"))
+future = supervisor.submit("invented_delayed", release_worker.wait)
 try:
     supervisor.await_result(future)
 except TimeoutError as primary:
     def cancel(**kwargs):
-        sleep(0.06)
+        release_worker.set()
+        future.result(timeout=0.5)
         return {"server_verified": False}
     sink = SimpleNamespace(cancel_owned_sessions_only=cancel, append_receipt=lambda document: {"durable": True, "restricted": True, "reference": "invented-only", "sha256": inventory_digest(document), "binding": {}})
-    receipt = preserving_failure_handoff(primary, supervisor=supervisor, transport=sink, context={"binding": {}, "reconciliation_ref": "invented"}, seconds=0.3)
+    receipt = preserving_failure_handoff(primary, supervisor=supervisor, transport=sink, context={"binding": {}, "reconciliation_ref": "invented"}, seconds=0.8)
     assert future.done()
     assert not receipt["session_state"]["outstanding_work"]
     assert all(session["state"] == "unknown" for session in receipt["session_state"]["owned_sessions"].values())

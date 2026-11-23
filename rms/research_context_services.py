@@ -7,6 +7,7 @@ from .hypothesis_models import (
     ResearchFamilyVersion, identifier,
 )
 from .models import IdeaVersion, SourceVersion
+from .rr14_scope import ReadScope
 from .hypothesis_assessment_links import assessment_link_seal
 from .hypothesis_validation import validate_request
 from .research_context_common import (
@@ -44,7 +45,7 @@ def edge(item, kind):
         raise ResourceNotFound from error
 
 
-def association_read(item):
+def association_read(item, *, scope=None):
     pairs = {
         "IdeaFamily": ("idea", "family"), "InvestigationFamily": ("investigation", "family"),
         "PriorResearchInvestigation": ("assessment", "investigation"),
@@ -55,19 +56,19 @@ def association_read(item):
         first, second = "assessment", target
     else:
         first, second = pairs[item.kind]
-    result = {**envelope(item), "kind": item.kind, "from": endpoint(getattr(item, first + "_version")),
+    result = {**envelope(item, scope=scope), "kind": item.kind, "from": endpoint(getattr(item, first + "_version")),
               "to": endpoint(getattr(item, second + "_version")), "rationale": item.rationale}
     if item.kind == "IdeaHypothesis":
         result["origin_type"] = "direct"
     return result
 
 
-def family_read(item):
-    return {**envelope(item), "family_id": item.record.public_id, "family_version_id": item.public_id,
+def family_read(item, *, scope=None):
+    return {**envelope(item, scope=scope), "family_id": item.record.public_id, "family_version_id": item.public_id,
             "fields": item.fields, "links": record_links("research-families", item)}
 
 
-def assessment_read(item):
+def assessment_read(item, *, scope=None):
     associations = list(item.research_associations.filter(kind="AssessmentRecord").order_by("position"))
     ordered_links = []
     for association_item in associations:
@@ -83,19 +84,22 @@ def assessment_read(item):
     if ([position for position, _ in ordered_links] != list(range(1, item.link_count + 1))
             or assessment_link_seal(links) != {"link_count": item.link_count, "link_digest": item.link_digest}):
         raise AssessmentIntegrityError
-    return {**envelope(item), "assessment_id": item.record.public_id, "assessment_version_id": item.public_id,
+    return {**envelope(item, scope=scope), "assessment_id": item.record.public_id, "assessment_version_id": item.public_id,
             "fields": {**item.fields, "record_links": links},
             "record_associations": [association_read(a) for a in associations],
             "links": {"self": f"/api/v1/prior-research-assessments/{item.record.public_id}/versions/{item.version}"}}
 
 
-def investigation_read(item):
+def investigation_read(item, *, scope=None):
     family = edge(item, "InvestigationFamily")
     assessment = edge(item, "PriorResearchInvestigation")
-    return {**envelope(item), "investigation_id": item.record.public_id, "investigation_version_id": item.public_id,
+    report = None
+    if scope is None or scope.assessments().filter(pk=assessment.assessment_version_id).exists():
+        report = assessment_read(assessment.assessment_version, scope=scope)
+    return {**envelope(item, scope=scope), "investigation_id": item.record.public_id, "investigation_version_id": item.public_id,
             "status": "proposed", "fields": item.fields, "family": endpoint(family.family_version),
-            "prior_research_assessment": assessment_read(assessment.assessment_version),
-            "family_association": association_read(family), "assessment_association": association_read(assessment),
+            "prior_research_assessment": report,
+            "family_association": association_read(family), "assessment_association": association_read(assessment) if report else None,
             "links": record_links("investigations", item)}
 
 
@@ -221,25 +225,28 @@ def correct_idea_family_association(*, actor, association_id, idempotency_key, p
     return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="IdeaFamilyCorrection", path=f"/api/v1/idea-family-associations/{association_id}/corrections", operation=operation)
 
 
-def idea_family_read(item):
+def idea_family_read(item, *, scope=None):
     if item.kind != "IdeaFamily" or item.record.idea_version_id != item.idea_version_id:
         raise ResourceNotFound
     # Apply endpoint visibility before producing metadata or navigation links.
     resolve(IdeaVersion, item.idea_version.idea_version_id)
     resolve(ResearchFamilyVersion, item.family_version.public_id)
-    return {**association_read(item), "links": record_links("idea-family-associations", item)}
+    return {**association_read(item, scope=scope), "links": record_links("idea-family-associations", item)}
 
 
 def get_idea_family_association(*, actor, association_id, version=None):
     require_actor(actor)
-    return idea_family_read(latest(ResearchAssociationIdentity, association_id, version=version)[1])
+    scope = ReadScope(actor)
+    return idea_family_read(scope.exact(ResearchAssociationIdentity, association_id, version), scope=scope)
 
 
 def get_idea_family_association_history(*, actor, association_id):
     require_actor(actor)
-    record, item = latest(ResearchAssociationIdentity, association_id)
-    idea_family_read(item)
-    return {"results": [idea_family_read(v) for v in visible(ResearchAssociation).filter(record=record).order_by("version")]}
+    scope = ReadScope(actor)
+    items = list(scope.classifications().filter(record__public_id=association_id).order_by("version"))
+    if not items:
+        raise ResourceNotFound
+    return {"results": [idea_family_read(item, scope=scope) for item in items]}
 
 
 def get_idea_family_for_idea(*, actor, idea_version_id):
@@ -255,29 +262,41 @@ def get_idea_family_for_idea(*, actor, idea_version_id):
 
 def get_research_family(*, actor, family_id, version=None):
     require_actor(actor)
-    return family_read(latest(ResearchFamily, family_id, version=version)[1])
+    scope = ReadScope(actor)
+    return family_read(scope.exact(ResearchFamily, family_id, version), scope=scope)
 
 
 def get_investigation(*, actor, investigation_id, version=None):
     require_actor(actor)
-    return investigation_read(latest(Investigation, investigation_id, version=version)[1])
+    scope = ReadScope(actor)
+    return investigation_read(scope.exact(Investigation, investigation_id, version), scope=scope)
 
 
 def get_prior_research_assessment(*, actor, assessment_id, version):
     require_actor(actor)
-    return assessment_read(latest(PriorResearchAssessment, assessment_id, version=version)[1])
+    scope = ReadScope(actor)
+    report = assessment_read(scope.exact(PriorResearchAssessment, assessment_id, version), scope=scope)
+    if report is None:
+        raise ResourceNotFound
+    return report
 
 
 def get_research_family_history(*, actor, family_id):
     require_actor(actor)
-    record, _ = latest(ResearchFamily, family_id)
-    return {"results": [family_read(v) for v in record.versions.order_by("version")]}
+    return _scoped_history(actor, ReadScope(actor).families(), family_id, family_read)
 
 
 def get_investigation_history(*, actor, investigation_id):
     require_actor(actor)
-    record, _ = latest(Investigation, investigation_id)
-    return {"results": [investigation_read(v) for v in record.versions.order_by("version")]}
+    return _scoped_history(actor, ReadScope(actor).cases(), investigation_id, investigation_read)
+
+
+def _scoped_history(actor, queryset, identity, render):
+    items = list(queryset.filter(record__public_id=identity).order_by('version'))
+    if not items:
+        raise ResourceNotFound
+    scope = ReadScope(actor)
+    return {'results': [render(item, scope=scope) for item in items]}
 
 
 def list_research_families(*, actor, query):

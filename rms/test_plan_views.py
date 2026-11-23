@@ -7,9 +7,11 @@ from importlib import import_module
 import json
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import DatabaseError
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
@@ -124,22 +126,31 @@ class TestPlanEditorPage(RmsPage):
                         raw['/' + collection + '/' + str(index) + '/' + version_identity] = item[version_identity] or ''
                 return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, notice='Latest head and child input references explicitly adopted. Your definition, item order and Hypothesis proposal remain unchanged. Removed children are proposed as new items. Review all differences and give a revision reason before Save draft.')
             operation = 'record_data_access_check' if self.check_form else 'correct_test_plan' if plan_id else 'create_test_plan'
-            stored = plan_service(operation, actor=request.user, payload=payload, idempotency_key=key, **({'plan_id': plan_id} if plan_id else {}))
+            stored = plan_service(operation, actor=request.user, payload=payload, idempotency_key=key,
+                                  scoped=True, **({'plan_id': plan_id} if plan_id else {}))
         except signing.BadSignature:
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=400, issues=[{'path': '', 'message': 'Retry receipt is invalid. No save attempted.'}])
         except (SchemaUnavailable, DatabaseError):
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=503, key=key, unknown=True, issues=[{'path': '', 'message': 'Save outcome unknown. The proposal is locked for unchanged retry with its original key. Inspect the record before editing.'}])
         except ServiceError as error:
             status = getattr(error, 'http_status', 404 if isinstance(error, ResourceNotFound) else 409)
-            if status in (401, 403):
+            if status in (401, 403) or (status == 404 and plan_id):
                 return service_failure(self, request, error)
-            return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=status, issues=[{'path': '', 'message': 'Referenced record unavailable. Missing and restricted references use this same response.' if status == 404 else getattr(error, 'safe_message', 'Proposal conflicts with current state.')}])
+            message = ('Referenced record unavailable. Missing and restricted references use this same response.'
+                       if status == 404 else getattr(error, 'safe_message', 'Proposal conflicts with current state.'))
+            return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=status, issues=[{'path': '', 'message': message}])
         except Exception as error:
             if not hasattr(error, 'issues'):
                 raise
             payload = getattr(error, 'proposal', None) or payload
             return self.render_form(request, schema, payload, plan_id=plan_id, raw=raw, status=400, issues=error.issues)
         saved = json.loads(stored.body)
+        if saved == {'saved': True}:
+            if self.check_form:
+                response = HttpResponseRedirect(plan_url(plan_id) + '/data-checks')
+                response.status_code = 303
+                return response
+            return TemplateResponse(request._request, 'rms/test_plan_saved.html', page_context(request), status=201)
         version_id = saved.get('plan_version_id') or payload.get('plan_version_id')
         identity = saved.get('plan_id', plan_id)
         receipt = signing.dumps({'actor': str(request.user.pk), 'plan': identity, 'version': version_id, 'status': stored.status}, salt='test-plan-saved')
@@ -169,7 +180,7 @@ PLAN_SECTIONS = (
 )
 
 
-SCHEMA_SHA256 = '17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e'
+SCHEMA_SHA256 = '44d88a1f9e5c5bc48fbc6a40df5d3bd4c8b68ea4d4a3c97d02192db1a42eceee'
 
 
 def read_plan_schema(path=None):
@@ -394,6 +405,9 @@ class TestPlanDetailPage(RmsPage):
         context.update(record=record, definition=definition_nodes({'fields': record['fields'], 'criteria': record['criteria'], 'data_requirements': record['data_requirements']}), historical=version_id is not None,
             latest_url=plan_url(plan_id), history_url=plan_url(plan_id) + '/history', revision_url=plan_url(plan_id) + '/revise', checks_url=plan_url(plan_id) + '/data-checks',
             lineage=plan_lineage(record), save_notice=confirmed_receipt(request, plan_id, record['plan_version_id']))
+        if getattr(settings, 'RMS_RR14_SCOPE_FILE', '') and record['classification'] == 'synthetic':
+            context['rr14_dashboard_url'] = reverse(
+                'rms-founder-dashboard-plan', args=(record['plan_id'], record['plan_version_id']))
         return TemplateResponse(request._request, 'rms/test_plan_detail.html', context)
 
 

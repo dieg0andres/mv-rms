@@ -1,4 +1,5 @@
 import base64
+import json
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -11,6 +12,7 @@ from rms.hypothesis_models import HypothesisVersion
 from rms.models import IdeaVersion
 from rms.record_search import search_versions
 from rms.test_plan_services import create_test_plan
+from tests.synthetic_read_scope import SyntheticPlanReaders
 from tests.test_test_plan_backend_validation import complete_fixture
 
 
@@ -26,10 +28,17 @@ class RecordSearchTests(TestCase):
             cls.clients_by_role[role] = "Basic " + token
             if role == "editor":
                 cls.editor = actor
+            elif role == "founder_viewer":
+                cls.viewer = actor
         call_command("load_rms_hn_fixture", actor=cls.editor.username, review_time="2026-11-22T12:00:00Z", verbosity=0)
         plan = complete_fixture()
         plan["hypothesis_version_id"] = HypothesisVersion.objects.first().public_id
-        assert create_test_plan(actor=cls.editor, idempotency_key="search-plan", payload=plan).status == 201
+        receipt = create_test_plan(actor=cls.editor, idempotency_key="search-plan", payload=plan)
+        assert receipt.status == 201
+        cls.plan = json.loads(receipt.body)
+
+    def setUp(self):
+        SyntheticPlanReaders(self, self.plan).allow(self.editor, self.viewer)
 
     def search(self, role, **values):
         headers = {"HTTP_AUTHORIZATION": self.clients_by_role[role]} if role else {}

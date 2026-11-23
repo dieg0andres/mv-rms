@@ -311,3 +311,7 @@ from .test_plan_models import (  # noqa: E402,F401
     TestPlan, TestPlanVersion, CriterionProfile, CriterionProfileVersion,
     DataRequirement, DataRequirementVersion, TestPlanAssociation, DataAccessCheck,
 )
+
+from .run_attempt_models import RunAttempt  # noqa: E402,F401
+from .run_result_models import RunLifecycleEvent, RunResultVersion, RunRetry  # noqa: E402,F401
+from .run_assurance_models import RunDecision, RunLesson, RunReview  # noqa: E402,F401

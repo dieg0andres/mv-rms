@@ -1,0 +1,68 @@
+{% extends "rms/base.html" %}
+{% block title %}Synthetic run attempt — RMS{% endblock %}
+{% block content %}
+<article class="run-record">
+  <p><a href="{{ scope.runs_url }}">Runs for this Test Plan version</a> · <a href="{{ scope.plan_url }}">Exact Test Plan definition</a></p>
+  <h1>Synthetic run attempt</h1>
+  <p class="notice">Invented evidence only. RMS records externally reported work; it does not execute runs or authorize progression.</p>
+  <dl>
+    <dt>Run attempt</dt><dd><code>{{ attempt.run_id }}</code></dd>
+    <dt>Exact Test Plan version</dt><dd><code>{{ attempt.plan_version_id }}</code></dd>
+    <dt>Configuration</dt><dd>{{ attempt.configuration_key }}</dd>
+    <dt>Execution state</dt><dd>{{ execution_state|default:"Not reported" }}</dd>
+    <dt>Research outcome</dt><dd>{{ result_outcome|default:"No result recorded" }}</dd>
+    {% if attempt.retry_of %}<dt>Retry of</dt><dd><a href="{{ attempt.retry_of_url }}"><code>{{ attempt.retry_of }}</code></a></dd>{% endif %}
+    {% if attempt.retry_successor %}<dt>Retried as</dt><dd><a href="{{ attempt.retry_successor_url }}"><code>{{ attempt.retry_successor }}</code></a></dd>{% endif %}
+  </dl>
+  {% if actions %}
+    <section class="card" aria-labelledby="run-actions-heading">
+      <h2 id="run-actions-heading">Record an update</h2>
+      <ul>{% for action in actions %}<li><a href="{{ action.url }}">{{ action.label }}</a></li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+  <section class="card" aria-labelledby="run-events-heading">
+    <h2 id="run-events-heading">Execution history</h2>
+    {% if events %}
+      <ol>{% for event in events %}
+        <li>
+          <p><strong>{{ event.label }}</strong> · <time datetime="{{ event.recorded_at }}">{{ event.recorded_at }}</time> · {{ event.recorded_by }}</p>
+          {% if event.event_id %}<p>Exact event: <code>{{ event.event_id }}</code></p>{% endif %}
+          {% if event.reason %}<p class="run-reported-text">{{ event.reason }}</p>{% endif %}
+          {% if event.reconciles_event_id %}<p>Reconciles unknown event <code>{{ event.reconciles_event_id }}</code></p>{% endif %}
+          {% if event.partial_evidence %}
+            <p><a href="{% url 'rms-run-event-evidence' attempt.plan_id scope.plan_version_id scope.run_id event.event_id %}">Read exact event evidence</a>
+            · {{ event.partial_evidence.byte_length }} bytes · SHA-256 <code>{{ event.partial_evidence.sha256 }}</code></p>
+          {% endif %}
+        </li>
+      {% endfor %}</ol>
+    {% else %}<p>No lifecycle events have been recorded for this attempt.</p>{% endif %}
+  </section>
+  <section class="card" aria-labelledby="run-results-heading">
+    <h2 id="run-results-heading">Immutable result versions</h2>
+    {% if result_versions %}
+      <ul>{% for version in result_versions %}
+        <li><a href="{{ version.url }}">View result and history — version {{ version.number }}</a> · {{ version.outcome }} · {% if version.current %}Current{% else %}Historical{% endif %} · <code>{{ version.id }}</code></li>
+      {% endfor %}</ul>
+    {% elif result_outcome %}<p>No result versions on this page.</p>
+    {% else %}<p>No result has been recorded. Execution completion alone is not a research outcome.</p>{% endif %}
+    {% if previous_offset != None %}<a href="?offset={{ previous_offset }}#run-results-heading">Previous result versions</a>{% endif %}
+    {% if next_offset != None %}<a href="?offset={{ next_offset }}#run-results-heading">More result versions</a>{% endif %}
+  </section>
+  <details class="card">
+    <summary>Reported execution identities</summary>
+    <dl>
+      <dt>External reference</dt><dd><code>{{ attempt.external_reference }}</code></dd>
+      <dt>Code commit</dt><dd><code>{{ attempt.code_commit }}</code></dd>
+      <dt>Code manifest digest</dt><dd><code>{{ attempt.code_manifest_digest }}</code></dd>
+      <dt>Dependency lock digest</dt><dd><code>{{ attempt.dependency_lock_digest }}</code></dd>
+      <dt>Dataset manifest digest</dt><dd><code>{{ attempt.dataset_manifest_digest }}</code></dd>
+      <dt>Parameter digest</dt><dd><code>{{ attempt.parameter_digest }}</code></dd>
+      <dt>Environment digest</dt><dd><code>{{ attempt.environment_digest }}</code></dd>
+      <dt>Recorded by</dt><dd>{{ attempt.reported_by }}</dd>
+      <dt>Recorded at</dt><dd><time datetime="{{ attempt.recorded_at }}">{{ attempt.recorded_at }}</time></dd>
+      <dt>Registration digest</dt><dd><code>{{ attempt.row_digest }}</code></dd>
+    </dl>
+  </details>
+</article>
+{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="/static/rms/run_workflow.css">{% endblock %}

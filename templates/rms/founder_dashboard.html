@@ -1,0 +1,85 @@
+{% extends "rms/base.html" %}
+{% block title %}Founder dashboard · Research Management System{% endblock %}
+{% block content %}
+<header class="page-intro">
+  <div>
+    <h1>Founder dashboard</h1>
+    <p>Read-only overview for the synthetic workspace. Examples are not research progress.</p>
+    <p>Stage 2 scope and decisions in Paperclip: MAU-33.</p>
+  </div>
+</header>
+
+{% if rr14_scoped %}
+<section aria-labelledby="rr14-title">
+  <h2 id="rr14-title">Saved synthetic workflow</h2>
+  {% if rr14 %}
+    <p>These counts cover only <a href="{{ rr14.plan_url }}">this exact Test Plan version</a>, not the full dashboard.</p>
+    <p>Read at <time datetime="{{ rr14.observed_at|date:'c' }}">{{ rr14.observed_at|date:'Y-m-d H:i:s T' }}</time>. This is not a completeness or freshness guarantee.</p>
+    <dl>
+      <dt>Saved synthetic attempts</dt><dd>{{ rr14.activity }}</dd>
+      <dt>Saved synthetic early closures</dt><dd>{{ rr14.closures }}</dd>
+      <dt>Real full-validation cycle credit from these records</dt><dd>{{ rr14.cycles }}</dd>
+      <dt>Real qualification credit from these records</dt><dd>{{ rr14.qualifications }}</dd>
+    </dl>
+  {% else %}
+    <p class="notice">Saved synthetic workflow unavailable.</p>
+  {% endif %}
+  <p>Real ledger totals are unavailable.</p>
+</section>
+{% endif %}
+
+<section aria-labelledby="pipeline-title">
+  <h2 id="pipeline-title">Research pipeline</h2>
+  {% if pipeline == None %}
+    <p class="notice">Pipeline source unavailable. Case status, freshness and exceptions are unknown.</p>
+  {% else %}
+    {% include "rms/includes/dashboard_watermark.html" with watermark=pipeline.watermark only %}
+    {% if pipeline.watermark.freshness == "stale" %}
+      <p class="notice">Stale snapshot. These examples show the last reported state, not current status.</p>
+    {% elif pipeline.watermark.freshness == "unknown" %}
+      <p class="notice">Freshness is unknown. Do not treat this snapshot as current.</p>
+    {% endif %}
+    {% for case in pipeline.cases %}
+      <article class="card">
+        <h3>{{ case.title }}</h3>
+        <p>Invented example</p>
+        <dl>
+          <dt>Stage</dt><dd>{{ case.stage }}</dd>
+          <dt>Owner</dt><dd>{{ case.owner|default:"Unknown" }}</dd>
+          <dt>Blocker</dt><dd>{{ case.blocker|default:"Unknown" }}</dd>
+          <dt>Next action</dt><dd>{{ case.next_action|default:"Unknown" }}</dd>
+          <dt>Last changed</dt>
+          <dd>{% if case.last_changed_at %}<time datetime="{{ case.last_changed_at|date:'c' }}">{{ case.last_changed_at|date:'Y-m-d H:i T' }}</time>{% else %}Unknown{% endif %}</dd>
+          <dt>Age at snapshot</dt><dd>{% if case.last_changed_at %}{{ case.last_changed_at|timesince:pipeline.watermark.as_of }}{% else %}Unknown{% endif %}</dd>
+          <dt>Health</dt><dd>{{ case.health|default:"Unknown" }}</dd>
+          <dt>Exception</dt><dd>{{ case.exception|default:"Unknown" }}</dd>
+          <dt>Reported authority mode</dt><dd>{{ case.authority_mode|default:"Unknown" }} (information only)</dd>
+        </dl>
+      </article>
+    {% empty %}
+      <p>No cases are available to display in this snapshot.</p>
+    {% endfor %}
+  {% endif %}
+</section>
+
+<section aria-labelledby="ledgers-title">
+  <h2 id="ledgers-title">Workflow ledgers</h2>
+  <p>Each ledger comes from its own permission-scoped source. A missing or stale count is not zero.</p>
+  {% for ledger in ledgers %}
+    <section class="card" aria-labelledby="ledger-{{ ledger.key }}">
+      <h3 id="ledger-{{ ledger.key }}">{{ ledger.title }}</h3>
+      {% if ledger.watermark == None %}
+        <p>Source unavailable. Count unknown.</p>
+      {% else %}
+        {% if ledger.example_count == None %}
+          <p>Current count unavailable.</p>
+        {% else %}
+          <p>Visible invented examples: {{ ledger.example_count }}</p>
+          {% if ledger.zero_credit %}<p>Real credit from these examples: 0</p>{% endif %}
+        {% endif %}
+        {% include "rms/includes/dashboard_watermark.html" with watermark=ledger.watermark only %}
+      {% endif %}
+    </section>
+  {% endfor %}
+</section>
+{% endblock %}
