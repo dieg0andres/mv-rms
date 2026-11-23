@@ -1,5 +1,29 @@
 # RMS-TP-API-1 — candidate revision 1.1
 
+## Synthetic scoped successor: RMS-TP-API-1-RR14
+
+Schema SHA-256: `44d88a1f9e5c5bc48fbc6a40df5d3bd4c8b68ea4d4a3c97d02192db1a42eceee`.
+
+On the synthetic RR14 HTTP boundary, the published schema advertises the
+following success bodies. This supersedes earlier write-response examples for
+this candidate only. Historical receipts and the stored Plan definition schema
+version `1.0` are unchanged.
+
+| POST path (under `/api/v1`) | Success response |
+| --- | --- |
+| `/test-plans` | `201 {"saved":true}`; no new ID, read grant, or exact redirect. |
+| `/test-plans/{plan_id}/corrections` | `201` with `plan_id`, `plan_version_id`, and numeric `version`; a true no-op is `200` and includes `no_change: true`. |
+| `/test-plans/{plan_id}/data-checks` | `201 {"saved":true}`; no check ID. |
+
+Authorization is checked against the current scope before idempotency lookup
+and before releasing an eligible replay acknowledgement. Legacy stored bodies
+are not returned to HTTP clients. Scoped GET detail continues to return
+`PlanRead`; the fixture custodian must grant discovery of newly created plans.
+Offline fixture-service returns are not the HTTP contract. See
+`RMS-RR14-SAVED-ORIGINS.md` for browser navigation and the synthetic boundary.
+
+## Historical candidate revision 1.1
+
 Contract: RMS Strategy Specification and Test Plan 1.0, Paperclip document revision `dec62ed2-adab-4ab3-bbfd-8dffbcee897d`, source SHA-256 `9236d104249fc796d3b5fbe214a5be92c4d4f95812ee17ba0f0fb99d1cb1a240`.
 
 Schema: `rms/test_plan_schema.json`, schema version `1.0`, interface `RMS-TP-API-1`. SHA-256 `17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e`. The schema is the shared field/type/enum/endpoint source. This candidate includes persistent services and additive migrations; PostgreSQL execution is a separate, coordinated check.
