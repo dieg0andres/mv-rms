@@ -178,7 +178,7 @@ PLAN_SECTIONS = (
 )
 
 
-SCHEMA_SHA256 = '17e17d366e89fb0e69c3d992dd06da7b2345bcef6193170015b7b733e26df82e'
+SCHEMA_SHA256 = '44d88a1f9e5c5bc48fbc6a40df5d3bd4c8b68ea4d4a3c97d02192db1a42eceee'
 
 
 def read_plan_schema(path=None):
