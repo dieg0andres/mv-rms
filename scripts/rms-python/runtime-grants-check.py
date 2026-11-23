@@ -150,6 +150,21 @@ class Smoke(Workflow, unittest.TestCase):
         self.assertEqual(self.client.get(receipt['route']).json(), receipt['run'])
         for record in receipt['evidence']:
             self.assertEqual(self.client.get(record['path']).json(), record['report'])
+            page = record['path'].removeprefix('/api/v1')
+            view = self.client.get(page)
+            self.assertEqual(view.status_code, 200)
+            self.assertIn(record['report']['manifest']['sha256'].encode(), view.content)
+            download = self.client.get(page, {'download': '1'})
+            self.assertEqual(download['Cache-Control'], 'private, no-store')
+            self.assertEqual(download.content, base64.b64decode(record['report']['content_base64']))
+        self.login('unrelated')
+        protected = receipt['evidence'][0]
+        page = protected['path'].removeprefix('/api/v1')
+        for target in (protected['path'], page, page + '?download=1'):
+            denied = self.client.get(target)
+            self.assertEqual(denied.status_code, 404)
+            self.assertEqual(denied['Cache-Control'], 'private, no-store')
+            self.assertNotIn(protected['report']['manifest']['sha256'].encode(), denied.content)
         self.login('outsider')
         self.assertEqual(self.client.get(receipt['evidence'][0]['path']).status_code, 403)
 
@@ -265,6 +280,17 @@ if mode == 'principals':
             user.groups.add(Group.objects.get_or_create(name=group)[0])
 elif mode == 'seed':
     Smoke().seed()
+elif mode == 'scope':
+    # Bind the two fixture readers to their saved case and Plan in this database.
+    # Owner credentials never enter the HTTP application or its permission checks.
+    with open(args[0]) as handle:
+        plan = json.load(handle)
+    principals = {}
+    for username in ('mau162-editor', 'mau162-founder_viewer'):
+        actor = User.objects.get(username=username)
+        principals[str(actor.pk)] = {'username': username, 'plans': [plan['plan_id']],
+                                     'cases': [plan['research_context']['investigation']['stable_id']]}
+    print(json.dumps({'format': 'rr14-disposable-synthetic-v1', 'principals': principals}, sort_keys=True))
 elif mode == 'readiness':
     with connection.cursor() as cursor:
         cursor.execute('SELECT count(*) FROM public.django_migrations')

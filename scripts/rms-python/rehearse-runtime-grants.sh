@@ -109,14 +109,14 @@ manage migrate auth --noinput --verbosity 0
 check "$owner" "$source_db" principals
 crypto "$source_db"
 grants "$source_db" 0007_test_plan_history_guards
-check "$runtime" "$source_db" seed > "$out/plan.json"
+historic_check "$runtime" "$source_db" seed > "$out/plan.json"
 snapshot "$source_db" baseline > "$out/before.tsv"
 manage migrate rms 0008 --noinput --verbosity 0
 grants "$source_db" 0008_run_attempts
 check "$runtime" "$source_db" readiness 503
 snapshot "$source_db" baseline > "$out/after-0008.tsv"
 cmp "$out/before.tsv" "$out/after-0008.tsv"
-run=$(check "$runtime" "$source_db" register "$out/plan.json")
+run=$(historic_check "$runtime" "$source_db" register "$out/plan.json")
 snapshot "$source_db" all | grep -E '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-before.tsv"
 manage migrate rms 0009 --noinput --verbosity 0
 grants "$source_db" 0009_run_results
@@ -139,6 +139,8 @@ manage migrate rms 0011 --noinput --verbosity 0
 grants "$source_db" 0011_run_event_evidence
 before_evidence "$source_db" > "$out/after-0011.tsv"
 cmp "$out/before-0011.tsv" "$out/after-0011.tsv"
+export RMS_RR14_SCOPE_FILE="$out/source-scope.json"
+check "$owner" "$source_db" scope "$out/plan.json" > "$RMS_RR14_SCOPE_FILE"
 check "$runtime" "$source_db" readiness 200
 check "$runtime" "$source_db" event_evidence "$out/plan.json" > "$out/event-evidence.json"
 inventory "$source_db" > "$out/source-inventory.tsv"
@@ -152,6 +154,9 @@ inventory "$restore_db" > "$out/restore-inventory.tsv"
 cmp "$out/source-inventory.tsv" "$out/restore-inventory.tsv"
 snapshot "$restore_db" all > "$out/restore.tsv"
 cmp "$out/source.tsv" "$out/restore.tsv"
+export RMS_RR14_SCOPE_FILE="$out/restore-scope.json"
+check "$owner" "$restore_db" scope "$out/plan.json" > "$RMS_RR14_SCOPE_FILE"
+cmp "$out/source-scope.json" "$RMS_RR14_SCOPE_FILE"
 check "$runtime" "$restore_db" restore "$out/plan.json" "$out/replay.json" "$owner"
 check "$runtime" "$restore_db" assurance_restore "$out/assurance.json" "$owner"
 check "$runtime" "$restore_db" event_evidence_restore "$out/event-evidence.json"
