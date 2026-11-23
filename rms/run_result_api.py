@@ -1,25 +1,15 @@
 """JSON adapters for authorized exact-version synthetic run observations."""
 
-from django.http import HttpResponse
 from django.urls import path
-from django.utils.cache import patch_vary_headers
 from rest_framework.response import Response
 
 from . import run_result_services as services
-from .hypothesis_api import ResearchRecordView
-from .test_plan_api import StrictJSONParser
+from .run_api import RunsApi
 from .test_plan_services import _error
 
 
-class RunResultApi(ResearchRecordView):
-    parser_classes = [StrictJSONParser]
+class RunResultApi(RunsApi):
     action = None
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        response = super().finalize_response(request, response, *args, **kwargs)
-        response['Cache-Control'] = 'private, no-store'
-        patch_vary_headers(response, ('Authorization', 'Cookie'))
-        return response
 
     def get(self, request, **context):
         allowed = {'offset'} if self.action == 'results' else set()
@@ -44,11 +34,7 @@ class RunResultApi(ResearchRecordView):
                      'results': services.publish_result}.get(self.action)
         if operation is None:
             self.http_method_not_allowed(request)
-        if request.query_params:
-            _error('', 'unknown_field')
-        stored = operation(actor=request.user, **context, idempotency_key=request.headers.get('Idempotency-Key'),
-                           payload=request.data)
-        return HttpResponse(stored.body, status=stored.status, content_type='application/json; charset=utf-8')
+        return self.mutate(request, operation, **context)
 
 
 RUN = 'test-plans/<str:plan_id>/versions/<str:version_id>/runs/<str:run_id>'

@@ -1,6 +1,5 @@
 """Thin, private JSON routes for exact-result assurance records."""
 
-from django.http import HttpResponse
 from django.urls import path
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -30,11 +29,7 @@ class RunAssuranceApi(RunResultApi):
                       'lessons': services.record_lesson}
         if kind not in operations or record_id is not None:
             self.http_method_not_allowed(request)
-        if request.query_params:
-            _error('', 'unknown_field')
-        stored = operations[kind](actor=request.user, **context, idempotency_key=request.headers.get('Idempotency-Key'),
-                                  payload=request.data)
-        return HttpResponse(stored.body, status=stored.status, content_type='application/json; charset=utf-8')
+        return self.mutate(request, operations[kind], **context)
 
 
 urlpatterns = [path(RESULT + '/assurance', RunAssuranceApi.as_view(), name='run-assurance-api')]

@@ -25,6 +25,30 @@ Source contracts: MAU-25 staged delivery plan, revision 3, §§4, 7–9;
   result, authority, rights, independent review, qualification or cycle count.
   No real data, credentials, or external activity.
 
+## Runs browser API writes (RR01)
+
+- The shared Runs JSON write boundary covers POST for registration, events,
+  reconciliations, retries, results (including corrections), and exact-result
+  reviews, decisions and lessons. GET/HEAD/OPTIONS, unsupported methods,
+  browser forms and other API families retain their existing behavior.
+- A Basic-auth browser JSON caller uses the masked `csrfmiddlewaretoken` from
+  its authorized same-origin page form (for registration, the Runs collection
+  page). Send it as `X-CSRFToken` with the page-issued CSRF cookie and the usual
+  `Idempotency-Key` in a same-origin request. Do not log the token. An empty 403
+  means no write or replay occurred; reload the form before an intentional
+  retry with the same key and unchanged payload. Anonymous requests still
+  receive the Basic 401 challenge.
+- Origin, Referer, Fetch Metadata or a nonempty Cookie header selects Django's
+  CSRF policy, including its Origin and HTTPS Referer checks. Denials and other
+  Runs API responses retain `Cache-Control: private, no-store` and vary on
+  authorization and cookies. Keep browser request metadata and the external
+  scheme intact at ingress; do not enable cross-origin access to these writes.
+- Direct non-browser Basic-auth JSON callers without browser headers or cookies
+  (such as `scripts/rms-python/runtime-grants-check.py`) retain the existing
+  contract where the ingress permits them. Authentication, strict JSON parsing,
+  scope, and the required idempotency key still apply. This does not change the
+  separate staging ingress policy or add a caller exemption flag.
+
 ## Missing controls and release checks
 
 | Surface | Minimum verification | Boundary |
