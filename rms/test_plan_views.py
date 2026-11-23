@@ -7,9 +7,11 @@ from importlib import import_module
 import json
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import DatabaseError
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
@@ -403,6 +405,9 @@ class TestPlanDetailPage(RmsPage):
         context.update(record=record, definition=definition_nodes({'fields': record['fields'], 'criteria': record['criteria'], 'data_requirements': record['data_requirements']}), historical=version_id is not None,
             latest_url=plan_url(plan_id), history_url=plan_url(plan_id) + '/history', revision_url=plan_url(plan_id) + '/revise', checks_url=plan_url(plan_id) + '/data-checks',
             lineage=plan_lineage(record), save_notice=confirmed_receipt(request, plan_id, record['plan_version_id']))
+        if getattr(settings, 'RMS_RR14_SCOPE_FILE', '') and record['classification'] == 'synthetic':
+            context['rr14_dashboard_url'] = reverse(
+                'rms-founder-dashboard-plan', args=(record['plan_id'], record['plan_version_id']))
         return TemplateResponse(request._request, 'rms/test_plan_detail.html', context)
 
 

@@ -52,6 +52,13 @@ class FounderDashboardTests(SimpleTestCase):
         self.assertNotContains(response, "Visible invented examples:")
         self.assertNotContains(response, "Real credit from these examples:")
 
+    def test_decision_reference_is_plain_text_without_deployment_configuration(self):
+        self.assertContains(
+            self.request(),
+            "<p>Stage 2 scope and decisions in Paperclip: MAU-33.</p>",
+            html=True,
+        )
+
     def test_invented_cases_show_escaped_text_age_and_uncertainty(self):
         with patch.object(FounderDashboardPage, "provider", InventedDashboardProvider()):
             response = self.request()

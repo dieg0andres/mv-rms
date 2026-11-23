@@ -5,9 +5,28 @@
   <div>
     <h1>Founder dashboard</h1>
     <p>Read-only overview for the synthetic workspace. Examples are not research progress.</p>
-    <p><a href="https://paperclip-6vpg.srv1986614.hstgr.cloud/MAU/issues/MAU-33">Stage 2 scope and decisions in Paperclip</a></p>
+    <p>Stage 2 scope and decisions in Paperclip: MAU-33.</p>
   </div>
 </header>
+
+{% if rr14_scoped %}
+<section aria-labelledby="rr14-title">
+  <h2 id="rr14-title">Saved synthetic workflow</h2>
+  {% if rr14 %}
+    <p>These counts cover only <a href="{{ rr14.plan_url }}">this exact Test Plan version</a>, not the full dashboard.</p>
+    <p>Read at <time datetime="{{ rr14.observed_at|date:'c' }}">{{ rr14.observed_at|date:'Y-m-d H:i:s T' }}</time>. This is not a completeness or freshness guarantee.</p>
+    <dl>
+      <dt>Saved synthetic attempts</dt><dd>{{ rr14.activity }}</dd>
+      <dt>Saved synthetic early closures</dt><dd>{{ rr14.closures }}</dd>
+      <dt>Real full-validation cycle credit from these records</dt><dd>{{ rr14.cycles }}</dd>
+      <dt>Real qualification credit from these records</dt><dd>{{ rr14.qualifications }}</dd>
+    </dl>
+  {% else %}
+    <p class="notice">Saved synthetic workflow unavailable.</p>
+  {% endif %}
+  <p>Real ledger totals are unavailable.</p>
+</section>
+{% endif %}
 
 <section aria-labelledby="pipeline-title">
   <h2 id="pipeline-title">Research pipeline</h2>
