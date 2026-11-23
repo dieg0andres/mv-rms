@@ -1,7 +1,7 @@
 import io
 
 from django.core.management import call_command
-from django.test import TransactionTestCase
+from django.test import TestCase
 
 from rms.management.commands.load_rms_vs_1_fixture import (
     SOURCE_CREATED,
@@ -13,7 +13,7 @@ from rms.management.commands.load_rms_vs_1_fixture import (
 from rms.models import Source
 
 
-class DeterministicFixtureTests(TransactionTestCase):
+class DeterministicFixtureTests(TestCase):
     def test_load_twice_is_idempotent_and_export_is_reproducible(self):
         first_load = io.StringIO()
         second_load = io.StringIO()

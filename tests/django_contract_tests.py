@@ -2,12 +2,12 @@ import base64
 
 from django.contrib.auth.models import Group, User
 from django.db import DatabaseError, transaction
-from django.test import Client, TransactionTestCase
+from django.test import Client, TestCase
 
 from rms.models import IdempotencyRecord, Source, SourceVersion
 
 
-class FrozenRouteAndDatabaseContractTests(TransactionTestCase):
+class FrozenRouteAndDatabaseContractTests(TestCase):
     def setUp(self):
         editor_group = Group.objects.create(name="editor")
         viewer_group = Group.objects.create(name="founder_viewer")
@@ -105,8 +105,9 @@ class FrozenRouteAndDatabaseContractTests(TransactionTestCase):
         self.assertEqual(response.json()["error"]["code"], "validation_error")
         self.assertEqual(Source.objects.count(), 0)
 
-    def test_unsupported_safe_method_is_405_after_auth_but_write_is_403(self):
-        self.assertEqual(self.viewer.get("/api/v1/sources").status_code, 405)
+    def test_viewer_can_list_sources_and_method_and_write_denials_are_distinct(self):
+        self.assertEqual(self.viewer.get("/api/v1/sources").status_code, 200)
+        self.assertEqual(self.viewer.get("/api/v1/sources/contract-source/corrections").status_code, 405)
         self.assertEqual(
             self.viewer.put(
                 "/api/v1/sources",

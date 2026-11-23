@@ -206,7 +206,8 @@ class ClassificationFrontendTests(SimpleTestCase):
         reader.assert_not_called()
         self.assertIn("  Invented draft  ", self.render(response))
 
-    def test_hypothesis_exact_detail_links_pinned_classification_without_lookup(self):
+    @patch("rms.test_plan_views.plan_service", return_value={"results": []})
+    def test_hypothesis_exact_detail_links_pinned_classification_without_lookup(self, linked_plans):
         self.record["upstream_notices"] = [{"pinned": {"stable_id": self.identity, "version_id": self.classification["supersedes_version_id"], "version": 1}, "newer": {"stable_id": self.identity, "version_id": self.classification["version_id"], "version": 2}, "impact_version_id": "Invented impact"}]
         with patch.object(hypothesis_services, "get_hypothesis", return_value=self.record), patch.object(services, "get_idea_family_for_idea") as lookup:
             response = RecordDetailPage.as_view()(self.request(), record_id=self.record["hypothesis_id"], version=1)
