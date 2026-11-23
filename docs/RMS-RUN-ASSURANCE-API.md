@@ -56,4 +56,4 @@ python manage.py test tests.django_run_result_tests \
   tests.django_run_frontend_template_tests -v 2 --noinput
 ```
 
-Run the commands separately: both suites' real-commit concurrency tests deliberately retain append-only rows until Django drops the disposable database and cannot share one fixture lifecycle. The fixture creates only invented authenticated principals and observations via the existing hypothesis/Test Plan/Run lifecycle fixture. The test owner temporarily introduces one corrupt byte payload inside a rolled-back test savepoint; no saved fixture or original row is repaired. Engineering's results do not substitute for named Director review, independent Test/Risk acceptance, an ordinary-runtime rehearsal, browser verification or restore.
+The concurrency cases each create and discard a separate disposable database so both suites can run together. The fixtures use invented authenticated principals and observations. The test owner exercises a corrupted byte payload inside a rolled-back test savepoint. Independent Test and Risk verify the frozen release against its browser, ordinary runtime and restored database.

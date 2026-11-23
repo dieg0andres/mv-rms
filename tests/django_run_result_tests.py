@@ -11,7 +11,7 @@ from threading import Barrier
 from django.contrib.auth.models import Group, User
 from django.core.management import call_command
 from django.db import DatabaseError, connections, transaction
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase
 from rest_framework.test import APIClient
 
 from rms.models import IdempotencyRecord, RunAttempt, RunLifecycleEvent, RunResultVersion, RunRetry
@@ -19,6 +19,7 @@ from rms.management.commands.load_rms_hn_fixture import Command as HypothesisFix
 from rms.research_context_common import StaleVersion
 from rms.run_result_services import RunConflict, publish_result, retry_run
 from rms.test_plan_services import correct_test_plan, create_test_plan
+from tests.committed_database import CommittedDatabaseTestCase
 from tests.test_test_plan_backend_validation import complete_fixture
 
 
@@ -200,10 +201,8 @@ class RunResultTests(Workflow, TestCase):
         self.assertEqual(result['assessments'][0]['evaluation'], 'inconclusive')
 
 
-class RunResultConcurrencyTests(Workflow, TransactionTestCase):
+class RunResultConcurrencyTests(Workflow, CommittedDatabaseTestCase):
     """Use committed threads. The append-only test rows are dropped with the test database."""
-
-    available_apps = ['django.contrib.auth', 'django.contrib.contenttypes']
 
     def test_distinct_sessions_race_for_retry_and_result_revision(self):
         self.setup_workflow('run-result-race')

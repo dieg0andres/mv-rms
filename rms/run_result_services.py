@@ -257,12 +257,14 @@ def _record_event(*, actor, plan_id, version_id, run_id, idempotency_key, payloa
     return _write(actor, plan_id, version_id, run_id, idempotency_key, payload, suffix, operation)
 
 
-def append_event(**context):
-    return _record_event(**context, reconcile=False)
+def append_event(*, actor, plan_id, version_id, run_id, idempotency_key, payload):
+    return _record_event(actor=actor, plan_id=plan_id, version_id=version_id, run_id=run_id,
+                         idempotency_key=idempotency_key, payload=payload, reconcile=False)
 
 
-def reconcile_event(**context):
-    return _record_event(**context, reconcile=True)
+def reconcile_event(*, actor, plan_id, version_id, run_id, idempotency_key, payload):
+    return _record_event(actor=actor, plan_id=plan_id, version_id=version_id, run_id=run_id,
+                         idempotency_key=idempotency_key, payload=payload, reconcile=True)
 
 
 def retry_run(*, actor, plan_id, version_id, run_id, idempotency_key, payload):

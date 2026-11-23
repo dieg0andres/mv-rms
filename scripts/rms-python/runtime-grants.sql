@@ -17,11 +17,12 @@ DO $$ BEGIN RAISE EXCEPTION 'Wrong target, owner, runtime role, or PostgreSQL ma
 \endif
 
 SELECT COALESCE(max(name) = :'rms_leaf', false) AND :'rms_leaf' IN
-    ('0007_test_plan_history_guards', '0008_run_attempts', '0009_run_results', '0010_run_assurance')
-    AND (:'rms_leaf' <> '0010_run_assurance' OR bool_or(name = '0009_run_results')) AS valid_leaf,
-    :'rms_leaf' IN ('0008_run_attempts', '0009_run_results', '0010_run_assurance') AS has_runs,
-    :'rms_leaf' IN ('0009_run_results', '0010_run_assurance') AS has_results,
-    :'rms_leaf' = '0010_run_assurance' AS has_assurance
+    ('0007_test_plan_history_guards', '0008_run_attempts', '0009_run_results', '0010_run_assurance', '0011_run_event_evidence')
+    AND (:'rms_leaf' NOT IN ('0010_run_assurance','0011_run_event_evidence') OR bool_or(name = '0009_run_results'))
+    AND (:'rms_leaf' <> '0011_run_event_evidence' OR bool_or(name = '0010_run_assurance')) AS valid_leaf,
+    :'rms_leaf' IN ('0008_run_attempts', '0009_run_results', '0010_run_assurance', '0011_run_event_evidence') AS has_runs,
+    :'rms_leaf' IN ('0009_run_results', '0010_run_assurance', '0011_run_event_evidence') AS has_results,
+    :'rms_leaf' IN ('0010_run_assurance', '0011_run_event_evidence') AS has_assurance
 FROM public.django_migrations WHERE app='rms' \gset
 \if :valid_leaf
 \else
