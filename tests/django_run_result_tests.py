@@ -83,7 +83,7 @@ class RunResultTests(Workflow, TestCase):
         url = f'{self.root}/{run}'
         registered = self.client.get(url).json()
         self.assertEqual(registered['available_actions'], ['event'])
-        self.assertEqual(registered['allowed_event_states'], ['running', 'failed', 'cancelled'])
+        self.assertEqual(registered['allowed_event_states'], ['running', 'failed', 'cancelled', 'unknown'])
 
         viewer = User.objects.create_user('invented-capability-viewer')
         viewer.groups.add(Group.objects.create(name='founder_viewer'))
@@ -99,7 +99,7 @@ class RunResultTests(Workflow, TestCase):
         running = self.event(run, 'running', None)
         current = self.client.get(url).json()
         self.assertEqual(current['available_actions'], ['event'])
-        self.assertEqual(current['allowed_event_states'], ['completed', 'failed', 'cancelled'])
+        self.assertEqual(current['allowed_event_states'], ['completed', 'failed', 'cancelled', 'unknown'])
         self.event(run, 'running', running['event_id'], 409, label='invalid-transition')
         self.event(run, 'completed', running['event_id'], label='terminal-transition')
 

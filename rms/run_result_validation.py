@@ -122,21 +122,21 @@ def assess_criteria(run, items):
     return ordered, 'criteria_pass' if mandatory and all(item == 'passed' for item in mandatory) else 'inconclusive'
 
 
-def stage_artifact(item):
-    shape(item, 'content_base64 sha256 synthetic_confirmed', '/artifact')
+def stage_artifact(item, path='/artifact'):
+    shape(item, 'content_base64 sha256 synthetic_confirmed', path)
     encoded = item['content_base64']
     if (item['synthetic_confirmed'] is not True or not isinstance(encoded, str) or
             not 1 <= len(encoded) <= 4 * ((MAX_ARTIFACT_BYTES + 2) // 3)):
-        _error('/artifact', 'invalid_synthetic_artifact')
+        _error(path, 'invalid_synthetic_artifact')
     try:
         data = base64.b64decode(encoded, validate=True)
     except (ValueError, binascii.Error):
-        _error('/artifact/content_base64', 'invalid_base64')
+        _error(path + '/content_base64', 'invalid_base64')
     if not 1 <= len(data) <= MAX_ARTIFACT_BYTES or base64.b64encode(data).decode('ascii') != encoded:
-        _error('/artifact/content_base64', 'invalid_size_or_encoding')
+        _error(path + '/content_base64', 'invalid_size_or_encoding')
     checksum = hashlib.sha256(data).hexdigest()
     if item['sha256'] != checksum:
-        _error('/artifact/sha256', 'digest_mismatch')
+        _error(path + '/sha256', 'digest_mismatch')
     return data, checksum
 
 

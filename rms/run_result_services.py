@@ -21,9 +21,10 @@ from .test_plan_validation import validate_json_size
 
 
 TRANSITIONS = {
-    'registered': ('running', 'failed', 'cancelled'),
-    'running': ('completed', 'failed', 'cancelled'),
+    'registered': ('running', 'failed', 'cancelled', 'unknown'),
+    'running': ('completed', 'failed', 'cancelled', 'unknown'),
 }
+RECONCILED_STATES = ('completed', 'failed', 'cancelled')
 
 
 class RunConflict(ServiceError):
@@ -50,9 +51,36 @@ def _run(plan_id, version_id, run_id, *, lock=False):
 
 
 def _event_render(event):
-    return {'event_id': event.public_id, 'previous_event_id': event.previous_event.public_id if event.previous_event else None,
-            'state': event.state, 'sequence': event.sequence, 'reason': event.reason,
-            'recorded_by': event.recorded_by, 'recorded_at': wire(event.recorded_at), 'row_digest': event.row_digest}
+    evidence = event.partial_evidence_bytes
+    if event.row_digest != _record_digest(event) or (evidence is None) != (event.partial_evidence_sha256 is None):
+        raise ResultIntegrityError
+    rendered = {'event_id': event.public_id, 'previous_event_id': event.previous_event.public_id if event.previous_event else None,
+                'state': event.state, 'sequence': event.sequence, 'reason': event.reason,
+                'recorded_by': event.recorded_by, 'recorded_at': wire(event.recorded_at), 'row_digest': event.row_digest}
+    if evidence is not None:
+        if hashlib.sha256(bytes(evidence)).hexdigest() != event.partial_evidence_sha256:
+            raise ResultIntegrityError
+        rendered['partial_evidence'] = {'event_id': event.public_id, 'sha256': event.partial_evidence_sha256,
+                                        'byte_length': len(evidence)}
+    if event.previous_event_id and event.previous_event.state == 'unknown':
+        rendered['reconciles_event_id'] = event.previous_event.public_id
+    return rendered
+
+
+def read_event_evidence(*, actor, plan_id, version_id, run_id, event_id):
+    require_actor(actor)
+    run = _run(plan_id, version_id, run_id)
+    try:
+        event = run.lifecycle_events.select_related('previous_event').get(public_id=event_id)
+    except RunLifecycleEvent.DoesNotExist as exc:
+        raise ResourceNotFound from exc
+    rendered = _event_render(event)
+    if 'partial_evidence' not in rendered:
+        raise ResourceNotFound
+    return {'manifest': {**rendered['partial_evidence'], 'run_id': run.public_id, 'plan_version_id': version_id,
+                         'configuration_key': run.configuration_key, 'event_digest': event.row_digest,
+                         'recorded_by': event.recorded_by, 'recorded_at': rendered['recorded_at']},
+            'content_base64': base64.b64encode(event.partial_evidence_bytes).decode('ascii')}
 
 
 def _result_render(result, *, detail=False):
@@ -102,6 +130,9 @@ def read_run(*, actor, plan_id, version_id, run_id):
         if event_states:
             actions.append('event')
             rendered['allowed_event_states'] = list(event_states)
+        if state == 'unknown':
+            actions.append('reconcile')
+            rendered['allowed_reconciliation_states'] = list(RECONCILED_STATES)
         if _can_retry(state, has_retry=links['retry_run_id'] is not None):
             actions.append('retry')
         if _can_publish_result(state):
@@ -125,8 +156,12 @@ def list_results(*, actor, plan_id, version_id, run_id, offset='0'):
 
 
 def _record_digest(record):
+    excluded = {'row_digest', 'artifact_bytes', 'partial_evidence_bytes'}
+    if isinstance(record, RunLifecycleEvent) and record.partial_evidence_sha256 is None:
+        # Pre-evidence event rows used this exact field set for their immutable digest.
+        excluded.add('partial_evidence_sha256')
     return digest({field.attname: wire(getattr(record, field.attname))
-                   for field in record._meta.concrete_fields if field.name not in ('row_digest', 'artifact_bytes')})
+                   for field in record._meta.concrete_fields if field.name not in excluded})
 
 
 def _verify_result(result):
@@ -194,21 +229,40 @@ def _current_event(run, expected):
     return event
 
 
-def append_event(*, actor, plan_id, version_id, run_id, idempotency_key, payload):
+def _record_event(*, actor, plan_id, version_id, run_id, idempotency_key, payload, reconcile):
     def operation(run):
-        shape(payload, 'expected_event_id state reason')
+        has_evidence = isinstance(payload, dict) and 'partial_evidence' in payload
+        shape(payload, 'expected_event_id state reason partial_evidence' if has_evidence else 'expected_event_id state reason')
         previous = _current_event(run, expected_id(payload['expected_event_id'], 'RUE', '/expected_event_id', nullable=True))
         target = payload['state']
         if target not in RunLifecycleEvent.STATES:
             _error('/state', 'invalid_value')
-        if target not in TRANSITIONS.get(previous.state if previous else 'registered', ()):
+        state = previous.state if previous else 'registered'
+        if reconcile:
+            if state != 'unknown' or target not in RECONCILED_STATES:
+                raise RunConflict
+            if not has_evidence:
+                _error('/partial_evidence', 'required')
+        elif target not in TRANSITIONS.get(state, ()):
             raise RunConflict
         event = RunLifecycleEvent(run=run, previous_event=previous, sequence=previous.sequence + 1 if previous else 1,
                                   state=target, reason=text(payload['reason'], '/reason'))
+        if has_evidence:
+            event.partial_evidence_bytes, event.partial_evidence_sha256 = stage_artifact(
+                payload['partial_evidence'], '/partial_evidence')
         _append(event, actor)
         return event.public_id, _event_render(event)
 
-    return _write(actor, plan_id, version_id, run_id, idempotency_key, payload, 'events', operation)
+    suffix = 'reconciliations' if reconcile else 'events'
+    return _write(actor, plan_id, version_id, run_id, idempotency_key, payload, suffix, operation)
+
+
+def append_event(**context):
+    return _record_event(**context, reconcile=False)
+
+
+def reconcile_event(**context):
+    return _record_event(**context, reconcile=True)
 
 
 def retry_run(*, actor, plan_id, version_id, run_id, idempotency_key, payload):

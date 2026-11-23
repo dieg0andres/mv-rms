@@ -22,22 +22,24 @@ class RunRecord(models.Model):
 
 
 class RunLifecycleEvent(RunRecord):
-    STATES = ('running', 'completed', 'failed', 'cancelled')
+    STATES = ('running', 'completed', 'failed', 'cancelled', 'unknown')
     public_id = models.CharField(max_length=42, unique=True, default=partial(identifier, 'RUE'), editable=False)
     run = models.ForeignKey('rms.RunAttempt', on_delete=models.PROTECT, related_name='lifecycle_events')
     state = models.CharField(max_length=12)
     sequence = models.PositiveSmallIntegerField()
     previous_event = models.OneToOneField('self', null=True, on_delete=models.PROTECT)
     reason = models.CharField(max_length=2000)
+    partial_evidence_bytes = models.BinaryField(null=True, editable=False)
+    partial_evidence_sha256 = models.CharField(max_length=64, null=True, editable=False)
 
     class Meta:
         ordering = ['sequence']
         constraints = [
             models.UniqueConstraint(fields=['run', 'sequence'], name='run_event_sequence'),
             models.CheckConstraint(condition=(Q(sequence=1, previous_event__isnull=True,
-                                                state__in=['running', 'failed', 'cancelled']) |
-                                              Q(sequence=2, previous_event__isnull=False,
-                                                state__in=['completed', 'failed', 'cancelled'])),
+                                                state__in=['running', 'failed', 'cancelled', 'unknown']) |
+                                              Q(sequence__in=[2, 3], previous_event__isnull=False,
+                                                state__in=['completed', 'failed', 'cancelled', 'unknown'])),
                                    name='run_event_shape'),
         ]
 

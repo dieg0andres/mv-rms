@@ -31,6 +31,8 @@ class RunResultApi(ResearchRecordView):
         if self.action == 'events':
             run = services.read_run(**context)
             return Response({key: run[key] for key in ('run_id', 'state', 'current_event_id', 'events')})
+        if self.action == 'event_evidence':
+            return Response(services.read_event_evidence(**context))
         if self.action == 'results':
             return Response(services.list_results(**context, offset=request.query_params.get('offset', '0')))
         if self.action in ('result', 'artifact'):
@@ -38,7 +40,7 @@ class RunResultApi(ResearchRecordView):
         self.http_method_not_allowed(request)
 
     def post(self, request, **context):
-        operation = {'events': services.append_event, 'retry': services.retry_run,
+        operation = {'events': services.append_event, 'reconcile': services.reconcile_event, 'retry': services.retry_run,
                      'results': services.publish_result}.get(self.action)
         if operation is None:
             self.http_method_not_allowed(request)
@@ -54,6 +56,8 @@ RESULT = RUN + '/results/<str:result_version_id>'
 urlpatterns = [
     path(RUN, RunResultApi.as_view(action='run'), name='run-detail-api'),
     path(RUN + '/events', RunResultApi.as_view(action='events'), name='run-events-api'),
+    path(RUN + '/events/<str:event_id>/evidence', RunResultApi.as_view(action='event_evidence'), name='run-event-evidence-api'),
+    path(RUN + '/reconciliations', RunResultApi.as_view(action='reconcile'), name='run-reconciliation-api'),
     path(RUN + '/retry', RunResultApi.as_view(action='retry'), name='run-retry-api'),
     path(RUN + '/results', RunResultApi.as_view(action='results'), name='run-results-api'),
     path(RESULT, RunResultApi.as_view(action='result'), name='run-result-version-api'),

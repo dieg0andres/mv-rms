@@ -12,7 +12,7 @@ from rest_framework.parsers import FormParser
 from . import run_result_services as services
 from .navigation_views import service_failure
 from .permissions import has_rms_write_access
-from .run_workflow_forms import EventForm, ResultForm, RetryForm
+from .run_workflow_forms import EventForm, ReconciliationForm, ResultForm, RetryForm
 from .services import ResourceNotFound, ServiceError
 from .test_plan_validation import TestPlanValidationError
 from .views import RmsPage
@@ -22,6 +22,7 @@ OUTCOME_LABELS = {'criteria_pass': 'Applicable mandatory criteria passed', 'mand
                   'inconclusive': 'Inconclusive'}
 OPERATIONS = {
     'event': ('Record an observed execution event', EventForm, services.append_event),
+    'reconcile': ('Reconcile an unknown execution state', ReconciliationForm, services.reconcile_event),
     'retry': ('Register a separate synthetic retry', RetryForm, services.retry_run),
     'result': ('Record a synthetic result', ResultForm, services.publish_result),
 }
@@ -169,8 +170,8 @@ class RunActionPage(RunWorkflowPage):
             if expected_head:
                 label = 'Correct a synthetic result'
         form = form_type(form_data, **options)
-        if operation == 'event' and not submit:
-            states = run['allowed_event_states']
+        if operation in ('event', 'reconcile') and not submit:
+            states = run['allowed_event_states' if operation == 'event' else 'allowed_reconciliation_states']
             form.fields['state'].choices = [('', 'Choose a state'), *((state, state.capitalize()) for state in states)]
         action = {'label': label, 'url': action_url(ids, operation), 'return_url': scope['attempt_url'],
                   'return_label': 'Back to exact Run attempt', 'submit_label': label}
