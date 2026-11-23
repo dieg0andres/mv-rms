@@ -8,7 +8,7 @@ umask 077
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.."
 [[ $(realpath "$RMS_DB_HOST") == "$(realpath "$PAPERCLIP_RUN_SCRATCH_DIR")"/* && -d "$RMS_DB_HOST" ]]
 unset PGHOSTADDR PGSERVICE PGOPTIONS PGPASSWORD RMS_DB_PASSWORD
-export PGHOST="$RMS_DB_HOST" PGPORT="$RMS_DB_PORT" PYTHONDONTWRITEBYTECODE=1
+export PGHOST="$RMS_DB_HOST" PGPORT="$RMS_DB_PORT" PYTHONDONTWRITEBYTECODE=1 LC_ALL=C
 pgbin="$RMS_CUSTODY_PGBIN"
 pg() { "$pgbin/psql" -Xwq -v ON_ERROR_STOP=1 "$@"; }
 [[ $(pg -At -U fixture_admin -d postgres -c "SELECT current_user || ':' || current_setting('server_version_num') WHERE inet_server_addr() IS NULL") == fixture_admin:170011 ]]
@@ -17,27 +17,32 @@ tag="rms_ma170_rehearsal_$(date +%s)_$$_$RANDOM"
 source_db="${tag}_src"
 restore_db="${tag}_dst"
 runtime="${tag}_rt"
+verifier="${tag}_ver"
+outsider="${tag}_out"
+rejected_db="${tag}_rej"
 admin() { pg -U fixture_admin "$@"; }
-admin -d postgres -v runtime="$runtime" <<'SQL'
+admin -d postgres -v runtime="$runtime" -v verifier="$verifier" -v outsider="$outsider" <<'SQL'
+BEGIN;
 CREATE ROLE :"runtime" LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION NOINHERIT;
+CREATE ROLE :"verifier" LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION NOINHERIT;
+CREATE ROLE :"outsider" LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE NOREPLICATION NOINHERIT;
+GRANT :"runtime" TO :"verifier" WITH INHERIT FALSE, SET TRUE;
+COMMIT;
 SQL
-made_source=0 made_restore=0
+made_databases=()
 cleanup() {
-    local result=$?
+    local result=$? database
     trap - EXIT
-    if [[ "$made_restore" == 1 ]]; then "$pgbin/dropdb" -w -U fixture_admin "$restore_db" || result=1; fi
-    if [[ "$made_source" == 1 ]]; then "$pgbin/dropdb" -w -U fixture_admin "$source_db" || result=1; fi
-    admin -d postgres -v runtime="$runtime" <<'SQL' || result=1
-DROP ROLE :"runtime";
+    for database in "${made_databases[@]}"; do "$pgbin/dropdb" -w -U fixture_admin "$database" || result=1; done
+    admin -d postgres -v runtime="$runtime" -v verifier="$verifier" -v outsider="$outsider" <<'SQL' || result=1
+DROP ROLE :"verifier", :"runtime", :"outsider";
 SQL
     printf 'cleanup exit=%s; local fixture receipts: %s\n' "$result" "$output"
     exit "$result"
 }
 trap cleanup EXIT
 "$pgbin/createdb" -w -U fixture_admin -O fixture_owner --template=template0 "$source_db"
-made_source=1
-"$pgbin/createdb" -w -U fixture_admin -O fixture_owner --template=template0 "$restore_db"
-made_restore=1
+made_databases+=("$source_db")
 manage() { RMS_DB_USER=fixture_owner RMS_DB_NAME="$source_db" .venv/bin/python manage.py "$@"; }
 probe() {
     RMS_DB_USER="$1" RMS_DB_NAME="$2" RMS_CUSTODY_PROBE="$3" .venv/bin/python manage.py shell \
@@ -72,22 +77,100 @@ if (cd "$output" && awk '$2 == "sealed.dump" {print $1 "  pre.dump"}' dumps.sha2
     printf 'Stale checkpoint was accepted in place of the sealed backup\n' >&2
     exit 1
 fi
-"$pgbin/pg_restore" -w -U fixture_admin --exit-on-error --single-transaction -d "$restore_db" "$output/sealed.dump"
-pg -U fixture_owner -d "$restore_db" -v runtime="$runtime" -v target_db="$restore_db" <<'SQL'
-REVOKE ALL ON DATABASE :"target_db" FROM PUBLIC, :"runtime";
-GRANT CONNECT ON DATABASE :"target_db" TO :"runtime";
-SQL
-probe "$runtime" "$restore_db" verify > "$output/restored.json"
+access_log="$output/restore-access.log"
+record_access() { printf '%s\n' "$*" | tee -a "$access_log"; }
 
-for target in "$source_db" "$restore_db"; do
-    [[ $(pg -U "$runtime" -d "$target" -Atc "SELECT has_table_privilege(current_user, 'rms_custodyevent', 'SELECT')
-            AND has_table_privilege(current_user, 'rms_custodyevent', 'INSERT')
-            AND NOT has_table_privilege(current_user, 'rms_custodyevent', 'UPDATE,DELETE,TRUNCATE,TRIGGER,MAINTAIN')
-            AND NOT has_any_column_privilege(current_user, 'rms_custodyevent', 'UPDATE,REFERENCES')
-            AND NOT has_function_privilege(current_user, 'rms_custody_event_guard()', 'EXECUTE')
-            AND NOT has_database_privilege(current_user, current_database(), 'CREATE,TEMPORARY')
-            AND NOT has_schema_privilege(current_user, 'public', 'CREATE')") == t ]]
-done
+access_denied() {
+    local target=$1 role=$2 phase=$3 expected=$4
+    if pg -U "$role" -d "$target" -Atc 'SELECT 1' > "$output/connect.log" 2>&1; then
+        printf '%s: %s unexpectedly connected to %s\n' "$phase" "$role" "$target" >&2
+        return 1
+    fi
+    if ! rg -Fq "$expected" "$output/connect.log"; then
+        cat "$output/connect.log" >&2
+        return 1
+    fi
+    record_access "$phase db=$target login=$role: denied ($expected)"
+}
+
+ordinary_denied() {
+    access_denied "$1" "$runtime" "$2" "$3" && access_denied "$1" "$outsider" "$2" "$3"
+}
+
+prepare_restore() {
+    local target=$1
+    admin -d postgres -v target_db="$target" <<'SQL'
+CREATE DATABASE :"target_db" OWNER fixture_owner TEMPLATE template0 ALLOW_CONNECTIONS false;
+SQL
+    made_databases+=("$target")
+    ordinary_denied "$target" created 'not currently accepting connections'
+    admin -d postgres -v target_db="$target" -v runtime="$runtime" -v verifier="$verifier" -v outsider="$outsider" <<'SQL'
+BEGIN;
+REVOKE ALL ON DATABASE :"target_db" FROM PUBLIC, :"runtime", :"outsider";
+GRANT CONNECT ON DATABASE :"target_db" TO :"verifier";
+ALTER DATABASE :"target_db" ALLOW_CONNECTIONS true;
+COMMIT;
+SQL
+    ordinary_denied "$target" before_import 'permission denied for database'
+    "$pgbin/pg_restore" -w -U fixture_admin --exit-on-error --single-transaction -d "$target" "$output/sealed.dump"
+    ordinary_denied "$target" after_import_before_reconciliation 'permission denied for database'
+}
+
+runtime_privileges() {
+    local login=$1 target=$2
+    [[ $(pg -U "$login" -d "$target" -At -v runtime="$runtime" <<'SQL'
+SELECT current_user = :'runtime'
+       AND has_table_privilege(current_user, 'rms_custodyevent', 'SELECT')
+       AND has_table_privilege(current_user, 'rms_custodyevent', 'INSERT')
+       AND NOT has_table_privilege(current_user, 'rms_custodyevent', 'UPDATE,DELETE,TRUNCATE,TRIGGER,MAINTAIN')
+       AND NOT has_any_column_privilege(current_user, 'rms_custodyevent', 'UPDATE,REFERENCES')
+       AND NOT has_function_privilege(current_user, 'rms_custody_event_guard()', 'EXECUTE')
+       AND NOT has_database_privilege(current_user, current_database(), 'CREATE,TEMPORARY')
+       AND NOT has_schema_privilege(current_user, 'public', 'CREATE');
+SQL
+    ) == t ]]
+}
+
+reconcile_and_release() {
+    local target=$1 expected=$2 receipt=$3 comparison=0
+    PGOPTIONS="-c role=$runtime" runtime_privileges "$verifier" "$target" || return 1
+    PGOPTIONS="-c role=$runtime" probe "$verifier" "$target" verify > "$receipt" || return 1
+    cmp -s "$expected" "$receipt" || comparison=$?
+    if [[ "$comparison" == 1 ]]; then
+        record_access "reconciliation_rejected db=$target verifier=$verifier effective_role=$runtime: checkpoint mismatch"
+        return 42
+    fi
+    [[ "$comparison" == 0 ]] || return 1
+    ordinary_denied "$target" reconciled_before_release 'permission denied for database' || return 1
+    local receipt_sha256
+    receipt_sha256=$(sha256sum < "$receipt" | cut -d' ' -f1) || return 1
+    record_access "reconciliation_passed db=$target verifier=$verifier effective_role=$runtime receipt_sha256=$receipt_sha256" || return 1
+    admin -d postgres -v target_db="$target" -v runtime="$runtime" -v verifier="$verifier" <<'SQL' || return 1
+BEGIN;
+REVOKE CONNECT ON DATABASE :"target_db" FROM :"verifier";
+GRANT CONNECT ON DATABASE :"target_db" TO :"runtime";
+COMMIT;
+SQL
+    record_access "release_committed db=$target login=$runtime"
+}
+
+runtime_privileges "$runtime" "$source_db"
+prepare_restore "$rejected_db"
+reject_status=0
+reconcile_and_release "$rejected_db" "$output/pre.json" "$output/rejected.json" || reject_status=$?
+[[ "$reject_status" == 42 ]]
+ordinary_denied "$rejected_db" after_rejected_reconciliation 'permission denied for database'
+
+prepare_restore "$restore_db"
+reconcile_and_release "$restore_db" "$output/sealed.json" "$output/restored.json"
+access_denied "$restore_db" "$outsider" after_release 'permission denied for database'
+access_denied "$restore_db" "$verifier" after_release 'permission denied for database'
+runtime_privileges "$runtime" "$restore_db"
+record_access "after_release db=$restore_db login=$runtime: connected with expected runtime grants"
+probe "$runtime" "$restore_db" verify > "$output/runtime-restored.json"
+cmp "$output/restored.json" "$output/runtime-restored.json"
+ordinary_denied "$rejected_db" after_separate_successful_release 'permission denied for database'
+
 if manage migrate rms 0010_run_assurance --noinput --verbosity 0 > "$output/unsafe-reverse.log" 2>&1; then
     printf 'Populated reverse unexpectedly succeeded\n' >&2
     exit 1
@@ -114,16 +197,19 @@ assert post['tables']['rms_custodyevent']['count'] == 0
 assert restored == sealed and sealed['tables']['rms_custodyevent']['count'] == 4
 assert pre['watermark'] != restored['watermark']
 manifest = {
-    'schema': 'fixture:MAU-170:migration-restore:v1',
+    'schema': 'fixture:MAU-170:migration-restore:v2',
     'tools': subprocess.check_output([os.environ['RMS_CUSTODY_PGBIN'] + '/pg_restore', '--version'], text=True).strip(),
     'scope': 'disposable_local_invented_fixture_only',
     'migration_sha256': hashlib.sha256(Path('rms/migrations/0011_custody.py').read_bytes()).hexdigest(),
-    'permissions': 'ordinary role separated from DDL; exact application fixture grants rechecked after restore',
+    'permissions': 'created closed; isolated verifier assumes runtime privileges; runtime connects only after reconciliation',
     'id_mapping': [{'source': item['result_version_id'], 'target': item['result_version_id']}
                    for item in pre['objects']],
     'pre_migration': pre, 'post_migration': post, 'restored': restored,
     'checks': {'preserved_history': True, 'populated_reverse_refused': True, 'restore_reconciled': True,
-               'export_reproduced': True, 'stale_checkpoint_watermark_differs': True, 'scope_denials': True},
+               'export_reproduced': True, 'stale_checkpoint_watermark_differs': True, 'scope_denials': True,
+               'ordinary_access_denied_until_reconciled': True, 'rejected_target_never_released': True,
+               'unrelated_login_denied_after_release': True},
+    'restore_access_log_sha256': hashlib.sha256((output / 'restore-access.log').read_bytes()).hexdigest(),
     'rollback': 'Keep writes gated. Restore a new target from the matching checkpoint; never reverse populated custody.',
     'dumps': dict((name, checksum) for checksum, name in (line.split() for line in (output / 'dumps.sha256').read_text().splitlines())),
 }
