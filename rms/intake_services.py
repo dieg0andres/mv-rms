@@ -1,12 +1,14 @@
 """Exact screening, manual prior research and fail-closed synthetic intake."""
 
 import re
+from datetime import UTC
 
 from django.conf import settings
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from .hypothesis_models import InvestigationVersion, ResearchAssociationIdentity, ResearchFamilyVersion
+from .hypothesis_models import InvestigationVersion, ResearchAssociation, ResearchAssociationIdentity, ResearchFamilyVersion
+from .hypothesis_validation import HypothesisValidationError
 from .intake_models import IntakeHypothesisBinding, IntakeSourceAssessment, ResearchIntake, ResearchIntakeVersion
 from .models import Idea, IdeaVersion, SourceVersion
 from .research_context_common import Forbidden, StaleVersion, append, endpoint, envelope, execute_write, field_error, require_actor, resolve, visible
@@ -107,13 +109,20 @@ def _prior(case, family):
     if (not query_time or timezone.is_naive(query_time) or query_time > timezone.now()
             or (manual["finding"] != "no_relevant_work_found" and not manual["record_links"])):
         field_error("/investigation_version_id", "incomplete_prior_research")
+    rights_snapshot = {}
     for link in prior.research_associations.filter(kind="AssessmentRecord"):
         target = next(getattr(link, name) for name in ("idea_version", "source_version", "family_version", "investigation_version") if getattr(link, name + "_id"))
         if not _head(target):
             field_error("/investigation_version_id", "stale_prior_research")
-        if isinstance(target, SourceVersion) and not _rights(target):
-            field_error("/investigation_version_id", "missing_or_stale_rights")
-    return prior
+        if isinstance(target, SourceVersion):
+            rights = _rights(target)
+            if not rights:
+                field_error("/investigation_version_id", "missing_or_stale_rights")
+            reference, expires_at = rights
+            rights_snapshot[target.source_version_id] = {
+                "reference": reference, "expires_at": expires_at.astimezone(UTC).isoformat(),
+            }
+    return rights_snapshot
 
 
 def _idea(stable_id):
@@ -124,9 +133,7 @@ def _idea(stable_id):
 
 
 def save_intake(*, actor, idea_id, idempotency_key, payload):
-    require_actor(actor, write=True)
-    if actor.groups.filter(name="founder_viewer").exists():
-        raise Forbidden
+    _require_intake_editor(actor)
 
     def operation(values):
         idea = _idea(idea_id)
@@ -153,13 +160,13 @@ def save_intake(*, actor, idea_id, idempotency_key, payload):
         binding = family_identity.versions.get(version=family_identity.latest_version) if family_identity else None
         if binding and binding.family_version_id != family.pk:
             field_error("/family_version_id", "revise_exact_classification_first")
-        case, assessments = None, []
+        case, prior_source_rights, assessments = None, None, []
         fields = {key: values[key] for key in ("distinctness", "family_rationale")}
         if values["outcome"] == "ready":
             if item.workflow_status == "rejected":
                 field_error("/idea_version_id", "idea_rejected")
             case = resolve(InvestigationVersion, values["investigation_version_id"])
-            _prior(case, family)
+            prior_source_rights = _prior(case, family)
             if visible(ResearchIntakeVersion).filter(investigation_version__record=case.record).exclude(record__idea=idea).exists():
                 field_error("/investigation_version_id", "stale_or_mismatched")
             contributions = list(item.contributions.select_related("source_version__source"))
@@ -183,7 +190,7 @@ def save_intake(*, actor, idea_id, idempotency_key, payload):
             correction_reason=values.get("correction_reason"),
             changed_fields=["/screening"] if previous else [], state=values["outcome"],
             idea_version=item, family_binding=binding, investigation_version=case, fields=fields,
-            assessment_count=len(assessments),
+            assessment_count=len(assessments), prior_source_rights=prior_source_rights,
         )
         for contribution, narrative, rights in assessments:
             IntakeSourceAssessment.objects.create(intake_version=saved, contribution=contribution,
@@ -199,7 +206,8 @@ def _check_progress(item):
     if (item.state != "ready" or not _head(item) or not _head(item.idea_version)
             or not _head(binding) or not _head(binding.family_version)):
         field_error("/intake_version_id", "missing_or_stale_intake")
-    _prior(case, binding.family_version)
+    if _prior(case, binding.family_version) != item.prior_source_rights:
+        field_error("/intake_version_id", "missing_or_stale_rights")
     rows = list(item.source_assessments.select_related("contribution__source_version__source"))
     if not rows or len(rows) != item.assessment_count:
         field_error("/intake_version_id", "missing_source_assessments")
@@ -207,6 +215,33 @@ def _check_progress(item):
         source = row.contribution.source_version
         if not _head(source) or _rights(source) != (row.rights_reference, row.rights_expires_at):
             field_error("/intake_version_id", "missing_or_stale_rights")
+
+
+def has_screening_history(*, actor, idea_id):
+    require_actor(actor)
+    return visible(ResearchIntake).filter(idea__idea_id=idea_id).exists()
+
+
+def _require_intake_editor(actor):
+    require_actor(actor, write=True)
+    if actor.groups.filter(name="founder_viewer").exists():
+        raise Forbidden
+
+
+def hypothesis_draft_ready(*, actor, idea_version_id, version_id, case_version_id, family_binding_version_id):
+    """Read-only hint for exact browser inputs; saves recheck inside the lineage transaction."""
+    _require_intake_editor(actor)
+    if not version_id:
+        return False
+    try:
+        authorize_hypothesis_intake(
+            actor=actor, version_id=version_id, idea=resolve(IdeaVersion, idea_version_id),
+            case=resolve(InvestigationVersion, case_version_id),
+            binding=resolve(ResearchAssociation, family_binding_version_id),
+        )
+    except (HypothesisValidationError, ResourceNotFound):
+        return False
+    return True
 
 
 def authorize_hypothesis_intake(*, actor, version_id, idea, case, binding, predecessor=None):
@@ -217,8 +252,7 @@ def authorize_hypothesis_intake(*, actor, version_id, idea, case, binding, prede
                 or (predecessor and IntakeHypothesisBinding.objects.filter(hypothesis_version=predecessor).exists())):
             field_error("/intake_version_id", "missing_or_stale_intake")
         return None
-    if actor.groups.filter(name="founder_viewer").exists():
-        raise Forbidden
+    _require_intake_editor(actor)
     item = resolve(ResearchIntakeVersion, version_id)
     if item.idea_version_id != idea.pk or item.investigation_version_id != case.pk or not binding or item.family_binding_id != binding.pk:
         field_error("/intake_version_id", "stale_or_mismatched")

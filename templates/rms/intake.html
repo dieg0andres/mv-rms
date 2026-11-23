@@ -20,9 +20,9 @@
 <p>Family <a href="{% url 'rms-family-version' item.family.stable_id item.family.version %}">{{ item.family.version_id }}</a> · Idea <code>{{ item.idea.version_id }}</code></p>
 {% if item.investigation %}
 <p>Case <a href="{% url 'rms-case-version' item.investigation.stable_id item.investigation.version %}">{{ item.investigation.version_id }}</a> · <a href="{% url 'rms-assessment-version' item.prior_research.stable_id item.prior_research.version %}">Exact manual prior-research assessment</a></p>
-{% if form and item.version == history.latest_version and can_assess %}
+{% if form and item.version == history.latest_version %}{% if can_draft %}
 <p><a href="{% url 'rms-hypothesis-create' %}?idea_id={{ idea_id|urlencode }}&amp;idea_version={{ item.idea.version }}&amp;intake_version_id={{ item.version_id|urlencode }}&amp;investigation_version_id={{ item.investigation.version_id|urlencode }}&amp;family_binding_version_id={{ item.family_binding.version_id|urlencode }}">Draft hypothesis with this exact intake</a></p>
-{% endif %}
+{% else %}<p>Reassess the current inputs before drafting a hypothesis.</p>{% endif %}{% endif %}
 {% endif %}
 {% if item.correction_reason %}<p>Correction of v{{ item.corrects_version }}: {{ item.correction_reason }}</p>{% endif %}
 <p>Distinctness classification: {{ item.fields.distinctness }}. {{ item.fields.family_rationale }}</p>

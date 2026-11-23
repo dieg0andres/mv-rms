@@ -246,7 +246,7 @@ class ConnectedFrontendTests(SimpleTestCase):
     def test_fresh_editor_get_cookie_allows_bound_native_post(self):
         idea = {"idea_version_id": self.record["origin"]["idea"]["version_id"], "version": 1}
         path = "/hypotheses/new?idea_id=IDE-11111111-1111-4111-8111-111111111111&idea_version=1"
-        with patch("rms.navigation_views.exact_idea", return_value=idea):
+        with patch("rms.navigation_views.exact_idea", return_value=idea), patch("rms.navigation_views.has_screening_history", return_value=False):
             client, form, token = self.fresh_editor_form(path)
         self.assertIn("csrftoken", form.cookies)
         self.assertEqual(form["Cache-Control"], "private, no-store")
@@ -336,7 +336,7 @@ class ConnectedFrontendTests(SimpleTestCase):
     def test_idea_detail_links_creation_history_and_permitted_hypotheses(self):
         identity = self.record["origin"]["idea"]["stable_id"]
         detail = {"idea_id": identity, "latest_version": 1, "latest_idea_version_id": self.record["origin"]["idea"]["version_id"], "latest": {"version": 1, "title": "Invented originating Idea", "contributions": []}}
-        with patch("rms.views.get_idea"), patch("rms.views.idea_detail", return_value=detail), patch.object(hypothesis_services, "list_hypotheses", return_value=listing([self.record])) as read:
+        with patch("rms.views.get_idea"), patch("rms.views.idea_detail", return_value=detail), patch("rms.intake_services.has_screening_history", return_value=False), patch.object(hypothesis_services, "list_hypotheses", return_value=listing([self.record])) as read:
             response = IdeaDetailPage.as_view()(self.request(path="/ideas/" + identity), idea_id=identity)
         self.assertEqual(read.call_args.kwargs["query"], {"originating_idea_id": identity})
         html = self.render(response)

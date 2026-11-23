@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from .hypothesis_api import ResearchRecordView
 from .hypothesis_validation import HypothesisValidationError
-from .intake_services import CLOSURE, PRIORITY, SOURCE_ASSESSMENT, form_context, read_intake, save_intake
+from .intake_services import CLOSURE, PRIORITY, SOURCE_ASSESSMENT, form_context, hypothesis_draft_ready, read_intake, save_intake
 from .services import ResourceNotFound, ServiceError
 from .views import RmsPage
 
@@ -95,6 +95,13 @@ class IntakePage(RmsPage):
             status = 200
             inputs = form_context(actor=request.user, idea_id=idea_id)
             if inputs:
+                latest = history["results"][-1] if history["results"] else None
+                if latest and latest["state"] == "ready":
+                    context["can_draft"] = hypothesis_draft_ready(
+                        actor=request.user, version_id=latest["version_id"], idea_version_id=latest["idea"]["version_id"],
+                        case_version_id=latest["investigation"]["version_id"],
+                        family_binding_version_id=latest["family_binding"]["version_id"],
+                    )
                 initial = {"idea_version_id": inputs["idea_version_id"], "expected_latest_version": history["latest_version"], "idempotency_key": str(uuid4())}
                 form = IntakeForm(contributions=inputs["contributions"], outcome=outcome, initial=initial, data=data)
                 context.update(form=form, can_assess=bool(inputs["contributions"]), exact_idea_version_id=inputs["idea_version_id"])

@@ -20,13 +20,15 @@ class ResearchIntakeVersion(ResearchVersion):
     family_binding = models.ForeignKey("ResearchAssociation", on_delete=models.PROTECT)
     investigation_version = models.ForeignKey("InvestigationVersion", on_delete=models.PROTECT, null=True)
     assessment_count = models.PositiveIntegerField()
+    prior_source_rights = models.JSONField(null=True)
 
     class Meta(ResearchVersion.Meta):
         constraints = ResearchVersion.Meta.constraints + [models.CheckConstraint(
             condition=Q(state="ready", investigation_version__isnull=False, assessment_count__gt=0)
             | Q(state="early_closed", investigation_version__isnull=True, assessment_count=0),
             name="intake_state_shape",
-        )]
+        ), models.CheckConstraint(condition=Q(state="ready") | Q(prior_source_rights__isnull=True),
+                                  name="intake_prior_rights_ready_only")]
 
 
 class IntakeSourceAssessment(models.Model):

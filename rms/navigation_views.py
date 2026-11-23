@@ -23,6 +23,7 @@ from django.utils.dateparse import parse_datetime
 
 from .views import RmsPage
 from .api import PUBLIC_ID_RE, SOURCE_ID_RE
+from .intake_services import has_screening_history, hypothesis_draft_ready
 
 
 NAVIGATION = (
@@ -715,16 +716,29 @@ class RecordEditorPage(ConnectedPage):
                     submitted["reference_idea_id"] = record["origin"]["idea"]["stable_id"]
                     submitted["reference_idea_version"] = str(record["origin"]["idea"]["version"])
                     idea = exact_idea(record["origin"]["idea"]["stable_id"], record["origin"]["idea"]["version"])
-            elif self.kind == "hypothesis" and request.query_params.get("idea_id"):
+            elif self.kind == "hypothesis" and ("idea_id" in request.query_params or "intake_version_id" in request.query_params):
+                idea_id = request.query_params.get("idea_id", "")
                 try:
                     version = int(request.query_params["idea_version"]) if "idea_version" in request.query_params else None
                 except ValueError:
                     raise ResourceNotFound
-                idea = exact_idea(request.query_params["idea_id"], version)
+                idea = exact_idea(idea_id, version)
                 if idea is None:
                     raise ResourceNotFound
+                version_id = request.query_params.get("intake_version_id")
+                if "intake_version_id" in request.query_params:
+                    ready = version is not None and hypothesis_draft_ready(
+                        actor=request.user, idea_version_id=idea["idea_version_id"],
+                        version_id=version_id, case_version_id=request.query_params.get("investigation_version_id"),
+                        family_binding_version_id=request.query_params.get("family_binding_version_id"),
+                    )
+                else:
+                    ready = not has_screening_history(actor=request.user, idea_id=idea_id)
+                if not ready:
+                    return TemplateResponse(request._request, "rms/intake_reassess.html",
+                                            {**live_context(self, request), "idea_id": idea_id}, status=400)
                 submitted["/originating_idea_version_id"] = idea["idea_version_id"]
-                if request.query_params.get("intake_version_id"):
+                if version_id:
                     for key in ("intake_version_id", "investigation_version_id"):
                         submitted["/" + key] = request.query_params.get(key, "")
                     submitted["/idea_family_binding/mode"] = "existing"
