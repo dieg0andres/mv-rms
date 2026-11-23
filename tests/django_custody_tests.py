@@ -19,9 +19,10 @@ from rms.custody_services import (
 from rms.hypothesis_validation import HypothesisValidationError
 from rms.models import IdempotencyRecord, RunResultVersion
 from rms.research_context_common import Forbidden, StaleVersion
+from rms.run_result_services import read_result
 from rms.services import IdempotencyConflict, ResourceNotFound
 from rms.stage_gate_services import POLICY
-from rms.test_plan_services import digest
+from rms.test_plan_services import correct_test_plan, digest
 from tests.committed_database import CommittedDatabaseTestCase
 from tests.django_run_result_tests import Workflow
 
@@ -69,6 +70,77 @@ class CustodyWorkflow(Workflow):
 class CustodyTests(CustodyWorkflow, TestCase):
     def setUp(self):
         self.setup_custody('custody')
+        self.result_url = '/api/v1' + self.url.removesuffix('/custody')
+
+    def assert_byte_reads_denied(self, actor, error, status):
+        browser = APIClient()
+        browser.force_authenticate(user=actor)
+        for service, url in (
+            (download_export, self.url + '/export'),
+            (self.read_original, self.result_url + '/artifact'),
+        ):
+            with self.subTest(path=url), self.assertRaises(error):
+                service(actor=actor, **self.ids)
+            response = browser.get(url)
+            self.assertEqual(response.status_code, status)
+            self.assertEqual(response.headers['Cache-Control'], 'private, no-store')
+            self.assertNotIn(b'content_base64', response.content)
+            self.assertNotIn(self.result_payload_fixture['artifact']['content_base64'].encode(), response.content)
+
+    @staticmethod
+    def read_original(**context):
+        return read_result(artifact=True, **context)
+
+    def test_both_byte_paths_require_the_same_current_export(self):
+        outsider = get_user_model().objects.create_user('invented-byte-outsider')
+        outsider.groups.add(Group.objects.get(name='editor'))
+        with override_settings(RMS_SYNTHETIC_STAGE_GATES=self.settings_fixture):
+            self.assert_byte_reads_denied(self.editor, ResourceNotFound, 404)
+            self.advance(3)
+            self.assert_byte_reads_denied(self.editor, ResourceNotFound, 404)
+            self.advance(4)
+            self.assert_byte_reads_denied(outsider, ResourceNotFound, 404)
+            response = self.client.get(self.result_url + '/artifact')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers['Cache-Control'], 'private, no-store')
+            package = self.client.get(self.url + '/export').json()
+            self.assertEqual(response.json(), {
+                'manifest': self.result.artifact_manifest, 'content_base64': package['content_base64'],
+            })
+            self.assertEqual(base64.b64decode(package['content_base64']), bytes(self.result.artifact_bytes))
+
+        baseline = (CustodyEvent.objects.count(), IdempotencyRecord.objects.count())
+        for changes in (None, {'expires_at': '2001-01-01T00:00:00Z'}, {'status': 'denied'}):
+            with self.subTest(rights=changes):
+                drift = deepcopy(self.settings_fixture)
+                binding = drift[self.ids['plan_id']]['custody']['bindings']['export']
+                if changes is None:
+                    del binding['rights']
+                else:
+                    binding['rights'].update(changes)
+                with override_settings(RMS_SYNTHETIC_STAGE_GATES=drift):
+                    self.assert_byte_reads_denied(self.editor, HypothesisValidationError, 404)
+        with override_settings(RMS_SYNTHETIC_STAGE_GATES={}):
+            self.assert_byte_reads_denied(self.editor, ResourceNotFound, 404)
+            metadata = self.client.get(self.result_url).json()
+            self.assertEqual(metadata['artifact'], self.result.artifact_manifest)
+            self.assertNotIn('content_base64', metadata)
+        self.assertEqual((CustodyEvent.objects.count(), IdempotencyRecord.objects.count()), baseline)
+        self.result.refresh_from_db()
+        self.assertEqual(bytes(self.result.artifact_bytes), base64.b64decode(package['content_base64']))
+
+    def test_plan_correction_closes_both_byte_paths_without_hiding_result_metadata(self):
+        with override_settings(RMS_SYNTHETIC_STAGE_GATES=self.settings_fixture):
+            self.advance(4)
+            proposal = {name: deepcopy(self.plan[name]) for name in (
+                'hypothesis_version_id', 'fields', 'criteria', 'data_requirements',
+            )}
+            proposal.update(expected_latest_version=1, correction_reason='Invented plan correction')
+            proposal['criteria'][0]['fields']['threshold'] = '3'
+            correct_test_plan(actor=self.editor, plan_id=self.ids['plan_id'], idempotency_key='custody-plan-v2',
+                              payload=proposal)
+            self.assert_byte_reads_denied(self.editor, CustodyDenied, 409)
+            self.assertEqual(self.client.get(self.result_url).json()['artifact'], self.result.artifact_manifest)
 
     def test_authenticated_entry_csrf_scope_and_repeatable_exact_export(self):
         users = get_user_model().objects
@@ -169,8 +241,7 @@ class CustodyTests(CustodyWorkflow, TestCase):
             prior = CustodyEvent.objects.get(operation='export')
             corrected = self.publish(dict(self.result_payload_fixture, expected_result_version_id=self.result.public_id,
                                           correction_reason='Invented correction'), key='invented-correction')
-            with self.assertRaises(CustodyDenied):
-                download_export(actor=self.editor, **self.ids)
+            self.assert_byte_reads_denied(self.editor, CustodyDenied, 409)
         with override_settings(RMS_SYNTHETIC_STAGE_GATES=grants(self.editor, self.ids['plan_id'], corrected)):
             response = self.command('stage', 0, key='corrected-stage', ids=dict(self.ids, result_version_id=corrected.public_id))
         edge = CustodyEvent.objects.get(public_id=json.loads(response.body)['id'])

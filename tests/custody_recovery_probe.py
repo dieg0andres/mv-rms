@@ -1,5 +1,6 @@
 """Internal helper for the disposable MAU-170 recovery rehearsal, not an RMS export API."""
 
+import base64
 import hashlib
 import json
 import os
@@ -12,6 +13,7 @@ from rms.custody_models import CustodyEvent
 from rms.custody_services import download_export, read_custody, snapshot
 from rms.hypothesis_validation import HypothesisValidationError
 from rms.models import RunResultVersion
+from rms.run_result_services import read_result
 from rms.services import ResourceNotFound
 from rms.test_plan_services import digest
 from tests.django_custody_tests import CustodyWorkflow, grants
@@ -72,25 +74,41 @@ def probe(stage):
     fixture.ids = {'plan_id': plan_id, 'version_id': run.plan_version.public_id, 'run_id': run.public_id,
                    'result_version_id': fixture.result.public_id}
     policy = grants(fixture.editor, plan_id, fixture.result)
+    outsider = User.objects.get(username='invented-recovery-outsider')
+
+    def read_original(*, actor, **ids):
+        return read_result(actor=actor, artifact=True, **ids)
+
+    def assert_denied(service, actor, expected):
+        try:
+            service(actor=actor, **fixture.ids)
+        except expected:
+            return
+        raise AssertionError('A denied fixture read was permitted')
+
     with override_settings(RMS_SYNTHETIC_STAGE_GATES=policy):
         if stage == 'seal':
             fixture.advance(4)
         export = download_export(actor=fixture.editor, **fixture.ids)
-        for service in (read_custody, download_export):
-            try:
-                service(actor=User.objects.get(username='invented-recovery-outsider'), **fixture.ids)
-            except ResourceNotFound:
-                pass
-            else:
-                raise AssertionError('Unscoped fixture actor obtained custody information')
-    policy[plan_id]['custody']['bindings']['export']['authority']['status'] = 'revoked'
-    with override_settings(RMS_SYNTHETIC_STAGE_GATES=policy):
-        try:
-            download_export(actor=fixture.editor, **fixture.ids)
-        except HypothesisValidationError:
-            pass
-        else:
-            raise AssertionError('The restored export ignored revoked authority')
+        artifact = read_original(actor=fixture.editor, **fixture.ids)
+        original = base64.b64decode(artifact['content_base64'], validate=True)
+        fixture.assertEqual(artifact['content_base64'], json.loads(export)['content_base64'])
+        fixture.assertEqual(original, bytes(fixture.result.artifact_bytes))
+        fixture.assertEqual(artifact['manifest'], fixture.result.artifact_manifest)
+        for service in (read_custody, download_export, read_original):
+            assert_denied(service, outsider, ResourceNotFound)
+    binding = policy[plan_id]['custody']['bindings']['export']
+    for record_name, denial in (('rights', 'denied'), ('authority', 'revoked')):
+        record = binding[record_name]
+        status = record['status']
+        record['status'] = denial
+        with override_settings(RMS_SYNTHETIC_STAGE_GATES=policy):
+            for service in (download_export, read_original):
+                assert_denied(service, fixture.editor, HypothesisValidationError)
+        record['status'] = status
+    with override_settings(RMS_SYNTHETIC_STAGE_GATES={}):
+        for service in (download_export, read_original):
+            assert_denied(service, fixture.editor, ResourceNotFound)
     try:
         with transaction.atomic():
             CustodyEvent.objects.update(manifest={})
@@ -98,7 +116,11 @@ def probe(stage):
         pass
     else:
         raise AssertionError('Custody history could be rewritten')
-    return checkpoint(True) | {'export_sha256': hashlib.sha256(export).hexdigest()}
+    return checkpoint(True) | {
+        'export_sha256': hashlib.sha256(export).hexdigest(),
+        'original_sha256': hashlib.sha256(original).hexdigest(),
+        'both_byte_paths_deny_unscoped_and_revoked': True,
+    }
 
 
 def main():

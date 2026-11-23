@@ -20,7 +20,7 @@ and non-cacheable. Denials do not create records or consume idempotency keys.
 | `GET /results` | Latest-first revision metadata; optional `offset`, up to 50 per page, with `next_offset`. |
 | `POST /results` | Publish an initial revision or full correction, only on the exact completed event. See payload below. |
 | `GET /results/{result_version_id}` | One immutable version (`RESV-…`), exact criterion assessments and artifact manifest. |
-| `GET /results/{result_version_id}/artifact` | Verified manifest and exact `content_base64`; bytes are not rendered inline as a document. |
+| `GET /results/{result_version_id}/artifact` | Verified manifest and exact `content_base64`; bytes are not rendered inline as a document. For custody plans, the same current rights and receipt checks as custody export apply. |
 
 `read_run` and `GET` on the attempt detail omit both `available_actions` and
 `allowed_event_states` for readers without write access. Writers receive

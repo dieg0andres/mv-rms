@@ -1,6 +1,5 @@
 """Shared writes and reads of synthetic observations; never dispatches a run."""
 
-import base64
 import hashlib
 import re
 
@@ -152,10 +151,11 @@ def get_result_version(*, actor, plan_id, version_id, run_id, result_version_id)
 
 
 def read_result(*, artifact=False, **context):
-    result = get_result_version(**context)
     if artifact:
-        return {'manifest': result.artifact_manifest, 'content_base64': base64.b64encode(result.artifact_bytes).decode('ascii')}
-    return _result_render(result, detail=True)
+        from .custody_services import read_result_artifact
+
+        return read_result_artifact(**context)
+    return _result_render(get_result_version(**context), detail=True)
 
 
 def _append(record, actor):

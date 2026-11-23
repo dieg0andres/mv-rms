@@ -7,6 +7,8 @@ from rest_framework.response import Response
 
 from . import run_result_services as services
 from .hypothesis_api import ResearchRecordView
+from .hypothesis_validation import HypothesisValidationError
+from .services import ResourceNotFound
 from .test_plan_api import StrictJSONParser
 from .test_plan_services import _error
 
@@ -33,8 +35,13 @@ class RunResultApi(ResearchRecordView):
             return Response({key: run[key] for key in ('run_id', 'state', 'current_event_id', 'events')})
         if self.action == 'results':
             return Response(services.list_results(**context, offset=request.query_params.get('offset', '0')))
-        if self.action in ('result', 'artifact'):
-            return Response(services.read_result(**context, artifact=self.action == 'artifact'))
+        if self.action == 'result':
+            return Response(services.read_result(**context))
+        if self.action == 'artifact':
+            try:
+                return Response(services.read_result(**context, artifact=True))
+            except HypothesisValidationError as error:
+                raise ResourceNotFound from error
         self.http_method_not_allowed(request)
 
     def post(self, request, **context):

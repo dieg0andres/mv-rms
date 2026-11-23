@@ -2,12 +2,13 @@
 
 import base64
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
 from .custody_models import CustodyEvent
 from .hypothesis_validation import HypothesisValidationError
-from .research_context_common import StaleVersion, execute_write, field_error, lock_lineage, wire
+from .research_context_common import StaleVersion, execute_write, field_error, lock_lineage, require_actor, wire
 from .run_result_services import ResultIntegrityError, _run, _verify_result
 from .run_result_validation import MAX_ARTIFACT_BYTES
 from .services import ResourceNotFound, ServiceError, canonical_json_bytes
@@ -33,6 +34,13 @@ def custody_access(actor, plan_id, *, write=False):
     if custody.get('enabled') is not True:
         raise ResourceNotFound
     return custody
+
+
+def _custody_plan(plan_id):
+    fixture = _mapping(_mapping(getattr(settings, 'RMS_SYNTHETIC_STAGE_GATES', None)).get(plan_id))
+    return 'custody' in fixture or CustodyEvent.objects.filter(
+        result__run__plan_version__record__public_id=plan_id,
+    ).exists()
 
 
 def _result(plan_id, version_id, run_id, result_version_id, *, lock=False):
@@ -176,14 +184,36 @@ def record_custody(*, actor, plan_id, version_id, run_id, result_version_id, ide
                          path=path, operation=operation, validate=_validate)
 
 
+def _authorize_release(*, actor, fixture, result):
+    event = _head(result)
+    if event is None or event.operation != 'export' or event.actor_id != str(actor.pk):
+        raise ResourceNotFound
+    _check_chain(fixture, result, _live_snapshot(result), timezone.now())
+    return event
+
+
+def _original_bytes(result):
+    return base64.b64encode(result.artifact_bytes).decode('ascii')
+
+
+@transaction.atomic
+def read_result_artifact(*, actor, plan_id, version_id, run_id, result_version_id):
+    require_actor(actor)
+    lock_lineage()
+    fixture = custody_access(actor, plan_id, write=True) if _custody_plan(plan_id) else None
+    result = _result(plan_id, version_id, run_id, result_version_id, lock=True)
+    if fixture is None:
+        _verify_result(result)
+    else:
+        _authorize_release(actor=actor, fixture=fixture, result=result)
+    return {'manifest': result.artifact_manifest, 'content_base64': _original_bytes(result)}
+
+
 @transaction.atomic
 def download_export(*, actor, plan_id, version_id, run_id, result_version_id):
     fixture = custody_access(actor, plan_id, write=True)
     lock_lineage()
     result = _result(plan_id, version_id, run_id, result_version_id, lock=True)
-    event = _head(result)
-    if event is None or event.operation != 'export' or event.actor_id != str(actor.pk):
-        raise ResourceNotFound
-    _check_chain(fixture, result, _live_snapshot(result), timezone.now())
+    event = _authorize_release(actor=actor, fixture=fixture, result=result)
     return canonical_json_bytes({'manifest': event.manifest, 'manifest_digest': event.manifest_digest,
-                                 'content_base64': base64.b64encode(result.artifact_bytes).decode('ascii')})
+                                 'content_base64': _original_bytes(result)})
