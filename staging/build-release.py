@@ -10,7 +10,7 @@ def build_release(output, commit, tree):
     module = module_from_spec(recipe)
     recipe.loader.exec_module(module)
     return module.build(
-        output, commit, tree, manifest_path=None,
+        output, commit, tree, manifest_path=None, package_version=3,
         summary="Research workspace for versioned synthetic records.",
         extra_required=("rms/test_plan_schema.json", "rms/test_plan_navigation_urls.py",
                         "rms/test_plan_api_urls.py", "templates/rms/base.html",

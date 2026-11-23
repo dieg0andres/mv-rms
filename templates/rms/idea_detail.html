@@ -3,7 +3,7 @@
 {% block content %}
 <p class="notice"><strong>Synthetic-only record.</strong> Workflow intake is not validation, test approval, or trading approval.</p><h1>Idea detail</h1>
 <section class="card"><dl><dt>Stable Idea ID</dt><dd><code>{{ detail.idea_id }}</code></dd><dt>Latest immutable version ID</dt><dd><code>{{ detail.latest_idea_version_id }}</code></dd><dt>Latest version</dt><dd>{{ detail.latest_version }}</dd></dl></section>
-<p><a href="/ideas/{{ detail.idea_id }}/history">Idea version history</a>{% if can_edit %} · <a href="/ideas/{{ detail.idea_id }}/correct">Revise idea</a> · <a href="/hypotheses/new?idea_id={{ detail.idea_id }}&amp;idea_version={{ detail.latest_version }}">Create hypothesis from Idea v{{ detail.latest_version }}</a>{% endif %}</p>
+<p><a href="/ideas/{{ detail.idea_id }}/history">Idea version history</a> · <a href="{% url 'rms-intake' detail.idea_id %}">Screening and prior research</a>{% if can_edit %} · <a href="/ideas/{{ detail.idea_id }}/correct">Revise idea</a>{% if screened == False %} · <a href="/hypotheses/new?idea_id={{ detail.idea_id }}&amp;idea_version={{ detail.latest_version }}">Open legacy hypothesis draft for Idea v{{ detail.latest_version }}</a>{% endif %}{% endif %}</p>
 {% include "rms/includes/idea_version.html" with version=detail.latest only %}
 <p><a href="/idea-family-associations?idea_version_id={{ detail.latest.idea_version_id|urlencode }}">Inspect classification for exact Idea v{{ detail.latest_version }}</a></p>
 <h2>Linked Hypotheses</h2>

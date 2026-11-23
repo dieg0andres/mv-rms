@@ -10,6 +10,8 @@ from .hypothesis_models import (
 )
 from .hypothesis_validation import draft_completeness
 from .models import IdeaVersion
+from .intake_models import IntakeHypothesisBinding
+from .intake_services import authorize_hypothesis_intake
 from .research_context_common import (
     append, change_paths, check_expected, endpoint, envelope, execute_write,
     field_error, latest, paginated, record_links, require_actor, resolve, visible,
@@ -126,7 +128,9 @@ def hypothesis_read(item):
             if getattr(impact, f"newer_{kind}_id") is not None:
                 notices.append({"code": "review_needed", "pinned": endpoint(getattr(impact, f"pinned_{kind}")),
                                 "newer": endpoint(getattr(impact, f"newer_{kind}")), "impact_version_id": impact.public_id})
+    screening = IntakeHypothesisBinding.objects.filter(hypothesis_version=item).select_related("intake_version").first()
     return {
+        **({"intake_version_id": screening.intake_version.public_id} if screening else {}),
         **envelope(item), "hypothesis_id": item.record.public_id, "hypothesis_version_id": item.public_id,
         "status": "draft", "fields": item.fields, **draft_completeness(item.fields),
         "origin": {"idea": endpoint(origin.idea_version), "association": association_read(origin),
@@ -150,12 +154,25 @@ def hypothesis_read(item):
     }
 
 
+def _screening(actor, payload, predecessor=None):
+    idea, case, classified = resolve_context(payload)
+    intake = authorize_hypothesis_intake(actor=actor, version_id=payload.get("intake_version_id"),
+                                         idea=idea, case=case, binding=classified, predecessor=predecessor)
+    return idea, case, classified, intake
+
+
+def _bind_screening(item, intake):
+    if intake:
+        IntakeHypothesisBinding.objects.create(hypothesis_version=item, intake_version=intake)
+
+
 def create_hypothesis(*, actor, idempotency_key, payload):
     def operation(p):
-        idea, case, classified = resolve_context(p)
+        idea, case, classified, intake = _screening(actor, p)
         record = Hypothesis.objects.create()
         item = append(HypothesisVersion, actor=actor, record=record, fields=p["fields"])
         bind_context(actor=actor, payload=p, idea=idea, case=case, classified=classified, item=item)
+        _bind_screening(item, intake)
         record_initial_impacts(item, actor=actor)
         return 201, hypothesis_read(item)
     return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCreate", path="/api/v1/hypotheses", operation=operation)
@@ -165,7 +182,8 @@ def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
     def operation(p):
         record, old = latest(Hypothesis, hypothesis_id, lock=True)
         check_expected(record, p)
-        idea, case, classified = resolve_context(p)
+        idea, case, classified, intake = _screening(actor, p, old)
+        prior_intake = IntakeHypothesisBinding.objects.filter(hypothesis_version=old).first()
         old_origin = edge(old, "IdeaHypothesis")
         old_case = edge(old, "HypothesisInvestigation")
         changed = change_paths(old.fields, p["fields"], "/fields/")
@@ -174,6 +192,7 @@ def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
             ("origin_rationale", old_origin.rationale, p["origin_rationale"]),
             ("investigation_version_id", old_case.investigation_version_id, case.pk),
             ("idea_family_binding", old_origin.idea_family_version_id, classified.pk if classified else None),
+            ("intake_version_id", prior_intake.intake_version_id if prior_intake else None, intake.pk if intake else None),
         ):
             if before != after:
                 changed.append("/" + key)
@@ -182,6 +201,7 @@ def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
         item = append(HypothesisVersion, actor=actor, record=record, predecessor=old, fields=p["fields"],
                       correction_reason=p["correction_reason"], changed_fields=sorted(changed))
         bind_context(actor=actor, payload=p, idea=idea, case=case, classified=classified, item=item, predecessor=old)
+        _bind_screening(item, intake)
         record_initial_impacts(item, actor=actor)
         return 201, hypothesis_read(item)
     return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCorrection", path=f"/api/v1/hypotheses/{hypothesis_id}/corrections", operation=operation)

@@ -3,9 +3,15 @@
 from django.urls import include, path
 
 from rms import api, views
+from rms.intake_views import IntakeAPI, IntakePage
+from rms.stage_gate_views import StageGateAPI, StageGatePage
 
 
 urlpatterns = [
+    path("test-plans/<str:plan_id>/versions/<str:version_id>/synthetic-gates", StageGatePage.as_view(), name="rms-stage-gate"),
+    path("api/v1/test-plans/<str:plan_id>/versions/<str:version_id>/synthetic-gates", StageGateAPI.as_view(), name="rms-stage-gate-api"),
+    path("ideas/<str:idea_id>/intake", IntakePage.as_view(), name="rms-intake"),
+    path("api/v1/ideas/<str:idea_id>/intake", IntakeAPI.as_view(), name="rms-intake-api"),
     path("sources/new", views.SourceCreatePage.as_view(), name="source-create-page"),
     path(
         "sources/<str:source_id>/correct",
@@ -63,6 +69,8 @@ urlpatterns = [
         name="idea-history",
     ),
     path("api/v1/readiness", api.ReadinessView.as_view(), name="readiness"),
+    path("", include("rms.run_attempt_urls")),
+    path("", include("rms.run_workflow_urls")),
     path("api/v1/", include("rms.test_plan_api_urls")),
     path("", include("rms.test_plan_navigation_urls")),
     path("", include("rms.hypothesis_api_urls")),

@@ -95,8 +95,10 @@ class ContextSourceTests(DatabaseFreeCase):
             return {"IdeaHypothesis": origin, "HypothesisInvestigation": case_edge, "InvestigationFamily": self.family_edge, "PriorResearchInvestigation": assessment_edge}[kind]
         before = deepcopy(hyp.fields)
         with patch("rms.hypothesis_services.edge", side_effect=lookup), \
+             patch("rms.hypothesis_services.IntakeHypothesisBinding.objects.filter") as intake, \
              patch.object(IdeaVersion, "contributions", contributions), \
              patch.object(HypothesisVersion, "correction_impacts", impacts):
+            intake.return_value.select_related.return_value.first.return_value = None
             result = services.hypothesis_read(hyp)
             upstream = services.pinned_upstream(hyp)
         self.assertIn(("source", source), upstream)
@@ -139,9 +141,12 @@ class ContextSourceTests(DatabaseFreeCase):
         with patch("rms.hypothesis_services.execute_write", side_effect=execute), \
              patch("rms.hypothesis_services.latest", return_value=(hyp.record, hyp)), \
              patch("rms.hypothesis_services.resolve_context", return_value=(self.idea, self.case, self.classification)), \
+             patch("rms.hypothesis_services.authorize_hypothesis_intake", return_value=None), \
+             patch("rms.hypothesis_services.IntakeHypothesisBinding.objects.filter") as intake, \
              patch("rms.hypothesis_services.edge", side_effect=lambda item, kind: origin if kind == "IdeaHypothesis" else case_edge), \
              patch("rms.hypothesis_services.hypothesis_read", return_value={"version": 1}), \
              patch("rms.hypothesis_services.append") as append:
+            intake.return_value.first.return_value = None
             result = services.correct_hypothesis(actor=actor(), hypothesis_id=hyp.record.public_id, idempotency_key="invented", payload=payload)
         self.assertEqual(result, (200, {"version": 1}))
         append.assert_not_called()

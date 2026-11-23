@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 from django.apps import apps
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.db.migrations.loader import MigrationLoader
 from rms import staging_test_reset as reset
 from rms.management.commands import reset_rms_staging as command_module
 
@@ -77,9 +78,22 @@ class Cursor:
 
 
 class ResetTests(unittest.TestCase):
-    def test_allowlist_matches_actual_registered_product_models(self):
-        self.assertEqual({model._meta.db_table for model in apps.get_app_config('rms').get_models()}, set(reset.RMS_TABLES))
+    def test_allowlist_matches_the_last_schema_approved_for_reset(self):
+        approved = MigrationLoader(None).project_state([('rms', '0007_test_plan_history_guards')])
+        approved_tables = {model._meta.db_table for model in approved.apps.get_app_config('rms').get_models()}
+        self.assertEqual(approved_tables, set(reset.RMS_TABLES))
         self.assertEqual(len(reset.RMS_TABLES), 27)
+
+    def test_every_subsequent_product_table_blocks_the_legacy_reset(self):
+        current_tables = {model._meta.db_table for model in apps.get_app_config('rms').get_models()}
+        for new_table in sorted(current_tables.difference(reset.RMS_TABLES)):
+            with self.subTest(table=new_table):
+                cursor = Cursor()
+                cursor.present.add(new_table)
+                with self.assertRaisesRegex(reset.ResetRejected, 'unreviewed_rms_table'):
+                    reset.reset_in_transaction(cursor)
+                self.assertEqual(cursor.rows, 80)
+                self.assertFalse(any(sql.startswith(('ALTER TABLE', 'TRUNCATE TABLE')) for sql, _ in cursor.calls))
 
     def test_wrong_configurations_fail_before_connection(self):
         reset.validate_binding(SETTINGS, project='mv-rms-staging', container='mv-rms-staging-db-1')

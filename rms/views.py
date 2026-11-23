@@ -247,10 +247,13 @@ class IdeaDetailPage(RmsPage):
         from .navigation_views import (
             SchemaUnavailable, shared_service, selection_projection, service_failure,
         )
+        from .intake_services import has_screening_history
         context = {"detail": detail}
         try:
             listing = shared_service("hypothesis", "list", actor=request.user, query={"originating_idea_id": idea_id})
             context["hypotheses"] = selection_projection("hypothesis", listing)
+            if has_rms_write_access(request.user):
+                context["screened"] = has_screening_history(actor=request.user, idea_id=idea_id)
         except (SchemaUnavailable, DatabaseError):
             context["hypotheses_unavailable"] = True
         except ServiceError as error:

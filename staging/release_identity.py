@@ -15,20 +15,26 @@ ASSETS = {
     "/static/rms/test_plan.js": "text/javascript; charset=utf-8",
     "/static/rms/test_plan.css": "text/css; charset=utf-8",
 }
+RUN_WORKFLOW_ASSETS = {
+    "/static/rms/run_workflow.css": "text/css; charset=utf-8",
+    "/static/rms/run_workflow.js": "text/javascript; charset=utf-8",
+}
+ASSETS_BY_PACKAGE_VERSION = {2: ASSETS, 3: {**ASSETS, **RUN_WORKFLOW_ASSETS}}
 
 
 def validate_release(root, metadata):
     for key in ("commit", "tree"):
         if not isinstance(metadata.get(key), str) or not re.fullmatch(r"[0-9a-f]{40}", metadata[key]):
             raise ValueError("Invalid explicit release identity")
-    if metadata.get("package_version") == 2:
+    assets = ASSETS_BY_PACKAGE_VERSION.get(metadata.get("package_version"))
+    if assets is not None:
         if metadata.get("integrated_navigation") is not True:
             raise ValueError("Integrated navigation flag missing")
         release = Path(root) / "releases" / "product"
         inventory = metadata.get("file_sha256")
         if not isinstance(inventory, dict) or not inventory:
             raise ValueError("Product file inventory missing")
-        for required in ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py", *(url.lstrip("/") for url in ASSETS)):
+        for required in ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py", *(url.lstrip("/") for url in assets)):
             if required not in inventory:
                 raise ValueError("Integrated product input missing")
         for name, expected in inventory.items():
@@ -48,17 +54,20 @@ def validate_release(root, metadata):
 
 
 def version_page_requested(path, metadata):
-    return path == "/__staging/version" or (path == "/" and metadata.get("package_version") != 2)
+    return path == "/__staging/version" or (path == "/" and metadata.get("package_version") not in ASSETS_BY_PACKAGE_VERSION)
 
 
 def verified_asset(path, release, metadata):
-    if path not in ASSETS:
-        return None
+    assets = ASSETS_BY_PACKAGE_VERSION.get(metadata.get("package_version"))
     relative = path.lstrip("/")
-    expected = metadata.get("file_sha256", {}).get(relative) if metadata.get("package_version") == 2 else metadata.get("static_sha256") if path == "/static/rms/rms_forms.js" else None
+    if assets is None:
+        assets = {"/static/rms/rms_forms.js": ASSETS["/static/rms/rms_forms.js"]}
+        expected = metadata.get("static_sha256") if path in assets else None
+    else:
+        expected = metadata.get("file_sha256", {}).get(relative) if path in assets else None
     if expected is None:
         return None
     content = (Path(release) / relative).read_bytes()
     if sha256(content).hexdigest() != expected:
         raise ValueError("Static identity mismatch")
-    return content, ASSETS[path]
+    return content, assets[path]
