@@ -97,6 +97,8 @@ textarea { min-height: 6rem; resize: vertical; }
 .field p { margin: 0; }
 .required::after { content: " (required)"; font-weight: 400; }
 .actions, .record-links { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem 1rem; }
+.search-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); column-gap: 1.25rem; }
+.search-results { margin-top: 1.5rem; }
 .notice, .warning, .error { border-left: .25rem solid #477a73; border-radius: .25rem; background: #e3efe9; padding: .7rem 1rem; }
 .warning { border-color: #93660c; color: #593f0a; background: #fff2cf; }
 .error, .field-error { color: #86291d; }
