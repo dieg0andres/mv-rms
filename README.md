@@ -2,6 +2,14 @@
 
 RMS is a private, server-rendered workspace for tracing research records back to their sources and exact saved versions. The current release uses invented data. Paperclip manages the engineering work and founder decisions. Django and Django REST Framework serve the browser and API from the same permission-checked services. PostgreSQL stores the records and their history.
 
+## Project status
+
+| Workflow | Where to find it |
+| --- | --- |
+| Record a source, develop a hypothesis and write a versioned Test Plan | Available on `master`, with a responsive research workspace, exact-version search and case handoffs. [Test Plans](https://github.com/dieg0andres/mv-rms/pull/5) · [Workspace](https://github.com/dieg0andres/mv-rms/pull/7) · [Search and handoffs](https://github.com/dieg0andres/mv-rms/pull/8) |
+| Register attempts, record results and evidence, and review a research case | The integrated Runs and Results candidate is awaiting independent verification. Its pull request identifies the exact revision, regression results and release status. [Integrated workflow](https://github.com/dieg0andres/mv-rms/pull/20) |
+| Screen an invented idea, check authority to advance it, and reconcile exported evidence | These Stage 2 components have separate reviewed implementations. Combined workflow verification follows acceptance of Runs and Results. [Intake and screening](https://github.com/dieg0andres/mv-rms/pull/15) · [Stage gates](https://github.com/dieg0andres/mv-rms/pull/13) · [Evidence and recovery](https://github.com/dieg0andres/mv-rms/pull/17) |
+
 ## Using the workspace
 
 The [researcher walkthrough](docs/RESEARCHER-WALKTHROUGH.md) follows one invented case from its source file to its Test Plan, then through a failed attempt, a retry and a result correction on a build with Runs and Results.
