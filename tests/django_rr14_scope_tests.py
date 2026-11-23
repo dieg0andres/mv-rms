@@ -34,7 +34,7 @@ class RR14Scopes(AssuranceWorkflow, TestCase):
         self.principals = {}
         self.suffix = 'rr14-eng-' + uuid4().hex[:12]
         with self.fixture_recipe(self.suffix):
-            self.setup_workflow(self.suffix)
+            self.setup_workflow(self.suffix, seed_read_scope=False)
         self.scope_for(self.editor)
         self.reader = principal(self.suffix + '-reader')
         self.scope_for(self.reader)
@@ -95,8 +95,6 @@ class RR14Scopes(AssuranceWorkflow, TestCase):
             'expected_event_id': terminal['event_id'], 'reason': 'Invented RR14 retry',
         }).json()
         self.setup_assurance(self.suffix, attempt=retry['run_id'])
-        for actor in (self.reviewer, self.decider, self.lesson_author):
-            self.scope_for(actor)
         with self.configured():
             review, decision, lesson = self.chain()
             self.as_actor(self.editor)

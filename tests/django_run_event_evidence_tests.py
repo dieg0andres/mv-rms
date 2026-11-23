@@ -70,6 +70,7 @@ class RunEventEvidenceTests(Workflow, TestCase):
         self.assertNotContains(response, self.invented_file['content_base64'])
         viewer = User.objects.create_user('event-evidence-viewer')
         viewer.groups.add(Group.objects.get_or_create(name='founder_viewer')[0])
+        self.scope_for(viewer)
         self.client.force_authenticate(viewer)
         self.assertEqual(self.client.get(path).json(), report)
         preview = self.client.get(page)

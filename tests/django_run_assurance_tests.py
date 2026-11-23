@@ -41,6 +41,8 @@ class AssuranceWorkflow(Workflow):
         self.reviewer = principal(f'{suffix}-reviewer', 'editor')
         self.decider = principal(f'{suffix}-decider', 'editor')
         self.lesson_author = principal(f'{suffix}-lesson', 'editor')
+        for reader in (self.reviewer, self.decider, self.lesson_author):
+            self.scope_for(reader)
         self.bindings = {provenance_key(record): str(self.editor.pk) for record in design_records(self.result)}
         self.expires_at = now() + timedelta(hours=1)
         self.grants = {}
@@ -113,6 +115,7 @@ class AssuranceTests(AssuranceWorkflow, TestCase):
 
     def test_default_off_and_effective_exact_scope_independence(self):
         viewer = principal('ordinary-viewer')
+        self.scope_for(viewer)
         outsider = principal('unbound-staff', None)
         User.objects.filter(pk=outsider.pk).update(is_staff=True, is_superuser=True)
         outsider.refresh_from_db()
@@ -167,6 +170,8 @@ class AssuranceTests(AssuranceWorkflow, TestCase):
         dual = principal('read-only-even-with-editor', 'editor')
         dual.groups.add(Group.objects.get(name='founder_viewer'))
         unrelated = principal('unrelated-non-contributor', 'editor')
+        for reader in (viewer, dual, unrelated):
+            self.scope_for(reader)
         with self.configured():
             review, decision, lesson = self.chain()
             originals = (
@@ -210,6 +215,7 @@ class AssuranceTests(AssuranceWorkflow, TestCase):
 
     def test_wrong_or_malformed_grants_are_denied(self):
         actor = principal('invalid-grants', 'editor')
+        self.scope_for(actor)
         self.as_actor(actor)
         key = grant_key(actor, self.result, 'review')
         actor_id, result_id, digest, _ = key
@@ -271,7 +277,9 @@ class AssuranceTests(AssuranceWorkflow, TestCase):
             payload = self.result_payload(self.run, self.completed)
             payload.update(expected_result_version_id=self.result.public_id, correction_reason='Invented better summary')
             other = self.post(self.result_base, 'result-2', payload).json()['result_version_id']
-            self.as_actor(principal('historical-reader'))
+            historical_reader = principal('historical-reader')
+            self.scope_for(historical_reader)
+            self.as_actor(historical_reader)
             self.assertEqual(self.context()['available_actions'], [])
             for kind, identity_key, row in (('reviews', 'review_id', review), ('decisions', 'decision_id', decision),
                                             ('lessons', 'lesson_id', lesson)):
@@ -342,6 +350,7 @@ class AssuranceRetryTests(AssuranceWorkflow, TestCase):
         self.setup_workflow('retry-contributor')
         run = self.register()
         contributor = principal('ancestry-editor', 'editor')
+        self.scope_for(contributor)
         self.as_actor(contributor)
         terminal = self.event(run, 'failed', None)['event_id']
         self.as_actor(self.editor)

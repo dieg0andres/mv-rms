@@ -84,14 +84,12 @@ class ClassificationReaderCorrections(DatabaseFreeCase):
         self.second.correction_reason = "Explain the reclassification"
 
     def test_current_exact_and_history_serialize_distinct_immutable_versions(self):
-        def latest(model, identity, *, version=None):
-            return self.record, self.first if version == 1 else self.second
-        visible = Mock()
-        visible.filter.return_value.order_by.return_value = [self.first, self.second]
-        with patch.object(context, "latest", side_effect=latest), \
-             patch.object(context, "resolve"), \
-             patch.object(context, "visible", return_value=visible), \
-             patch.object(ResearchAssociation.objects, "get", return_value=self.first):
+        scope = Mock(spec=context.ReadScope)
+        scope.exact.side_effect = lambda model, identity, version: self.first if version == 1 else self.second
+        versions = scope.classifications.return_value
+        versions.filter.return_value.order_by.return_value = [self.first, self.second]
+        scope.versions.return_value.values_list.return_value.first.return_value = self.first.public_id
+        with patch.object(context, "ReadScope", return_value=scope), patch.object(context, "resolve"):
             current = context.get_idea_family_association(actor=actor(False), association_id=self.record.public_id)
             exact = context.get_idea_family_association(actor=actor(False), association_id=self.record.public_id, version=1)
             history = context.get_idea_family_association_history(actor=actor(False), association_id=self.record.public_id)
@@ -102,8 +100,9 @@ class ClassificationReaderCorrections(DatabaseFreeCase):
         self.assertEqual(history["results"][1]["correction_reason"], "Explain the reclassification")
         self.assertEqual(current["supersedes_version_id"], "IFAV-first")
         self.assertEqual(exact["links"]["self"], "/api/v1/idea-family-associations/IFA-invented/versions/1")
-        visible.filter.assert_called_once_with(record=self.record)
-        visible.filter.return_value.order_by.assert_called_once_with("version")
+        versions.filter.assert_called_once_with(record__public_id=self.record.public_id)
+        versions.filter.return_value.order_by.assert_called_once_with("version")
+        scope.exact.assert_any_call(ResearchAssociationIdentity, self.record.public_id, 1)
 
     def test_lookup_by_exact_idea_returns_current_assignment(self):
         qs = Mock()
@@ -137,15 +136,19 @@ class ClassificationReaderCorrections(DatabaseFreeCase):
         with patch.object(context, "resolve", return_value=self.idea), patch.object(context, "visible", return_value=qs):
             with self.assertRaises(ResourceNotFound):
                 context.get_idea_family_for_idea(actor=actor(False), idea_version_id=self.idea.idea_version_id)
-        with patch.object(context, "latest", side_effect=ResourceNotFound):
+        scope = Mock(spec=context.ReadScope)
+        scope.exact.side_effect = ResourceNotFound
+        with patch.object(context, "ReadScope", return_value=scope):
             with self.assertRaises(ResourceNotFound):
                 context.get_idea_family_association(actor=actor(False), association_id="hidden")
-        with patch.object(context, "latest", return_value=(self.record, self.first)), \
+        scope.exact.side_effect = None
+        scope.exact.return_value = self.first
+        with patch.object(context, "ReadScope", return_value=scope), \
              patch.object(context, "resolve", side_effect=ResourceNotFound):
             with self.assertRaises(ResourceNotFound):
                 context.get_idea_family_association(actor=actor(False), association_id=self.record.public_id)
         self.first.kind = "AssessmentRecord"
-        with patch.object(context, "latest", return_value=(self.record, self.first)):
+        with patch.object(context, "ReadScope", return_value=scope):
             with self.assertRaises(ResourceNotFound):
                 context.get_idea_family_association(actor=actor(False), association_id=self.record.public_id)
 
@@ -242,7 +245,8 @@ class AssessmentSealCorrections(DatabaseFreeCase):
         assessment_edge = version(ResearchAssociation, ResearchAssociationIdentity(), "RASV-assessment", kind="PriorResearchInvestigation", assessment_version=self.item, investigation_version=case)
         with patch.object(context, "edge", side_effect=lambda item, kind: family_edge if kind == "InvestigationFamily" else assessment_edge):
             old_case_before = context.investigation_read(case)
-            with patch.object(PriorResearchAssessmentVersion.objects, "get", return_value=self.item):
+            with patch.object(PriorResearchAssessmentVersion.objects, "filter") as predecessor:
+                predecessor.return_value.values_list.return_value.first.return_value = self.item.public_id
                 self.external.reference, self.external.position = newer_links[0]["reference"], 1
                 self.external.assessment_version = newer
                 self.external_manager.order_by.return_value = [self.external]
