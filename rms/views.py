@@ -93,7 +93,7 @@ class RmsPage(APIView):
                 else:
                     role = "founder_viewer"
             section = "home"
-            for prefix, key in (("/sources", "sources"), ("/ideas", "ideas"), ("/hypotheses", "hypotheses"), ("/research-context", "context"), ("/research-families", "context"), ("/investigations", "context"), ("/prior-research-assessments", "context"), ("/idea-family-associations", "context")):
+            for prefix, key in (("/search", "search"), ("/sources", "sources"), ("/ideas", "ideas"), ("/hypotheses", "hypotheses"), ("/test-plans", "test-plans"), ("/research-context", "context"), ("/research-families", "context"), ("/investigations", "context"), ("/prior-research-assessments", "context"), ("/idea-family-associations", "context")):
                 if request.path == prefix or request.path.startswith(prefix + "/"):
                     section = key
                     break

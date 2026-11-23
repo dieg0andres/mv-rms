@@ -6,6 +6,8 @@ RMS is a private, server-rendered workspace for tracing research records back to
 
 - **Home** shows the collections available to the signed-in user. Select a count to browse a collection or open the exact version of its latest addition. An unavailable count means the reader could not establish a total.
 - **Sources and Ideas** capture citations, rights notes, proposed mechanisms, and each source version's contribution to an idea. Corrections retain their predecessors.
+- **Search records** finds permitted metadata and record IDs across six collections. Select a collection or include earlier versions to locate a correction. Each result opens the exact saved version. Search terms travel in the form body.
+- **Research cases** show their recorded owner, next action, and blocker on the overview and in the collection. The overview includes the latest case's revision time.
 - **Research context and Hypotheses** connect an idea to a family, an investigation, and a manual prior-research assessment. A hypothesis retains its originating versions when those records change.
 - **Test Plans** open from an exact hypothesis version. An editor can save an incomplete strategy specification, define a baseline and variations, record evaluation criteria and data requirements, and associate externally performed data checks. Historical definitions remain accessible.
 - **Access** is enforced by the server. Editors can create and revise permitted records. Founder viewers can inspect them. The workspace details disclose the installed application commit.

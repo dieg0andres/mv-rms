@@ -14,6 +14,7 @@
   <p><a href="{{ record.links.selected_version }}">Open exact version {{ record.latest_version }}</a> · <a href="{{ record.links.history }}">View saved history</a></p>
 {% else %}
   <a href="{{ record.browser_url }}">{% firstof record.fields.title record.fields.name %}</a><br><code>{% firstof record.hypothesis_id record.family_id record.investigation_id %}</code> · Version {{ record.version }}<br>{% firstof record.status record.state "Unknown state" %}{% if record.draft_completeness == "complete" %} · Draft complete{% elif record.draft_completeness == "incomplete" %} · Draft incomplete{% endif %}
+  {% if collection.kind == "case" %}{% include "rms/includes/case_handoff.html" with fields=record.fields %}{% endif %}
 {% endif %}
 </li>{% empty %}<li>{% if collection.listing.count == 0 %}No permitted saved records.{% else %}No permitted records on this page.{% endif %}</li>{% endfor %}</ul>
 <nav aria-label="{{ collection.resource.label }} pages">{% if collection.listing.previous %}<a href="{{ collection.listing.previous }}">Previous page</a>{% endif %} {% if collection.listing.next %}<a href="{{ collection.listing.next }}">Next page</a>{% endif %}</nav>
