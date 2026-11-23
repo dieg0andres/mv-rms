@@ -1,6 +1,7 @@
 """Prepared browser routes; Director owns registration in the project URLconf."""
 
 from django.urls import path
+from .search_views import RecordSearchPage
 
 from .navigation_views import (
     HypothesisDraftPreviewPage, NavigationPage, RecordDetailPage,
@@ -10,6 +11,7 @@ from .navigation_views import (
 
 urlpatterns = [
     path("", NavigationPage.as_view(section="home"), name="rms-home"),
+    path("search", RecordSearchPage.as_view(), name="rms-record-search"),
     path("sources", NavigationPage.as_view(section="sources"), name="rms-sources"),
     path("ideas", NavigationPage.as_view(section="ideas"), name="rms-ideas"),
     path("hypotheses", NavigationPage.as_view(section="hypotheses"), name="rms-hypotheses"),

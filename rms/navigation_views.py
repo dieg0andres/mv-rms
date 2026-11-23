@@ -19,6 +19,7 @@ from .permissions import has_rms_write_access
 from django.conf import settings
 
 from django.template.response import TemplateResponse
+from django.utils.dateparse import parse_datetime
 
 from .views import RmsPage
 from .api import PUBLIC_ID_RE, SOURCE_ID_RE
@@ -26,6 +27,7 @@ from .api import PUBLIC_ID_RE, SOURCE_ID_RE
 
 NAVIGATION = (
     ("home", "Home", "/"),
+    ("search", "Search records", "/search"),
     ("sources", "Sources", "/sources"),
     ("ideas", "Ideas", "/ideas"),
     ("hypotheses", "Hypotheses", "/hypotheses"),
@@ -319,6 +321,11 @@ class NavigationPage(RmsPage):
                         "collection": item["label"], "title": title or "Untitled record",
                         "url": url, "version": version,
                     })
+                    if kind == "case":
+                        context["latest_case"] = {
+                            "title": title, "url": url, "fields": record["fields"],
+                            "recorded": parse_datetime(record["recorded_at"]) if record.get("recorded_at") else None,
+                        }
             except (SchemaUnavailable, DatabaseError):
                 pass
             except ServiceError as error:
