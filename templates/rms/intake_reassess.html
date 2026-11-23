@@ -1,0 +1,7 @@
+{% extends "rms/base.html" %}
+{% block title %}Reassessment required — RMS{% endblock %}
+{% block content %}
+<h1>Reassessment required</h1>
+<p>The exact screening inputs are not available for drafting.</p>
+<p><a href="{% url 'rms-intake' idea_id %}">Return to screening and reassess</a></p>
+{% endblock %}

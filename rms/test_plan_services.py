@@ -9,6 +9,7 @@ from .test_plan_validation import validate_json_size, validate_request, draft_co
 from .hypothesis_models import HypothesisVersion, Hypothesis, Investigation
 from .research_context_services import edge
 from .hypothesis_services import hypothesis_read
+from .intake_services import check_plan_intake
 from .research_context_common import require_actor, resolve as resolve_hn, wire, lock_lineage, StaleVersion
 from .models import IdempotencyRecord
 from .services import canonical_json_bytes, _lock_idempotency_key, _replay_or_conflict, ResourceNotFound, StoredResponse
@@ -162,6 +163,7 @@ def _save(p,actor,plan,hyp,inputs,old=None):
 def create_test_plan(*,actor,idempotency_key,payload):
     def operation(p):
         hyp=resolve_hn(HypothesisVersion,p['hypothesis_version_id'])
+        check_plan_intake(actor=actor,hypothesis=hyp)
         inputs=_child_inputs(p,None)
         plan=m.TestPlan.objects.create()
         item=_save(p,actor,plan,hyp,inputs)
@@ -174,6 +176,7 @@ def correct_test_plan(*,actor,plan_id,idempotency_key,payload):
         plan,old=_head(plan_id,True)
         if plan.latest_version!=p['expected_latest_version']: raise StaleVersion
         hyp=resolve_hn(HypothesisVersion,p['hypothesis_version_id'])
+        check_plan_intake(actor=actor,hypothesis=hyp)
         if hyp.record_id!=_hypothesis(old).record_id: _error('/hypothesis_version_id','different_hypothesis')
         if hyp.version<_hypothesis(old).version: _error('/hypothesis_version_id','older_hypothesis')
         inputs=_child_inputs(p,old)
@@ -271,6 +274,7 @@ def record_data_access_check(*,actor,plan_id,idempotency_key,payload):
     def operation(p):
         plan,_=_head(plan_id,True)
         version=_get(m.TestPlanVersion,p['plan_version_id'],record=plan)
+        check_plan_intake(actor=actor,hypothesis=_hypothesis(version))
         requirement=_get(m.DataRequirementVersion,p['data_requirement_version_id'])
         if not _edges(version,'PlanDataRequirement').filter(data_requirement_version=requirement).exists(): _error('/data_requirement_version_id','not_associated')
         config=next((x for x in version.configurations if x['key']==p['configuration_key']),None)

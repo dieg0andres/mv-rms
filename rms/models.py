@@ -311,3 +311,7 @@ from .test_plan_models import (  # noqa: E402,F401
     TestPlan, TestPlanVersion, CriterionProfile, CriterionProfileVersion,
     DataRequirement, DataRequirementVersion, TestPlanAssociation, DataAccessCheck,
 )
+
+from .intake_models import (  # noqa: E402,F401
+    IntakeHypothesisBinding, IntakeSourceAssessment, ResearchIntake, ResearchIntakeVersion,
+)
