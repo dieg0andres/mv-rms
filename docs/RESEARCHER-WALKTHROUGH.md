@@ -10,6 +10,12 @@ Use this walkthrough in a workspace authorized for invented records. The example
 4. Create a hypothesis from the saved idea and select the exact case and family association. Describe a measurable claim, a competing explanation, and an observation that would falsify the claim. Save the hypothesis and inspect the source and case versions it cites.
 5. Open that hypothesis version and create a **Strategy Specification and Test Plan**. Define the baseline, any individually named variations, the data requirements and the criteria you will use to interpret a result. Record which criteria are mandatory. You can save an incomplete draft and return to its missing fields. For an externally performed data check, record the exact requirement, configuration, observed outcome and limitations.
 
+## Correct a Family or reclassify an Idea
+
+If the definition of a research Family changes, open its current detail page and choose **Revise research family**. Update the definition, describe why it changed, and choose **Save revision**. Open **Version history** to compare the revised Family with the definition an earlier case cited.
+
+If Bluebird belongs to a different Family, open its Idea history. On the version you intend to reclassify, choose **Inspect classification for exact Idea**, then **Revise classification with a reason**. Select the replacement Family version, explain why Bluebird belongs there, and give the reason for correcting the earlier assignment. Choose **Save revision**. In **Classification history**, the original entry points to the first Family and its successor points to the replacement. Existing Hypotheses retain the classification version they cited.
+
 ## Record an attempt and interpret its outcome
 
 This section applies when the saved Test Plan offers **Runs and Results for this exact version**. A registration records externally reported activity. The example uses invented values throughout.
