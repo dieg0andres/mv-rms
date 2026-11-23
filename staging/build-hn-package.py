@@ -10,7 +10,7 @@ import re
 import subprocess
 import tarfile
 
-from release_identity import ASSETS
+from release_identity import ASSETS_BY_PACKAGE_VERSION
 
 
 def git(*args):
@@ -20,7 +20,7 @@ def git(*args):
 def build(output, commit, tree, *,
           manifest_path="docs/RMS-HN-INTEGRATED-SOURCE-MANIFEST.json",
           summary="Hypothesis drafts and navigation; invented software records only.",
-          extra_required=()):
+          extra_required=(), package_version=2):
     if not all(re.fullmatch(r"[0-9a-f]{40}", value) for value in (commit, tree)):
         raise ValueError("Supply full reviewed commit and tree identities")
     if git("rev-parse", commit + "^{tree}").decode().strip() != tree:
@@ -39,7 +39,7 @@ def build(output, commit, tree, *,
                 raise ValueError("Unsupported product archive member")
             files[member.name] = contents.extractfile(member).read()
     required_paths = ("rms_project/urls.py", "rms/navigation_urls.py", "rms/hypothesis_api_urls.py",
-                      *extra_required, *(url.lstrip("/") for url in ASSETS))
+                      *extra_required, *(url.lstrip("/") for url in ASSETS_BY_PACKAGE_VERSION[package_version]))
     for required in required_paths:
         if required not in files:
             raise ValueError("Integrated product input missing")
@@ -58,7 +58,7 @@ def build(output, commit, tree, *,
         manifest_bytes = json.dumps(file_sha256, sort_keys=True, separators=(",", ":")).encode()
     recipe = {name: files["staging/" + name] for name in ("compose.yaml", "entrypoint.sh", "requirements-staging.lock", "runtime.py", "request_policy.py", "release_identity.py", "create-principals.py", "README.md")}
     recipe["Dockerfile"] = files["staging/Dockerfile.hn"]
-    metadata = {"package_version": 2, "integrated_navigation": True, "commit": commit, "tree": tree,
+    metadata = {"package_version": package_version, "integrated_navigation": True, "commit": commit, "tree": tree,
                 "summary": summary,
                 "source_manifest_sha256": sha256(manifest_bytes).hexdigest(),
                 "file_sha256": file_sha256}

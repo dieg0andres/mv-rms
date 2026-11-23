@@ -1,0 +1,59 @@
+{% extends "rms/base.html" %}
+{% block title %}Synthetic result version — RMS{% endblock %}
+{% block content %}
+<article class="run-record">
+  <p><a href="{{ scope.attempt_url }}">Run attempt and result history</a> · <a href="{{ scope.plan_url }}">Exact Test Plan definition</a></p>
+  <h1>Synthetic result version {{ result.number }}</h1>
+  <p class="notice">Invented evidence only. This record does not confer approval, validation credit, or qualification.</p>
+  {% if not result.current %}<p class="warning">Historical result. This is not the current result version.</p>{% endif %}
+  <dl>
+    <dt>Exact result version</dt><dd><code>{{ result.id }}</code></dd>
+    <dt>Run attempt</dt><dd><code>{{ scope.run_id }}</code></dd>
+    <dt>Exact Test Plan version</dt><dd><code>{{ scope.plan_version_id }}</code></dd>
+    <dt>Execution state</dt><dd>{{ execution_state|default:"Not reported" }}</dd>
+    <dt>Research outcome</dt><dd>{{ result.outcome|default:"Not determined" }}</dd>
+    {% if result.completed_event_id %}<dt>Exact completion event</dt><dd><code>{{ result.completed_event_id }}</code></dd>{% endif %}
+    {% if result.digest %}<dt>Result digest</dt><dd><code>{{ result.digest }}</code></dd>{% endif %}
+    <dt>Recorded by</dt><dd>{{ result.recorded_by }}</dd>
+    <dt>Recorded at</dt><dd><time datetime="{{ result.recorded_at }}">{{ result.recorded_at }}</time></dd>
+    {% if result.corrects %}
+      <dt>Corrects exact version</dt><dd><a href="{{ result.corrects.url }}"><code>{{ result.corrects.id }}</code></a></dd>
+      <dt>Correction reason</dt><dd class="run-reported-text">{{ result.correction_reason }}</dd>
+    {% endif %}
+  </dl>
+  {% if result.explanation %}<p class="run-reported-text">{{ result.explanation }}</p>{% endif %}
+  <section class="card" aria-labelledby="criteria-heading">
+    <h2 id="criteria-heading">Predefined criteria assessments</h2>
+    {% for criterion in criteria %}
+      <h3>{{ criterion.label }}</h3>
+      <dl>
+        <dt>Exact criterion version</dt><dd><code>{{ criterion.id }}</code></dd>
+        <dt>Requirement</dt><dd>{{ criterion.requirement }}</dd>
+        <dt>Assessment</dt><dd>{{ criterion.outcome|default:"Not assessed" }}</dd>
+        {% if criterion.observation != None %}<dt>Observation</dt><dd>{{ criterion.observation }}</dd>{% endif %}
+        <dt>Explanation</dt><dd class="run-reported-text">{{ criterion.explanation|default:"Not supplied" }}</dd>
+      </dl>
+    {% empty %}<p>No criterion assessments were recorded for this result version.</p>{% endfor %}
+  </section>
+  <section class="card" aria-labelledby="evidence-heading">
+    <h2 id="evidence-heading">Evidence for this exact result version</h2>
+    {% for artifact in artifacts %}
+      <h3>{{ artifact.label }}</h3>
+      <dl>
+        {% if artifact.id %}<dt>Artifact</dt><dd><code>{{ artifact.id }}</code></dd>{% endif %}
+        <dt>Provenance</dt><dd class="run-reported-text">{{ artifact.provenance|default:"Not supplied" }}</dd>
+        {% if artifact.reporter %}<dt>Reported by</dt><dd>{{ artifact.reporter }}</dd>{% endif %}
+        {% if artifact.integrity %}<dt>Integrity scope</dt><dd>{{ artifact.integrity }}</dd>{% endif %}
+        {% if artifact.manifest_digest %}<dt>Manifest digest</dt><dd><code>{{ artifact.manifest_digest }}</code></dd>{% endif %}
+        <dt>SHA-256</dt><dd><code>{{ artifact.sha256|default:"Not supplied" }}</code></dd>
+        <dt>Bytes</dt><dd>{{ artifact.byte_length|default_if_none:"Unknown" }}</dd>
+      </dl>
+    {% empty %}<p>No artifacts were recorded for this result version.</p>{% endfor %}
+  </section>
+  <section class="card" aria-labelledby="review-heading">
+    <h2 id="review-heading">Independent review, disposition and lessons</h2>
+    <p><a href="{{ assurance_url }}">Open assurance for this exact result version</a></p>
+  </section>
+</article>
+{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="/static/rms/run_workflow.css">{% endblock %}

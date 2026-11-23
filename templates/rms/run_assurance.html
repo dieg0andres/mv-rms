@@ -1,0 +1,48 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ title }} — RMS{% endblock %}
+{% block content %}
+<article class="run-record">
+  <p><a href="{{ scope.result_url }}">Exact result version and evidence</a>{% if not groups %} · <a href="{{ scope.assurance_url }}">Assurance overview</a>{% endif %}</p>
+  <h1>{{ title }}</h1>
+  <p class="notice">Invented records only. These records do not grant approval or count as validation or qualification.</p>
+  <dl>
+    <dt>Exact Test Plan version</dt><dd><code>{{ scope.plan_version_id }}</code></dd>
+    <dt>Run attempt</dt><dd><code>{{ scope.run_id }}</code></dd>
+    <dt>Exact result version</dt><dd><code>{{ scope.result_id }}</code></dd>
+  </dl>
+  {% if historical %}<p class="warning">Historical result. Earlier records remain visible; they do not authorize new reliance.</p>{% endif %}
+  {% if groups %}
+    {% for group in groups %}
+      <section class="card" aria-labelledby="assurance-{{ forloop.counter }}">
+        <h2 id="assurance-{{ forloop.counter }}">{{ group.label }}</h2>
+        <p><a href="{{ group.history_url }}">{{ group.label }} history</a></p>
+        {% if group.action_url %}<p><a href="{{ group.action_url }}">{{ group.action_label }}</a></p>{% endif %}
+      </section>
+    {% endfor %}
+  {% elif listing %}
+    {% if rows %}
+      <ol>{% for row in rows %}
+        <li><a href="{{ row.url }}"><code>{{ row.id }}</code></a> · {% if row.current %}Current{% else %}Historical{% endif %} · {{ row.recorded_by }} · <time datetime="{{ row.recorded_at }}">{{ row.recorded_at }}</time></li>
+      {% endfor %}</ol>
+    {% elif previous_offset != None %}<p>No records on this page.</p>
+    {% else %}<p>No records for this exact result version.</p>{% endif %}
+    {% if previous_offset != None %}<a href="?offset={{ previous_offset }}">Previous records</a>{% endif %}
+    {% if next_offset != None %}<a href="?offset={{ next_offset }}">More records</a>{% endif %}
+  {% elif record %}
+    <p><a href="{{ history_url }}">Back to {{ title|lower }} history</a></p>
+    <dl>
+      <dt>Exact record</dt><dd><code>{{ record_id }}</code></dd>
+      <dt>History status</dt><dd>{% if record.current %}Current{% else %}Historical — not available for new reliance{% endif %}</dd>
+      <dt>Recorded by</dt><dd>{{ record.recorded_by }} (actor <code>{{ record.actor_id }}</code>)</dd>
+      <dt>Recorded at</dt><dd><time datetime="{{ record.recorded_at }}">{{ record.recorded_at }}</time></dd>
+      <dt>Result digest</dt><dd><code>{{ record.result_digest }}</code></dd>
+      <dt>Artifact manifest digest</dt><dd><code>{{ record.artifact_manifest_digest }}</code></dd>
+      <dt>Assurance record digest</dt><dd><code>{{ record.row_digest }}</code></dd>
+      {% for label, value in values %}<dt>{{ label }}</dt><dd class="run-reported-text">{{ value }}</dd>{% endfor %}
+      {% if record.correction_reason %}<dt>Correction reason</dt><dd class="run-reported-text">{{ record.correction_reason }}</dd>{% endif %}
+      {% for link in links %}<dt>{{ link.label }}</dt><dd><a href="{{ link.url }}"><code>{{ link.id }}</code></a></dd>{% endfor %}
+    </dl>
+  {% endif %}
+</article>
+{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="/static/rms/run_workflow.css">{% endblock %}
