@@ -37,7 +37,7 @@ NAVIGATION = (
 
 SCHEMA_COMMIT = "aab6d6dfde13fe03f184292f197ed3a56ce00b9d"
 SCHEMA_PATH = "rms/hypothesis_schema.json"
-SCHEMA_SHA256 = "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea"
+SCHEMA_SHA256 = "ff42df2fa14de46e587783a662e719f83e7ae85adac1f7eb794f29140bfbae81"
 
 HYPOTHESIS_GROUPS = (
     ("Claim and rationale", ("title", "claim", "claim_basis", "economic_rationale", "expected_opportunity", "persistence_argument", "competing_explanations", "falsification_condition")),
@@ -539,6 +539,8 @@ def revision_snapshot(kind, record):
     payload = {"fields": deepcopy(record["fields"]), "expected_latest_version": record["version"], "correction_reason": ""}
     if kind == "hypothesis":
         payload.update({"originating_idea_version_id": record["origin"]["idea"]["version_id"], "origin_rationale": record["origin"]["association"]["rationale"], "investigation_version_id": record["research_context"]["investigation"]["version_id"], "idea_family_binding": {"mode": "existing", "association_version_id": record["research_context"]["idea_family_association"]["version_id"]}})
+        if record.get("intake_version_id"):
+            payload["intake_version_id"] = record["intake_version_id"]
     elif kind == "case":
         payload.update({"family_version_id": record["family"]["version_id"], "prior_research_assessment": {"mode": "existing", "assessment_version_id": record["prior_research_assessment"]["assessment_version_id"]}})
     return payload
@@ -722,6 +724,11 @@ class RecordEditorPage(ConnectedPage):
                 if idea is None:
                     raise ResourceNotFound
                 submitted["/originating_idea_version_id"] = idea["idea_version_id"]
+                if request.query_params.get("intake_version_id"):
+                    for key in ("intake_version_id", "investigation_version_id"):
+                        submitted["/" + key] = request.query_params.get(key, "")
+                    submitted["/idea_family_binding/mode"] = "existing"
+                    submitted["/idea_family_binding/association_version_id"] = request.query_params.get("family_binding_version_id", "")
             return self.render_form(request, schema, submitted, record_id=record_id, idea=idea, classification=classification)
         except (SchemaUnavailable, DatabaseError):
             return TemplateResponse(request._request, "rms/service_unavailable.html", live_context(self, request), status=503)

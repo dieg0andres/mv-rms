@@ -1,0 +1,37 @@
+{% extends "rms/base.html" %}
+{% block title %}Synthetic screening — RMS{% endblock %}
+{% block content %}
+<h1>Synthetic Idea screening</h1>
+<p><a href="{% url 'idea-detail-page' idea_id %}">Back to Idea</a> · <a href="/research-context">Open families and research cases</a></p>
+<p>Use invented evidence only. A ready assessment permits hypothesis drafting, not dispatch, validation, distinctness approval, or research credit.</p>
+{% if form %}
+<p>Exact Idea version: <code>{{ exact_idea_version_id }}</code>.</p>
+<p><a href="{% url 'rms-intake' idea_id %}">Assess for intake</a> · <a href="?outcome=early_closed">Record early closure</a></p>
+{% if outcome == 'early_closed' or can_assess %}
+<p>For intake, copy the exact family and case versions. The case holds the manual prior-research query and result record. Enter a correction reason when revising history.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save {{ outcome|cut:'_' }} screening record</button></form>
+{% else %}<p>Assessment is unavailable because exact source or fixture-rights inputs are missing or stale. You can still record an early closure.</p>{% endif %}
+{% endif %}
+<h2>Immutable screening history</h2>
+{% for item in history.results %}
+<section class="card">
+<h3>Version {{ item.version }}: {{ item.state }} · No research credit</h3>
+<p><code>{{ item.version_id }}</code> · {{ item.created_by }} · {{ item.recorded_at }}</p>
+<p>Family <a href="{% url 'rms-family-version' item.family.stable_id item.family.version %}">{{ item.family.version_id }}</a> · Idea <code>{{ item.idea.version_id }}</code></p>
+{% if item.investigation %}
+<p>Case <a href="{% url 'rms-case-version' item.investigation.stable_id item.investigation.version %}">{{ item.investigation.version_id }}</a> · <a href="{% url 'rms-assessment-version' item.prior_research.stable_id item.prior_research.version %}">Exact manual prior-research assessment</a></p>
+{% if form and item.version == history.latest_version and can_assess %}
+<p><a href="{% url 'rms-hypothesis-create' %}?idea_id={{ idea_id|urlencode }}&amp;idea_version={{ item.idea.version }}&amp;intake_version_id={{ item.version_id|urlencode }}&amp;investigation_version_id={{ item.investigation.version_id|urlencode }}&amp;family_binding_version_id={{ item.family_binding.version_id|urlencode }}">Draft hypothesis with this exact intake</a></p>
+{% endif %}
+{% endif %}
+{% if item.correction_reason %}<p>Correction of v{{ item.corrects_version }}: {{ item.correction_reason }}</p>{% endif %}
+<p>Distinctness classification: {{ item.fields.distinctness }}. {{ item.fields.family_rationale }}</p>
+<dl>{% for key, value in item.fields.priority.items %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endfor %}{% for key, value in item.fields.closure.items %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+{% for assessment in item.source_assessments %}
+<h4>Source assessment: {{ assessment.source.version_id }}</h4><p>Assessed under {{ assessment.rights_reference }} · {{ assessment.assessment_version_id }}</p>
+<dl>{% for key, value in assessment.fields.items %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+{% endfor %}
+{% for hypothesis in item.downstream_hypotheses %}<p>Exact downstream <a href="{% url 'rms-hypothesis-version' hypothesis.stable_id hypothesis.version %}">{{ hypothesis.version_id }}</a>{% if item.version != history.latest_version %} · Pinned to superseded screening; rebind before progression{% endif %}.</p>{% endfor %}
+</section>
+{% empty %}<p>No screening history yet.</p>{% endfor %}
+{% endblock %}

@@ -3,9 +3,12 @@
 from django.urls import include, path
 
 from rms import api, views
+from rms.intake_views import IntakeAPI, IntakePage
 
 
 urlpatterns = [
+    path("ideas/<str:idea_id>/intake", IntakePage.as_view(), name="rms-intake"),
+    path("api/v1/ideas/<str:idea_id>/intake", IntakeAPI.as_view(), name="rms-intake-api"),
     path("sources/new", views.SourceCreatePage.as_view(), name="source-create-page"),
     path(
         "sources/<str:source_id>/correct",

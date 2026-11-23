@@ -137,11 +137,11 @@ def check_expected(record, payload):
         raise StaleVersion
 
 
-def execute_write(*, actor, idempotency_key, payload, request_name, path, operation):
+def execute_write(*, actor, idempotency_key, payload, request_name, path, operation, validate=validate_request):
     require_actor(actor, write=True)
     if not isinstance(idempotency_key, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", idempotency_key):
         field_error("/Idempotency-Key", "invalid_format")
-    normalized = validate_request(request_name, payload)
+    normalized = validate(request_name, payload)
     # Actor scopes the storage key; actor/method/route/canonical original payload
     # bind reuse. Replays preserve the exact originally serialized bytes/status.
     actor_id = str(actor.pk)

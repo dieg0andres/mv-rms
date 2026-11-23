@@ -212,6 +212,9 @@ def correct_idea_family_association(*, actor, association_id, idempotency_key, p
         if old.kind != "IdeaFamily" or old.public_id != p["prior_association_version_id"]:
             field_error("/prior_association_version_id")
         family = resolve(ResearchFamilyVersion, p["family_version_id"])
+        from .intake_models import ResearchIntake
+        if family.record_id != old.family_version.record_id and visible(ResearchIntake).filter(idea_id=old.idea_version.idea_id).exists():
+            field_error("/family_version_id", "screened_family_change_not_authorized")
         if family.pk == old.family_version_id and p["rationale"] == old.rationale:
             return 200, association_read(old)
         item = association("IdeaFamily", actor=actor, predecessor=old, correction_reason=p["correction_reason"], idea_version=old.idea_version, family_version=family, rationale=p["rationale"])
