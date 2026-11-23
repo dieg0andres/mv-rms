@@ -17,6 +17,9 @@ pg() { "$bin/psql" -Xwq -v ON_ERROR_STOP=1 "$@"; }
 [[ $(pg -U "$RMS_DB_USER" -d "$RMS_DB_NAME" -Atc "SELECT current_user || ':' || (current_setting('server_version_num')::int / 10000) WHERE inet_server_addr() IS NULL") == rms_synthetic_test:17 ]]
 mkdir -- "$RMS_REHEARSAL_SCRATCH"
 out=$(realpath "$RMS_REHEARSAL_SCRATCH")
+if [[ -n ${RMS_REHEARSAL_PACKAGE:-} ]]; then
+    .venv/bin/python staging/check-release-assets.py "$RMS_REHEARSAL_PACKAGE" "$out"
+fi
 tag="mau162_$(date -u +%s)_$$_$RANDOM"
 owner="${tag}_owner" runtime="${tag}_runtime" source_db="${tag}_source" restore_db="${tag}_restore"
 admin() { pg -U rms_local_admin -d postgres "$@"; }
@@ -79,6 +82,7 @@ check "$runtime" "$source_db" seed > "$out/plan.json"
 snapshot "$source_db" baseline > "$out/before.tsv"
 manage migrate rms 0008 --noinput --verbosity 0
 grants "$source_db" 0008_run_attempts
+check "$runtime" "$source_db" readiness 503
 snapshot "$source_db" baseline > "$out/after-0008.tsv"
 cmp "$out/before.tsv" "$out/after-0008.tsv"
 run=$(check "$runtime" "$source_db" register "$out/plan.json")

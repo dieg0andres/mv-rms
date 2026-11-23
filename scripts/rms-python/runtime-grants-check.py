@@ -33,6 +33,14 @@ class Smoke(Workflow, unittest.TestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Basic ' + base64.b64encode(
             f'mau162-{role}:invented-fixture-only'.encode()).decode())
 
+    def readiness(self, expected_status):
+        response = self.client.get('/api/v1/readiness')
+        self.assertEqual(response.status_code, expected_status)
+        if expected_status == 200:
+            self.assertEqual(response.json(), {'status': 'ready'})
+        else:
+            self.assertEqual(response.json()['error']['code'], 'not_ready')
+
     def seed(self):
         stream = StringIO()
         call_command(Command(), actor='mau162-editor', review_time='2026-10-03T12:00:00Z', stdout=stream)
@@ -121,7 +129,11 @@ def guards(owner):
         'UPDATE public.rms_runresultversion SET summary=summary',
         'DELETE FROM public.rms_runlifecycleevent', 'TRUNCATE public.rms_runretry',
         'UPDATE public.auth_user SET is_superuser=is_superuser',
-        'DELETE FROM public.auth_user_groups', 'SELECT * FROM public.django_migrations',
+        'DELETE FROM public.auth_user_groups',
+        "INSERT INTO public.django_migrations (app, name, applied) VALUES ('fixture', 'invented', now())",
+        'UPDATE public.django_migrations SET name=name WHERE false',
+        'DELETE FROM public.django_migrations WHERE false', 'TRUNCATE public.django_migrations',
+        "SELECT nextval('public.django_migrations_id_seq')",
         "SELECT nextval('public.auth_user_id_seq')",
     ):
         deny(statement, '42501')
@@ -137,17 +149,24 @@ if mode == 'principals':
             user.groups.add(Group.objects.create(name=role))
 elif mode == 'seed':
     Smoke().seed()
+elif mode == 'readiness':
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT count(*) FROM public.django_migrations')
+        assert cursor.fetchone()[0] > 0
+    Smoke().readiness(int(args[0]))
 elif mode == 'register':
     smoke = Smoke()
     smoke.use_plan(args[0])
     print(smoke.register())
 elif mode == 'results':
     smoke = Smoke()
+    smoke.readiness(200)
     smoke.use_plan(args[0])
     smoke.results(args[1])
     guards(args[2])
 elif mode == 'restore':
     smoke = Smoke()
+    smoke.readiness(200)
     smoke.use_plan(args[0])
     smoke.verify_restore(args[1])
     guards(args[2])

@@ -43,6 +43,7 @@ WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p','v','m','f') A
 GROUP BY attrelid \gexec
 
 GRANT SELECT ON public.auth_user, public.auth_group, public.auth_user_groups TO :"runtime_role";
+GRANT SELECT ON public.django_migrations TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION public.digest(bytea, text) TO :"runtime_role";
 
 GRANT SELECT, INSERT ON
