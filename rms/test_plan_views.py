@@ -394,6 +394,9 @@ class TestPlanDetailPage(RmsPage):
         context.update(record=record, definition=definition_nodes({'fields': record['fields'], 'criteria': record['criteria'], 'data_requirements': record['data_requirements']}), historical=version_id is not None,
             latest_url=plan_url(plan_id), history_url=plan_url(plan_id) + '/history', revision_url=plan_url(plan_id) + '/revise', checks_url=plan_url(plan_id) + '/data-checks',
             lineage=plan_lineage(record), save_notice=confirmed_receipt(request, plan_id, record['plan_version_id']))
+        from .stage_gate_services import can_view_gate
+        if can_view_gate(actor=request.user, plan_id=plan_id):
+            context['stage_gate_url'] = f"{plan_url(plan_id)}/versions/{record['plan_version_id']}/synthetic-gates"
         return TemplateResponse(request._request, 'rms/test_plan_detail.html', context)
 
 
