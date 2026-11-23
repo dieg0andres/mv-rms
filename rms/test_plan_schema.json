@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:mv-rms:test-plan:api-1:1.0",
+  "$id": "urn:mv-rms:test-plan:api-1:1.0:rr14-scoped",
   "x-schema-version": "1.0",
-  "x-interface-version": "RMS-TP-API-1",
+  "x-interface-version": "RMS-TP-API-1-RR14",
   "x-max-request-bytes": 524288,
   "x-endpoints": [
     {
       "method": "POST",
       "path": "/api/v1/test-plans",
       "request": "PlanCreate",
-      "response": "PlanRead"
+      "response": "SaveAcknowledgement"
     },
     {
       "method": "GET",
@@ -34,7 +34,7 @@
       "method": "POST",
       "path": "/api/v1/test-plans/{plan_id}/corrections",
       "request": "PlanCorrection",
-      "response": "PlanRead"
+      "response": "PlanCorrectionAcknowledgement"
     },
     {
       "method": "GET",
@@ -47,7 +47,8 @@
     {
       "method": "POST",
       "path": "/api/v1/test-plans/{plan_id}/data-checks",
-      "request": "CheckCreate"
+      "request": "CheckCreate",
+      "response": "SaveAcknowledgement"
     },
     {
       "method": "GET",
@@ -1769,6 +1770,40 @@
         "upstream_notices",
         "check_summary"
       ],
+      "additionalProperties": false
+    },
+    "SaveAcknowledgement": {
+      "description": "HTTP 201 on save or eligible replay. No created identity or read grant is returned.",
+      "type": "object",
+      "properties": {
+        "saved": {
+          "const": true
+        }
+      },
+      "required": ["saved"],
+      "additionalProperties": false
+    },
+    "PlanCorrectionAcknowledgement": {
+      "description": "HTTP 201 for an appended version or HTTP 200 with no_change: true for an unchanged proposal. Only an exact version readable under current scope is acknowledged, including on replay.",
+      "type": "object",
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^TPL-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "plan_version_id": {
+          "type": "string",
+          "pattern": "^TPLV-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "no_change": {
+          "const": true
+        }
+      },
+      "required": ["plan_id", "plan_version_id", "version"],
       "additionalProperties": false
     },
     "PlanRead": {

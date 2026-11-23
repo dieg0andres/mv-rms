@@ -1,0 +1,7 @@
+{% extends "rms/base.html" %}
+{% block title %}Draft saved — RMS{% endblock %}
+{% block content %}
+<h1>Draft saved</h1>
+<p>The draft appears in the Test Plans list only after the fixture custodian grants read access.</p>
+<p><a href="{% url 'rms-test-plan-list' %}">Go to Test Plans</a></p>
+{% endblock %}

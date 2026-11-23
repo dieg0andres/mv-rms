@@ -15,7 +15,9 @@ and non-cacheable. Denials do not create records or consume idempotency keys.
 | --- | --- |
 | `GET` (empty suffix) | Attempt identity, state, `current_event_id`, ordered events, retry links, exact applicable `criteria`, and writer-only action hints (below). |
 | `GET /events` | Ordered append-only lifecycle, including the current event ID; an empty chain means `registered`. |
-| `POST /events` | `{expected_event_id, state, reason}`. Use `null` before any event. Recorded transitions: `registered → running/failed/cancelled`; `running → completed/failed/cancelled`. Terminal events are never overwritten. |
+| `POST /events` | `{expected_event_id, state, reason}` with optional `partial_evidence`. Use `null` before the first event. Registered and running attempts may be reported as failed, cancelled or unknown. Running can also complete. |
+| `POST /reconciliations` | A named editor supplies the exact unknown event, its observed terminal state, a reason and `partial_evidence`. Each reconciliation appends to the original history. |
+| `GET /events/{event_id}/evidence` | An authorized reader receives the exact event, attempt, plan/configuration, reporter, digest, length and verified invented bytes in `content_base64`. |
 | `POST /retry` | `{expected_event_id, external_reference, reason}`. Only on a failed or cancelled terminal event with no existing successor; new synthetic reference and run ID, identical exact configuration and reported identities. Register changed inputs separately. |
 | `GET /results` | Latest-first revision metadata; optional `offset`, up to 50 per page, with `next_offset`. |
 | `POST /results` | Publish an initial revision or full correction, only on the exact completed event. See payload below. |
@@ -39,6 +41,10 @@ after role authorization. Writes serialize on the attempt row. On any conflict,
 retrieve the exact record before forming a new intent with a fresh key.
 
 ## Result payload and interpretation
+
+On an attempt page, **Record an observed execution event** accepts partial invented evidence even when execution fails or its outcome is unknown. For API writes, `partial_evidence` uses the same canonical base64, SHA-256 and synthetic confirmation fields as a result artifact. Each attachment is limited to 8,192 bytes. Reads verify the immutable row digest and the bytes. Older events retain their original digests.
+
+An unknown attempt remains in the activity history. The only advertised state action is **Reconcile an unknown execution state**. Its documented resolution can be completed, failed or cancelled. A resolved failure or cancellation can have a separate retry under the same version and configuration. Each retry has its own attempt identity.
 
 - `completed_event_id`, `expected_result_version_id`, `correction_reason`, `summary`,
   `assessments`, `artifact`. Use null expectation and reason for the first version.

@@ -34,6 +34,40 @@ class EventForm(RunForm):
         (state, state.capitalize()) for state in RunLifecycleEvent.STATES
     )])
     reason = narrative('What was observed?')
+    evidence_text = forms.CharField(label='Invented event evidence', max_length=MAX_ARTIFACT_BYTES, required=False,
+                                    strip=False, widget=forms.Textarea(attrs={'rows': 3}),
+                                    help_text='Attach any available partial observation to this exact event.')
+    evidence_confirmed = forms.BooleanField(label='I confirm this event evidence is invented', required=False)
+
+    def clean(self):
+        clean = super().clean()
+        evidence = clean.get('evidence_text')
+        if evidence and len(evidence.encode('utf-8')) > MAX_ARTIFACT_BYTES:
+            self.add_error('evidence_text', 'Enter at most 8,192 bytes of invented evidence.')
+        if evidence and not clean.get('evidence_confirmed'):
+            self.add_error('evidence_confirmed', 'Confirm the source of these invented bytes.')
+        return clean
+
+    def payload(self):
+        payload = super().payload()
+        data = payload.pop('evidence_text').encode('utf-8')
+        confirmed = payload.pop('evidence_confirmed')
+        if data:
+            payload['partial_evidence'] = {'content_base64': base64.b64encode(data).decode('ascii'),
+                                           'sha256': hashlib.sha256(data).hexdigest(), 'synthetic_confirmed': confirmed}
+        return payload
+
+    def error_field(self, path):
+        return 'evidence_text' if path.startswith('/partial_evidence') else super().error_field(path)
+
+
+class ReconciliationForm(EventForm):
+    reason = narrative('How was the unknown execution state resolved?')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['evidence_text'].required = True
+        self.fields['evidence_confirmed'].required = True
 
 
 class RetryForm(RunForm):

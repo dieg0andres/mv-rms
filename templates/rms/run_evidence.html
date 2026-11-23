@@ -1,0 +1,21 @@
+{% extends "rms/base.html" %}
+{% block title %}{{ title }} — RMS{% endblock %}
+{% block content %}
+<article class="run-record">
+  <p><a href="{{ record_url }}">{{ record_label }}</a></p>
+  <h1>{{ title }}</h1>
+  <dl>
+    <dt>Saved record</dt><dd><code>{{ identity }}</code></dd>
+    <dt>Configuration</dt><dd>{{ manifest.configuration_key }}</dd>
+    <dt>Size</dt><dd>{{ manifest.byte_length }} byte{{ manifest.byte_length|pluralize }}</dd>
+    <dt>Verified SHA-256</dt><dd><code>{{ manifest.sha256 }}</code></dd>
+  </dl>
+  <section class="card" aria-labelledby="evidence-content">
+    <h2 id="evidence-content">Retained content</h2>
+    {% if preview != None %}<pre class="run-reported-text">{{ preview }}</pre>
+    {% else %}<p>This artifact contains binary data. Download it to inspect the original bytes.</p>{% endif %}
+    <p><a href="?download=1" download>Download original bytes</a></p>
+  </section>
+</article>
+{% endblock %}
+{% block scripts %}<link rel="stylesheet" href="/static/rms/run_workflow.css">{% endblock %}

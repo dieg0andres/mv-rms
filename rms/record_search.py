@@ -8,6 +8,7 @@ from django.urls import reverse
 from .hypothesis_models import HypothesisVersion, InvestigationVersion, ResearchFamilyVersion
 from .models import IdeaVersion, SourceVersion
 from .research_context_common import require_actor, visible
+from .rr14_scope import ReadScope
 from .test_plan_models import TestPlanVersion
 from .test_plan_services import _visible as visible_plan_records
 
@@ -33,9 +34,10 @@ COLLECTIONS = {
 PAGE_SIZE = 25
 
 
-def _matches(kind, term, include_history):
+def _matches(scope, kind, term, include_history):
     source = COLLECTIONS[kind]
     qs = visible_plan_records(source.model) if source.model is TestPlanVersion else visible(source.model)
+    qs = scope.versions(qs)
     qs = qs.filter(**{source.parent + "__synthetic": True})
     if not include_history:
         qs = qs.filter(version=F(source.parent + "__latest_version"))
@@ -63,7 +65,8 @@ def search_versions(*, actor, term, collection, include_history, page):
     if collection not in ("", *COLLECTIONS) or type(page) is not int or not 1 <= page <= 10000:
         raise ValueError("Choose a valid collection and page.")
     kinds = [collection] if collection else COLLECTIONS
-    first, *others = [_matches(kind, term.strip(), include_history) for kind in kinds]
+    scope = ReadScope(actor)
+    first, *others = [_matches(scope, kind, term.strip(), include_history) for kind in kinds]
     matches = first.union(*others, all=True) if others else first
     offset = (page - 1) * PAGE_SIZE
     rows = list(matches.order_by("-created_at", "kind", "stable_id", "-version")[offset:offset + PAGE_SIZE + 1])

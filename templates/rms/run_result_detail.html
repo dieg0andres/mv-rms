@@ -37,6 +37,7 @@
   </section>
   <section class="card" aria-labelledby="evidence-heading">
     <h2 id="evidence-heading">Evidence for this exact result version</h2>
+    {% if evidence_url %}<p><a href="{{ evidence_url }}">Read exact result evidence</a></p>{% endif %}
     {% for artifact in artifacts %}
       <h3>{{ artifact.label }}</h3>
       <dl>

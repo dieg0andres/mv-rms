@@ -14,7 +14,8 @@ from .research_context_common import (
     append, change_paths, check_expected, endpoint, envelope, execute_write,
     field_error, latest, paginated, record_links, require_actor, resolve, visible,
 )
-from .research_context_services import association, association_read, edge
+from .research_context_services import _scoped_history, association, association_read, edge
+from .rr14_scope import ReadScope, read_one
 
 
 def resolve_context(payload):
@@ -114,7 +115,7 @@ def record_upstream_impacts(kind, newer, *, actor):
                 add_impact(item, kind, pinned, newer, actor=actor)
 
 
-def hypothesis_read(item):
+def hypothesis_read(item, *, scope=None):
     origin = edge(item, "IdeaHypothesis")
     case_edge = edge(item, "HypothesisInvestigation")
     case = case_edge.investigation_version
@@ -124,20 +125,25 @@ def hypothesis_read(item):
     for impact in item.correction_impacts.order_by("created_at", "public_id"):
         for kind in ("source", "idea", "family", "investigation", "assessment", "association"):
             if getattr(impact, f"newer_{kind}_id") is not None:
-                notices.append({"code": "review_needed", "pinned": endpoint(getattr(impact, f"pinned_{kind}")),
-                                "newer": endpoint(getattr(impact, f"newer_{kind}")), "impact_version_id": impact.public_id})
+                pinned, newer = getattr(impact, f"pinned_{kind}"), getattr(impact, f"newer_{kind}")
+                if scope is None or (scope.allows(pinned) and scope.allows(newer)):
+                    notices.append({"code": "review_needed", "pinned": endpoint(pinned),
+                                    "newer": endpoint(newer), "impact_version_id": impact.public_id})
+    report_visible = scope is None or scope.assessments().filter(pk=assessment_edge.assessment_version_id).exists()
+    classification = origin.idea_family_version
+    classification_visible = scope is None or scope.classifications().filter(pk=classification.pk).exists()
     return {
-        **envelope(item), "hypothesis_id": item.record.public_id, "hypothesis_version_id": item.public_id,
+        **envelope(item, scope=scope), "hypothesis_id": item.record.public_id, "hypothesis_version_id": item.public_id,
         "status": "draft", "fields": item.fields, **draft_completeness(item.fields),
         "origin": {"idea": endpoint(origin.idea_version), "association": association_read(origin),
                    "sources": [{"source": endpoint(c.source_version), "contribution_version_id": c.contribution_id}
                                for c in origin.idea_version.contributions.select_related("source_version", "source_version__source").order_by("position")]},
         "research_context": {
             "investigation": endpoint(case), "family": endpoint(family_edge.family_version),
-            "assessment": endpoint(assessment_edge.assessment_version),
-            "idea_family_association": association_read(origin.idea_family_version),
+            "assessment": endpoint(assessment_edge.assessment_version) if report_visible else None,
+            "idea_family_association": association_read(classification, scope=scope) if classification_visible else None,
             "investigation_family_association": association_read(family_edge),
-            "investigation_assessment_association": association_read(assessment_edge),
+            "investigation_assessment_association": association_read(assessment_edge) if report_visible else None,
             "hypothesis_investigation_association": association_read(case_edge),
         },
         "upstream_notices": notices, "links": {
@@ -145,7 +151,7 @@ def hypothesis_read(item):
             "origin_idea_history": reverse("idea-history", kwargs={"idea_id": origin.idea_version.idea.idea_id}),
             "investigation": record_links("investigations", case)["self"],
             "family": record_links("research-families", family_edge.family_version)["self"],
-            "assessment": f"/api/v1/prior-research-assessments/{assessment_edge.assessment_version.record.public_id}/versions/{assessment_edge.assessment_version.version}",
+            "assessment": f"/api/v1/prior-research-assessments/{assessment_edge.assessment_version.record.public_id}/versions/{assessment_edge.assessment_version.version}" if report_visible else None,
         },
     }
 
@@ -189,13 +195,13 @@ def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
 
 def get_hypothesis(*, actor, hypothesis_id, version=None):
     require_actor(actor)
-    return hypothesis_read(latest(Hypothesis, hypothesis_id, version=version)[1])
+    scope = ReadScope(actor)
+    return hypothesis_read(scope.exact(Hypothesis, hypothesis_id, version), scope=scope)
 
 
 def get_hypothesis_history(*, actor, hypothesis_id):
     require_actor(actor)
-    record, _ = latest(Hypothesis, hypothesis_id)
-    return {"results": [hypothesis_read(item) for item in record.versions.order_by("version")]}
+    return _scoped_history(actor, ReadScope(actor).hypotheses(), hypothesis_id, hypothesis_read)
 
 
 def list_hypotheses(*, actor, query):

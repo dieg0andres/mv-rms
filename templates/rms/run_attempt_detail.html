@@ -28,6 +28,11 @@
           <p><strong>{{ event.label }}</strong> · <time datetime="{{ event.recorded_at }}">{{ event.recorded_at }}</time> · {{ event.recorded_by }}</p>
           {% if event.event_id %}<p>Exact event: <code>{{ event.event_id }}</code></p>{% endif %}
           {% if event.reason %}<p class="run-reported-text">{{ event.reason }}</p>{% endif %}
+          {% if event.reconciles_event_id %}<p>Reconciles unknown event <code>{{ event.reconciles_event_id }}</code></p>{% endif %}
+          {% if event.partial_evidence %}
+            <p><a href="{% url 'rms-run-event-evidence' attempt.plan_id scope.plan_version_id scope.run_id event.event_id %}">Read exact event evidence</a>
+            · {{ event.partial_evidence.byte_length }} bytes · SHA-256 <code>{{ event.partial_evidence.sha256 }}</code></p>
+          {% endif %}
         </li>
       {% endfor %}</ol>
     {% else %}<p>No lifecycle events have been recorded for this attempt.</p>{% endif %}
