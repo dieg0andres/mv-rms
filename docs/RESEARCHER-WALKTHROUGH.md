@@ -21,6 +21,14 @@ This section applies when the saved Test Plan offers **Runs and Results for this
 
 For example, with a mandatory rule requiring an invented reading above zero, a sufficient sample with a reading of −1 fails that criterion. A documented transcription correction to +2 can satisfy the same rule. The run remains completed in both versions. A criterion pass and an independent decision are recorded separately.
 
+When an attempt’s outcome is **Unknown**, retain the original observation and its partial evidence. Once evidence establishes the outcome, open the reconciliation action, enter the reason, and attach the supporting bytes. A retry can follow an eligible terminal outcome. The original observation and the later reconciliation each retain their own evidence link.
+
+## Inspect the evidence and decision
+
+Open **Read exact result evidence** from the saved result, or **Read exact event evidence** from the attempt history. The evidence page shows the byte count and SHA-256 digest. It previews supported text and offers the original bytes for download. Use the result version’s assurance history to trace its independent review, disposition and lesson. Each entry identifies the record it concerns. A corrected result has its own assurance history.
+
+From an exact Test Plan version, open **Founder dashboard for this exact Plan version** if the build offers it. **Saved synthetic attempts** counts recorded attempts in that version’s scope. A saved synthetic closure traces to its original decision. Real research totals can read **Unavailable**. The dashboard reports the records’ contribution to real cycles and qualifications separately.
+
 ## Hand off an exact version
 
 - Share the link from the exact saved version and state the next action. The collection's latest link can move after a correction. From a case, use its owner, recorded blocker and next action to identify who should act.

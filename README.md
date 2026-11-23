@@ -6,6 +6,8 @@ RMS is a private, server-rendered workspace for tracing research records back to
 
 The [researcher walkthrough](docs/RESEARCHER-WALKTHROUGH.md) follows one invented case from its source file to its Test Plan, then through a failed attempt, a retry and a result correction on a build with Runs and Results.
 
+Open **Workspace details** and read **Build** to identify the version serving your browser. The walkthrough names the links that appear on builds with Runs and Results.
+
 - **Home** shows the collections available to the signed-in user. Select a count to browse a collection or open the exact version of its latest addition. An unavailable count means the reader could not establish a total.
 - **Sources and Ideas** capture citations, rights notes, proposed mechanisms, and each source version's contribution to an idea. Corrections retain their predecessors.
 - **Search records** finds permitted metadata and record IDs across six collections. Select a collection or include earlier versions to locate a correction. Each result opens the exact saved version. Search terms travel in the form body.
