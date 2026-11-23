@@ -17,6 +17,8 @@ pg() { "$bin/psql" -Xwq -v ON_ERROR_STOP=1 "$@"; }
 [[ $(pg -U "$RMS_DB_USER" -d "$RMS_DB_NAME" -Atc "SELECT current_user || ':' || (current_setting('server_version_num')::int / 10000) WHERE inet_server_addr() IS NULL") == rms_synthetic_test:17 ]]
 mkdir -- "$RMS_REHEARSAL_SCRATCH"
 out=$(realpath "$RMS_REHEARSAL_SCRATCH")
+RMS_REHEARSAL_PASSWORD=$(.venv/bin/python -c 'from secrets import token_urlsafe; print(token_urlsafe(32))')
+export RMS_REHEARSAL_PASSWORD
 if [[ -n ${RMS_REHEARSAL_PACKAGE:-} ]]; then
     .venv/bin/python staging/check-release-assets.py "$RMS_REHEARSAL_PACKAGE" "$out"
 fi
@@ -65,11 +67,25 @@ SELECT format('SELECT %L, count(*), encode(public.digest(convert_to(coalesce(str
        WHERE app_label='rms' AND model IN ('runattempt','runlifecycleevent','runretry','runresultversion'))$$
   ELSE '' END)
 FROM pg_tables WHERE schemaname='public'
-  AND (:'scope'='all' OR (tablename <> 'django_migrations' AND tablename !~ '^rms_run'))
+  AND (:'scope'='all'
+       OR (:'scope'='baseline' AND tablename <> 'django_migrations' AND tablename !~ '^rms_run')
+       OR (:'scope'='pre_assurance' AND tablename NOT IN ('django_migrations','auth_permission','django_content_type',
+                                                         'rms_runreview','rms_rundecision','rms_runlesson')))
 ORDER BY tablename \gexec
 SELECT format('SELECT %L, last_value, is_called FROM %I.%I', sequencename,schemaname,sequencename)
 FROM pg_sequences WHERE schemaname='public' AND (:'scope'='all' OR sequencename NOT IN ('django_migrations_id_seq','auth_permission_id_seq','django_content_type_id_seq'))
 ORDER BY sequencename \gexec
+SQL
+}
+
+inventory() {
+    pg -At -U "$owner" -d "$1" -v runtime="$runtime" <<'SQL'
+SELECT relname, relkind, pg_get_userbyid(relowner), relacl FROM pg_class
+WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p','S') ORDER BY relname;
+SELECT c.relname, t.tgname, t.tgenabled, p.proname, pg_get_userbyid(p.proowner), p.prosecdef,
+       has_function_privilege(:'runtime', p.oid, 'EXECUTE'), pg_get_triggerdef(t.oid)
+FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_proc p ON p.oid=t.tgfoid
+WHERE c.relnamespace='public'::regnamespace AND NOT t.tgisinternal ORDER BY c.relname, t.tgname;
 SQL
 }
 
@@ -95,13 +111,25 @@ cmp <(rg -v '^rms_idempotencyrecord\|' "$out/before.tsv") <(rg -v '^rms_idempote
 snapshot "$source_db" all | rg '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-after.tsv"
 cmp "$out/registration-before.tsv" "$out/registration-after.tsv"
 check "$runtime" "$source_db" results "$out/plan.json" "$run" "$owner" > "$out/replay.json"
+check "$runtime" "$source_db" readiness 503
+snapshot "$source_db" pre_assurance > "$out/before-0010.tsv"
+manage migrate rms 0010 --noinput --verbosity 0
+grants "$source_db" 0010_run_assurance
+snapshot "$source_db" pre_assurance > "$out/after-0010.tsv"
+cmp "$out/before-0010.tsv" "$out/after-0010.tsv"
+check "$runtime" "$source_db" readiness 200
+check "$runtime" "$source_db" assurance "$out/replay.json" "$owner" > "$out/assurance.json"
+inventory "$source_db" > "$out/source-inventory.tsv"
 snapshot "$source_db" all > "$out/source.tsv"
 "$bin/pg_dump" -w -Fc -U "$owner" -d "$source_db" -f "$out/synthetic.dump"
 SECONDS=0
 "$bin/pg_restore" -w --single-transaction --exit-on-error --no-owner --no-acl -U "$owner" -d "$restore_db" "$out/synthetic.dump"
 crypto "$restore_db"
-grants "$restore_db" 0009_run_results
+grants "$restore_db" 0010_run_assurance
+inventory "$restore_db" > "$out/restore-inventory.tsv"
+cmp "$out/source-inventory.tsv" "$out/restore-inventory.tsv"
 snapshot "$restore_db" all > "$out/restore.tsv"
 cmp "$out/source.tsv" "$out/restore.tsv"
 check "$runtime" "$restore_db" restore "$out/plan.json" "$out/replay.json" "$owner"
-printf 'PASS PostgreSQL 17: 0007 -> 0008 registration -> 0009 results; restore+grants+verification %ss\n' "$SECONDS"
+check "$runtime" "$restore_db" assurance_restore "$out/assurance.json" "$owner"
+printf 'PASS PostgreSQL 17: 0007 -> 0008 registration -> 0009 results -> 0010 assurance; restore+grants+verification %ss\n' "$SECONDS"

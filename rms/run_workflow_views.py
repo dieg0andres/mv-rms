@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework.parsers import FormParser
 
 from . import run_result_services as services
@@ -130,6 +130,7 @@ class RunResultPage(RunWorkflowPage):
         manifest = row['artifact']
         return TemplateResponse(request._request, 'rms/run_result_detail.html', {
             'scope': scope, 'execution_state': run['state'].capitalize(), 'result': result,
+            'assurance_url': reverse('rms-run-assurance', args=[*ids, result_version_id]),
             'criteria': [{'label': item['rule']['name'], 'id': item['criterion_version_id'],
                           'requirement': 'Mandatory' if item['rule']['mandatory'] else 'Optional',
                           'outcome': item['evaluation'].capitalize(), 'observation': item['observed_value'],
@@ -205,6 +206,7 @@ class RunActionPage(RunWorkflowPage):
             target = workflow_scope(plan_id, version_id, row['run_id'])['attempt_url']
         return HttpResponseRedirect(target)
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, plan_id, version_id, run_id, operation):
         return self.handle_action(request, plan_id, version_id, run_id, operation, submit=False)
 

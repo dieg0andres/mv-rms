@@ -36,7 +36,7 @@
     <h2 id="run-results-heading">Immutable result versions</h2>
     {% if result_versions %}
       <ul>{% for version in result_versions %}
-        <li><a href="{{ version.url }}">Result version {{ version.number }}</a> — {{ version.outcome }} · {% if version.current %}Current{% else %}Historical{% endif %} · <code>{{ version.id }}</code></li>
+        <li><a href="{{ version.url }}">View result and history — version {{ version.number }}</a> · {{ version.outcome }} · {% if version.current %}Current{% else %}Historical{% endif %} · <code>{{ version.id }}</code></li>
       {% endfor %}</ul>
     {% elif result_outcome %}<p>No result versions on this page.</p>
     {% else %}<p>No result has been recorded. Execution completion alone is not a research outcome.</p>{% endif %}

@@ -9,11 +9,13 @@
     <dt>Exact Test Plan version</dt><dd><code>{{ scope.plan_version_id }}</code></dd>
     {% if scope.run_id %}<dt>Run attempt</dt><dd><code>{{ scope.run_id }}</code></dd>{% endif %}
     {% if scope.result_id %}<dt>Exact result version</dt><dd><code>{{ scope.result_id }}</code></dd>{% endif %}
+    {% for label, value in references %}<dt>{{ label }}</dt><dd><code>{{ value }}</code></dd>{% endfor %}
   </dl>
   {% if form.errors or save_error %}
     <section class="error" tabindex="-1" data-run-error-summary aria-labelledby="run-error-heading">
       <h2 id="run-error-heading">{{ error_heading|default:"The update could not be saved" }}</h2>
       {% if save_error %}<p>{{ save_error }}</p>{% endif %}
+      {% if refresh_required %}<p><a href="{{ action.return_url }}">{{ action.return_label }}</a></p>{% endif %}
       {% if form.errors %}
         <ul>
           {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
@@ -22,12 +24,14 @@
       {% endif %}
     </section>
   {% endif %}
-  <form method="post" action="{{ action.url }}" class="card run-form">
+  {% if refresh_required %}<div class="card run-form">{% else %}<form method="post" action="{{ action.url }}" class="card run-form">
     {% csrf_token %}
+  {% endif %}
     {% for field in form.hidden_fields %}{{ field }}{% endfor %}
     {% for field in form.visible_fields %}<div class="field">{{ field.as_field_group }}</div>{% endfor %}
+  {% if refresh_required %}</div>{% else %}
     <button type="submit">{{ action.submit_label }}</button>
-  </form>
+  </form>{% endif %}
 </article>
 {% endblock %}
 {% block scripts %}

@@ -51,18 +51,8 @@
     {% empty %}<p>No artifacts were recorded for this result version.</p>{% endfor %}
   </section>
   <section class="card" aria-labelledby="review-heading">
-    <h2 id="review-heading">Independent review, decision and lessons</h2>
-    {% for entry in review_history %}
-      <h3>{{ entry.label }}</h3>
-      <dl>
-        <dt>Record</dt><dd>{% if entry.url %}<a href="{{ entry.url }}"><code>{{ entry.id }}</code></a>{% else %}<code>{{ entry.id }}</code>{% endif %}</dd>
-        <dt>Recorded by</dt><dd>{{ entry.recorded_by }}</dd>
-        <dt>Recorded at</dt><dd><time datetime="{{ entry.recorded_at }}">{{ entry.recorded_at }}</time></dd>
-        <dt>Finding</dt><dd>{{ entry.outcome|default:"Not supplied" }}</dd>
-        <dt>Explanation</dt><dd class="run-reported-text">{{ entry.explanation|default:"Not supplied" }}</dd>
-      </dl>
-    {% empty %}<p>No review, decision or lesson has been recorded for this result version.</p>{% endfor %}
-    {% if actions %}<h3>Record an update</h3><ul>{% for action in actions %}<li><a href="{{ action.url }}">{{ action.label }}</a></li>{% endfor %}</ul>{% endif %}
+    <h2 id="review-heading">Independent review, disposition and lessons</h2>
+    <p><a href="{{ assurance_url }}">Open assurance for this exact result version</a></p>
   </section>
 </article>
 {% endblock %}

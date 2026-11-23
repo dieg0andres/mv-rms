@@ -44,8 +44,8 @@ class RunAttemptTemplateTests(SimpleTestCase):
         })
         self.assertIn('Completed', page)
         self.assertIn('Mandatory criterion failed', page)
-        self.assertInHTML(f'<a href="{RUN_URL}/results/RESV-original">Result version 1</a>', page)
-        self.assertInHTML(f'<a href="{RESULT_URL}">Result version 2</a>', page)
+        self.assertInHTML(f'<a href="{RUN_URL}/results/RESV-original">View result and history — version 1</a>', page)
+        self.assertInHTML(f'<a href="{RESULT_URL}">View result and history — version 2</a>', page)
         self.assertIn('Historical', page)
 
 
@@ -76,16 +76,11 @@ class RunResultTemplateTests(SimpleTestCase):
         self.assertNotIn('do-not-render-content', page)
         self.assertNotIn('Record an update', page)
 
-    def test_review_presentation_only_renders_supplied_actions(self):
-        review_url = RESULT_URL + '/review'
-        history = [{'id': 'REV-invented', 'label': 'Independent review', 'recorded_by': 'fictional-reviewer',
-                    'recorded_at': STAMP, 'outcome': 'Inconclusive', 'explanation': 'Invented review'}]
-        read_only = self.render_result(review_history=history)
-        reviewer = self.render_result(review_history=history, actions=[{'url': review_url, 'label': 'Record independent review'}])
-        self.assertIn('fictional-reviewer', read_only)
-        self.assertNotIn('Record independent review', read_only)
-        self.assertInHTML(f'<a href="{review_url}">Record independent review</a>', reviewer)
-        self.assertNotIn('Record a decision', reviewer)
+    def test_result_links_to_its_own_readable_assurance_overview(self):
+        assurance = RESULT_URL + '/assurance'
+        page = self.render_result(assurance_url=assurance)
+        self.assertInHTML(f'<a href="{assurance}">Open assurance for this exact result version</a>', page)
+        self.assertNotIn('Record independent review', page)
 
 
 class RunActionTemplateTests(SimpleTestCase):

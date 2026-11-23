@@ -1,14 +1,17 @@
 """Browser request contracts with invented service responses and no database."""
+import re
 from urllib.parse import urlencode
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 from django.urls import include, path, reverse
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIClient, APIRequestFactory
 
 from rms.research_context_common import StaleVersion
 from rms.run_workflow_forms import ResultForm
-from rms.services import ResourceNotFound
+from rms.run_workflow_views import OPERATIONS
+from rms.services import ResourceNotFound, StoredResponse
 from tests.django_run_attempt_registration_tests import LISTING, PLAN, VERSION, actor, dispatch
 
 
@@ -67,6 +70,57 @@ class RunEntryRouteTests(SimpleTestCase):
                     results.assert_called_with(actor=viewer, plan_id=PLAN, version_id=version_id, run_id=run_id)
                     read_plan.assert_called_with('read_test_plan_version', actor=viewer, plan_id=PLAN,
                                                  version_id=version_id)
+
+
+class RunActionCsrfTests(SimpleTestCase):
+    @patch('rms.run_workflow_views.services.list_results', return_value=EMPTY_RESULTS)
+    @patch('rms.run_workflow_views.services.read_run', return_value=RUN_CONTEXT)
+    def test_direct_event_form_issues_cookie_and_requires_matching_token(self, read, listing):
+        editor = actor('editor')
+        browser = APIClient(enforce_csrf_checks=True)
+        browser.force_authenticate(user=editor)
+        self.assertNotIn(settings.CSRF_COOKIE_NAME, browser.cookies)
+        attempt = reverse('rms-run-detail', args=[PLAN, VERSION, RUN])
+        form_url = reverse('rms-run-action', args=[PLAN, VERSION, RUN, 'event'])
+        event = OPERATIONS['event']
+        append = Mock(return_value=StoredResponse(201, b'{}'))
+        with patch.dict(OPERATIONS, event=(event[0], event[1], append)):
+            page = browser.get(form_url)
+            self.assertEqual(page.status_code, 200)
+            self.assertIn(settings.CSRF_COOKIE_NAME, page.cookies)
+
+            def hidden_value(name):
+                match = re.search(rf'name="{name}" value="([^"]+)"', page.content.decode())
+                self.assertIsNotNone(match, name)
+                return match[1]
+
+            def submit(values):
+                return browser.post(form_url, urlencode(values), content_type='application/x-www-form-urlencoded',
+                                    secure=True, headers={'origin': 'https://testserver'})
+
+            token = hidden_value('csrfmiddlewaretoken')
+            wrong_token = ('A' if token[0] != 'A' else 'B') + token[1:]
+            fields = {'idempotency_key': hidden_value('idempotency_key'), 'expected_event_id': '',
+                      'state': 'failed', 'reason': 'Invented execution event'}
+            read.reset_mock()
+            self.assertEqual(submit(fields).status_code, 403)
+            self.assertEqual(submit({**fields, 'csrfmiddlewaretoken': wrong_token}).status_code, 403)
+            read.assert_not_called()
+            append.assert_not_called()
+
+            valid_fields = {**fields, 'csrfmiddlewaretoken': token}
+            browser.force_authenticate(user=actor('founder_viewer'))
+            self.assertEqual(submit(valid_fields).status_code, 403)
+            read.assert_not_called()
+            append.assert_not_called()
+
+            browser.force_authenticate(user=editor)
+            saved = submit(valid_fields)
+            self.assertRedirects(saved, attempt, fetch_redirect_response=False)
+            append.assert_called_once_with(actor=editor, plan_id=PLAN, version_id=VERSION, run_id=RUN,
+                                           idempotency_key=fields['idempotency_key'],
+                                           payload={'expected_event_id': None, 'state': 'failed',
+                                                    'reason': 'Invented execution event'})
 
 
 @override_settings(ROOT_URLCONF=__name__)

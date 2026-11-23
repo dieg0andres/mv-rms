@@ -17,9 +17,11 @@ DO $$ BEGIN RAISE EXCEPTION 'Wrong target, owner, runtime role, or PostgreSQL ma
 \endif
 
 SELECT COALESCE(max(name) = :'rms_leaf', false) AND :'rms_leaf' IN
-    ('0007_test_plan_history_guards', '0008_run_attempts', '0009_run_results') AS valid_leaf,
-    :'rms_leaf' IN ('0008_run_attempts', '0009_run_results') AS has_runs,
-    :'rms_leaf' = '0009_run_results' AS has_results
+    ('0007_test_plan_history_guards', '0008_run_attempts', '0009_run_results', '0010_run_assurance')
+    AND (:'rms_leaf' <> '0010_run_assurance' OR bool_or(name = '0009_run_results')) AS valid_leaf,
+    :'rms_leaf' IN ('0008_run_attempts', '0009_run_results', '0010_run_assurance') AS has_runs,
+    :'rms_leaf' IN ('0009_run_results', '0010_run_assurance') AS has_results,
+    :'rms_leaf' = '0010_run_assurance' AS has_assurance
 FROM public.django_migrations WHERE app='rms' \gset
 \if :valid_leaf
 \else
@@ -66,6 +68,22 @@ GRANT SELECT, INSERT ON public.rms_runattempt TO :"runtime_role";
 \if :has_results
 GRANT SELECT, INSERT ON public.rms_runlifecycleevent, public.rms_runretry, public.rms_runresultversion TO :"runtime_role";
 GRANT UPDATE (id) ON public.rms_runattempt TO :"runtime_role";
+\endif
+\if :has_assurance
+GRANT SELECT, INSERT ON public.rms_runreview, public.rms_rundecision, public.rms_runlesson TO :"runtime_role";
+SELECT bool_and(
+    has_table_privilege(:'runtime_role', relation, 'SELECT')
+    AND has_table_privilege(:'runtime_role', relation, 'INSERT')
+    AND NOT has_table_privilege(:'runtime_role', relation, 'UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
+    AND NOT has_any_column_privilege(:'runtime_role', relation, 'UPDATE,REFERENCES')
+    AND (SELECT count(*) = 3 FROM pg_trigger WHERE tgrelid=relation AND NOT tgisinternal AND tgenabled='O'
+         AND tgname IN ('ra_binding','ra_no_edit','ra_no_truncate'))
+) AS assurance_separated
+FROM unnest(ARRAY['public.rms_runreview'::regclass,'public.rms_rundecision'::regclass,'public.rms_runlesson'::regclass]) AS relations(relation) \gset
+\if :assurance_separated
+\else
+DO $$ BEGIN RAISE EXCEPTION 'Unexpected effective assurance privileges or missing guards'; END $$;
+\endif
 \endif
 
 SELECT NOT EXISTS (
