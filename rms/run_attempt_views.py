@@ -25,7 +25,7 @@ class RegistrationForm(forms.Form):
     code_manifest_digest = forms.CharField(max_length=64)
     dependency_lock_digest = forms.CharField(max_length=64)
     dataset_manifest_digest = forms.CharField(max_length=64)
-    parameter_digest = forms.CharField(max_length=64, help_text='Reported digest must match the selected definition below.')
+    parameter_digest = forms.CharField(max_length=64, help_text='Use the digest for the selected configuration under “Resolved configuration digests”.')
     environment_digest = forms.CharField(max_length=64)
     idempotency_key = forms.CharField(max_length=128, widget=forms.HiddenInput)
 
