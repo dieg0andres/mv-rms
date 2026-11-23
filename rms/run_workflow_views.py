@@ -1,8 +1,9 @@
 """Render synthetic Run records using the same services as JSON requests."""
+import base64
 import json
 
 from django.db import DatabaseError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -132,6 +133,7 @@ class RunResultPage(RunWorkflowPage):
         return TemplateResponse(request._request, 'rms/run_result_detail.html', {
             'scope': scope, 'execution_state': run['state'].capitalize(), 'result': result,
             'assurance_url': reverse('rms-run-assurance', args=[*ids, result_version_id]),
+            'evidence_url': reverse('rms-run-result-evidence', args=[*ids, result_version_id]),
             'criteria': [{'label': item['rule']['name'], 'id': item['criterion_version_id'],
                           'requirement': 'Mandatory' if item['rule']['mandatory'] else 'Optional',
                           'outcome': item['evaluation'].capitalize(), 'observation': item['observed_value'],
@@ -140,6 +142,48 @@ class RunResultPage(RunWorkflowPage):
                            'byte_length': manifest['byte_length'], 'provenance': manifest['external_reference'],
                            'reporter': manifest['reported_by'], 'manifest_digest': manifest['manifest_digest'],
                            'integrity': manifest['integrity_scope']}],
+        })
+
+
+class RunEvidencePage(RunWorkflowPage):
+    def get(self, request, plan_id, version_id, run_id, *, event_id=None, result_version_id=None):
+        self._require_reader(request)
+        keys = {'actor': request.user, 'plan_id': plan_id, 'version_id': version_id, 'run_id': run_id}
+        ids = [plan_id, version_id, run_id]
+        try:
+            if event_id is not None:
+                evidence = services.read_event_evidence(**keys, event_id=event_id)
+                record_url = reverse('rms-run-detail', args=ids)
+                record_label = 'Execution history'
+                title = 'Event evidence'
+                identity = evidence['manifest']['event_id']
+            else:
+                evidence = services.read_result(**keys, result_version_id=result_version_id, artifact=True)
+                record_url = result_url(ids, result_version_id)
+                record_label = 'Result details'
+                title = 'Result evidence'
+                identity = evidence['manifest']['watermark']['result_version_id']
+        except ServiceError as error:
+            return service_failure(self, request, error)
+        except DatabaseError:
+            return self.unavailable(request)
+
+        data = base64.b64decode(evidence['content_base64'], validate=True)
+        if request.query_params.get('download') == '1':
+            response = HttpResponse(data, content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{identity}.bin"'
+            response['X-Content-Type-Options'] = 'nosniff'
+            return response
+
+        try:
+            preview = data.decode('utf-8')
+        except UnicodeDecodeError:
+            preview = None
+        if preview and any(not (char.isprintable() or char in '\t\r\n') for char in preview):
+            preview = None
+        return TemplateResponse(request._request, 'rms/run_evidence.html', {
+            'title': title, 'identity': identity, 'record_label': record_label, 'record_url': record_url,
+            'manifest': evidence['manifest'], 'preview': preview,
         })
 
 
