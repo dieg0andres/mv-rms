@@ -7,12 +7,12 @@ from .hypothesis_models import (
     ResearchFamilyVersion, identifier,
 )
 from .models import IdeaVersion, SourceVersion
-from .rr14_scope import ReadScope
+from .rr14_scope import ReadScope, read_one
 from .hypothesis_assessment_links import assessment_link_seal
 from .hypothesis_validation import validate_request
 from .research_context_common import (
     append, change_paths, check_expected, endpoint, envelope, execute_write,
-    field_error, latest, paginated, record_links, require_actor, resolve, visible,
+    field_error, latest, paginated, record_links, require_actor, require_version, resolve, visible,
 )
 from .services import ResourceNotFound, ServiceError
 
@@ -103,7 +103,7 @@ def investigation_read(item, *, scope=None):
             "links": record_links("investigations", item)}
 
 
-def resolve_assessment_links(fields):
+def resolve_assessment_links(fields, *, scope=None):
     models = {"source": (SourceVersion, "source_version"), "idea": (IdeaVersion, "idea_version"),
               "research_family": (ResearchFamilyVersion, "family_version"), "investigation": (InvestigationVersion, "investigation_version")}
     result = []
@@ -112,7 +112,11 @@ def resolve_assessment_links(fields):
             result.append(("external", link["reference"]))
         else:
             model, key = models[link["kind"]]
-            result.append((key, resolve(model, link["version_id"])))
+            if scope is not None and model in (ResearchFamilyVersion, InvestigationVersion):
+                allowed = scope.case_families() if model is ResearchFamilyVersion else scope.cases()
+                result.append((key, read_one(allowed, public_id=link["version_id"])))
+            else:
+                result.append((key, resolve(model, link["version_id"])))
     return result
 
 
@@ -132,29 +136,58 @@ def save_assessment(*, actor, fields, resolved, predecessor=None, reason=None):
     return item
 
 
-def create_research_family(*, actor, idempotency_key, payload):
+def create_research_family(*, actor, idempotency_key, payload, scoped=False):
     def operation(p):
         record = ResearchFamily.objects.create()
         item = append(ResearchFamilyVersion, actor=actor, record=record, fields={**p["fields"], "risk_review_reference": p["fields"].get("risk_review_reference")})
-        return 201, family_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="FamilyCreate", path="/api/v1/research-families", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="FamilyCreate", path="/api/v1/research-families", operation=operation,
+                         model=ResearchFamilyVersion, render=family_read, guard=no_references, check_saved=no_references, scoped=scoped)
 
 
-def correct_research_family(*, actor, family_id, idempotency_key, payload):
+def no_references(scope, payload):
+    return None
+
+
+def correction_target(scope, model, identity, expected, check_saved):
+    current = scope.exact(model, identity)
+    check_saved(scope, current)
+    if current.version != expected:
+        historical = current.record.versions.filter(version=expected).first()
+        if historical is not None:
+            require_version(scope.versions(type(historical).objects.all()), historical)
+            check_saved(scope, historical)
+    return current
+
+
+def correct_research_family(*, actor, family_id, idempotency_key, payload, scoped=False):
+    def guard(scope, proposal):
+        correction_target(scope, ResearchFamily, family_id, proposal['expected_latest_version'], no_references)
+
     def operation(p):
         record, old = latest(ResearchFamily, family_id, lock=True)
         check_expected(record, p)
         changed = change_paths(old.fields, p["fields"], "/fields/")
         if not changed:
-            return 200, family_read(old)
+            return 200, old
         item = append(ResearchFamilyVersion, actor=actor, record=record, predecessor=old, fields=p["fields"], correction_reason=p["correction_reason"], changed_fields=changed)
         from .hypothesis_services import record_upstream_impacts
         record_upstream_impacts("family", item, actor=actor)
-        return 201, family_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="FamilyCorrection", path=f"/api/v1/research-families/{family_id}/corrections", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="FamilyCorrection", path=f"/api/v1/research-families/{family_id}/corrections", operation=operation,
+                         model=ResearchFamilyVersion, render=family_read, guard=guard, check_saved=no_references, scoped=scoped)
 
 
-def create_investigation(*, actor, idempotency_key, payload):
+def check_case_context(scope, item):
+    require_version(scope.case_families(), edge(item, 'InvestigationFamily').family_version)
+    require_version(scope.assessments(), edge(item, 'PriorResearchInvestigation').assessment_version)
+
+
+def create_investigation(*, actor, idempotency_key, payload, scoped=False):
+    def guard(scope, proposal):
+        read_one(scope.families(), public_id=proposal['family_version_id'])
+        resolve_assessment_links(proposal['prior_research_assessment'], scope=scope)
+
     def operation(p):
         family = resolve(ResearchFamilyVersion, p["family_version_id"])
         resolved = resolve_assessment_links(p["prior_research_assessment"])
@@ -163,11 +196,21 @@ def create_investigation(*, actor, idempotency_key, payload):
         item = append(InvestigationVersion, actor=actor, record=record, fields={**p["fields"], "blocker_text": p["fields"].get("blocker_text")})
         association("InvestigationFamily", actor=actor, investigation_version=item, family_version=family)
         association("PriorResearchInvestigation", actor=actor, investigation_version=item, assessment_version=assessment)
-        return 201, investigation_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="InvestigationCreate", path="/api/v1/investigations", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="InvestigationCreate", path="/api/v1/investigations", operation=operation,
+                         model=InvestigationVersion, render=investigation_read, guard=guard, check_saved=check_case_context, scoped=scoped)
 
 
-def correct_investigation(*, actor, investigation_id, idempotency_key, payload):
+def correct_investigation(*, actor, investigation_id, idempotency_key, payload, scoped=False):
+    def guard(scope, proposal):
+        correction_target(scope, Investigation, investigation_id, proposal['expected_latest_version'], check_case_context)
+        read_one(scope.case_families(), public_id=proposal['family_version_id'])
+        binding = proposal['prior_research_assessment']
+        field = 'assessment_version_id' if binding['mode'] == 'existing' else 'corrects_assessment_version_id'
+        read_one(scope.assessments(), public_id=binding[field])
+        if binding['mode'] != 'existing':
+            resolve_assessment_links(binding['fields'], scope=scope)
+
     def operation(p):
         record, old = latest(Investigation, investigation_id, lock=True)
         check_expected(record, p)
@@ -199,17 +242,31 @@ def correct_investigation(*, actor, investigation_id, idempotency_key, payload):
         if old_assessment.pk != assessment.pk:
             changed.append("/prior_research_assessment")
         if not changed:
-            return 200, investigation_read(old)
+            return 200, old
         item = append(InvestigationVersion, actor=actor, record=record, predecessor=old, fields=p["fields"], correction_reason=p["correction_reason"], changed_fields=sorted(changed))
         association("InvestigationFamily", actor=actor, predecessor=old_family, correction_reason=p["correction_reason"], investigation_version=item, family_version=family)
         association("PriorResearchInvestigation", actor=actor, predecessor=old_assessment_edge, correction_reason=p["correction_reason"], investigation_version=item, assessment_version=assessment)
         from .hypothesis_services import record_upstream_impacts
         record_upstream_impacts("investigation", item, actor=actor)
-        return 201, investigation_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="InvestigationCorrection", path=f"/api/v1/investigations/{investigation_id}/corrections", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="InvestigationCorrection", path=f"/api/v1/investigations/{investigation_id}/corrections", operation=operation,
+                         model=InvestigationVersion, render=investigation_read, guard=guard, check_saved=check_case_context, scoped=scoped)
 
 
-def correct_idea_family_association(*, actor, association_id, idempotency_key, payload):
+def check_classification_context(scope, item):
+    if item.idea_version_id is None:
+        raise ResourceNotFound
+    resolve(IdeaVersion, item.idea_version.idea_version_id)
+    require_version(scope.case_families(), item.family_version)
+
+
+def correct_idea_family_association(*, actor, association_id, idempotency_key, payload, scoped=False):
+    def guard(scope, proposal):
+        correction_target(scope, ResearchAssociationIdentity, association_id, proposal['expected_latest_version'], check_classification_context)
+        prior = read_one(scope.classifications(), public_id=proposal['prior_association_version_id'], record__public_id=association_id)
+        check_classification_context(scope, prior)
+        read_one(scope.case_families(), public_id=proposal['family_version_id'])
+
     def operation(p):
         record, old = latest(ResearchAssociationIdentity, association_id, lock=True)
         check_expected(record, p)
@@ -217,12 +274,13 @@ def correct_idea_family_association(*, actor, association_id, idempotency_key, p
             field_error("/prior_association_version_id")
         family = resolve(ResearchFamilyVersion, p["family_version_id"])
         if family.pk == old.family_version_id and p["rationale"] == old.rationale:
-            return 200, association_read(old)
+            return 200, old
         item = association("IdeaFamily", actor=actor, predecessor=old, correction_reason=p["correction_reason"], idea_version=old.idea_version, family_version=family, rationale=p["rationale"])
         from .hypothesis_services import record_upstream_impacts
         record_upstream_impacts("association", item, actor=actor)
-        return 201, association_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="IdeaFamilyCorrection", path=f"/api/v1/idea-family-associations/{association_id}/corrections", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="IdeaFamilyCorrection", path=f"/api/v1/idea-family-associations/{association_id}/corrections", operation=operation,
+                         model=ResearchAssociation, render=association_read, guard=guard, check_saved=check_classification_context, scoped=scoped)
 
 
 def idea_family_read(item, *, scope=None):

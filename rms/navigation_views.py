@@ -8,7 +8,6 @@ from urllib.parse import urlencode, urlsplit
 from importlib import import_module
 from uuid import uuid4
 
-from django.http import HttpResponseRedirect
 from django.db import DatabaseError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
@@ -37,7 +36,7 @@ NAVIGATION = (
 
 SCHEMA_COMMIT = "aab6d6dfde13fe03f184292f197ed3a56ce00b9d"
 SCHEMA_PATH = "rms/hypothesis_schema.json"
-SCHEMA_SHA256 = "8a2ee1204b3d54647010254939bee3fabf49d5c2a1edae25a7e6be010726aaea"
+SCHEMA_SHA256 = "c6779839c7f3c159739ab1eca591caa4c6499ba787d303a398734ee7837af23f"
 
 HYPOTHESIS_GROUPS = (
     ("Claim and rationale", ("title", "claim", "claim_basis", "economic_rationale", "expected_opportunity", "persistence_argument", "competing_explanations", "falsification_condition")),
@@ -730,7 +729,21 @@ class RecordEditorPage(ConnectedPage):
 
     def render_form(self, request, schema, submitted, *, record_id=None, idea=None, issues=(), status=200, conflict=False, notice=None, request_key=None, classification=None, read_references=True):
         correction = record_id is not None
-        context_groups = research_context_groups(schema)[:2] if self.kind == "hypothesis" else []
+        if correction and request.method == "POST":
+            identity = {RESOURCES[self.kind]["id"]: record_id}
+            try:
+                latest = shared_service(self.kind, "get", actor=request.user, **identity)
+                try:
+                    expected = int(submitted.get("/expected_latest_version", ""))
+                except (TypeError, ValueError):
+                    expected = None
+                if expected is not None and 0 < expected < latest["version"]:
+                    shared_service(self.kind, "get", actor=request.user, **identity, version=expected)
+            except (SchemaUnavailable, DatabaseError):
+                return TemplateResponse(request._request, "rms/service_unavailable.html", status=503)
+            except ServiceError as error:
+                return service_failure(self, request, error)
+        context_groups = research_context_groups(schema)[:2] if self.kind == "hypothesis" and not correction else []
         groups = form_groups(schema, self.kind, correction)
         if not read_references:
             families, cases, selection_unavailable = [], [], True
@@ -762,7 +775,7 @@ class RecordEditorPage(ConnectedPage):
             context["classification_revision_url"] = browser_url("classification", classification["stable_id"]) + "/revise"
         return TemplateResponse(request._request, "rms/record_form.html", context, status=status)
 
-    def select_classification(self, request, schema, submitted, record_id, operation):
+    def select_classification(self, request, schema, submitted, operation):
         try:
             if operation == "lookup_classification":
                 record = classification_for_idea(request, {"idea_version_id": submitted.get("/originating_idea_version_id", "")})
@@ -781,38 +794,38 @@ class RecordEditorPage(ConnectedPage):
                 submitted.pop("/idea_family_binding/rationale", None)
                 submitted.pop("confirm_first_family", None)
                 notice = "Exact classification selected in the unfinished draft. No Hypothesis save is confirmed; review the binding before saving."
-            return self.render_form(request, schema, submitted, record_id=record_id, classification=record, notice=notice, request_key=submitted.get("idempotency_key"))
+            return self.render_form(request, schema, submitted, classification=record, notice=notice, request_key=submitted.get("idempotency_key"))
         except (SchemaUnavailable, DatabaseError):
-            return self.render_form(request, schema, submitted, record_id=record_id, status=503, issues=[{"path": "", "message": "Classification could not be read. The draft binding and unfinished input remain unchanged."}], request_key=submitted.get("idempotency_key"))
+            return TemplateResponse(request._request, "rms/service_unavailable.html", status=503)
         except ServiceError as error:
-            if getattr(error, "http_status", None) in (401, 403):
-                return service_failure(self, request, error)
-            status = 404 if isinstance(error, ResourceNotFound) else getattr(error, "http_status", 409)
-            return self.render_form(request, schema, submitted, record_id=record_id, status=status, issues=[{"path": "", "message": "Classification unavailable. Missing and restricted records use the same response; the draft binding remains unchanged."}], request_key=submitted.get("idempotency_key"))
+            return service_failure(self, request, error)
         except Exception as error:
             if not hasattr(error, "issues"):
                 raise
-            return self.render_form(request, schema, submitted, record_id=record_id, status=400, issues=error.issues, request_key=submitted.get("idempotency_key"))
+            return self.render_form(request, schema, submitted, status=400, issues=error.issues, request_key=submitted.get("idempotency_key"))
 
     @method_decorator(csrf_protect)
     def post(self, request, record_id=None):
         self._require_editor(request)
         submitted = {key: request.data.get(key, "") for key in request.data}
+        operation = submitted.get("operation", "save")
+        correction = record_id is not None
+        if correction and operation != "save":
+            return self._not_found(request)
         try:
             schema = read_navigation_schema()
         except SchemaUnavailable:
+            if correction:
+                return TemplateResponse(request._request, "rms/service_unavailable.html", status=503)
             context = live_context(self, request)
             context["unsaved_input"] = json.dumps({key: value for key, value in submitted.items() if key.startswith("/")}, ensure_ascii=False, indent=2)
             return TemplateResponse(request._request, "rms/service_unavailable.html", context, status=503)
-        operation = submitted.get("operation", "save")
         if self.kind == "hypothesis" and operation in ("lookup_classification", "adopt_classification"):
-            return self.select_classification(request, schema, submitted, record_id, operation)
+            return self.select_classification(request, schema, submitted, operation)
         target = self.kind
-        correction = record_id is not None
         prefix = ""
         if self.kind == "hypothesis" and operation in ("create_family", "create_case"):
             target = "family" if operation == "create_family" else "case"
-            correction = False
             prefix = "/context/" + target
         elif operation != "save":
             return self.render_form(request, schema, submitted, record_id=record_id, status=400, issues=[{"path": "", "message": "Choose a supported save action."}])
@@ -821,7 +834,7 @@ class RecordEditorPage(ConnectedPage):
             payload = form_payload(schema, schema["$defs"][name], submitted, prefix)
             if target == "hypothesis" and payload.get("idea_family_binding", {}).get("mode") == "create" and submitted.get("confirm_first_family") != "yes":
                 raise FormEncodingError("/idea_family_binding/mode", "Confirm first family assignment explicitly and provide its grouping reason.")
-            kwargs = {"actor": request.user, "idempotency_key": request.headers.get("Idempotency-Key") or submitted.get("idempotency_key", ""), "payload": payload}
+            kwargs = {"actor": request.user, "idempotency_key": request.headers.get("Idempotency-Key") or submitted.get("idempotency_key", ""), "payload": payload, "scoped": True}
             if correction:
                 kwargs[RESOURCES[target]["id"]] = record_id
             stored = shared_service(target, "correct" if correction else "create", **kwargs)
@@ -831,9 +844,7 @@ class RecordEditorPage(ConnectedPage):
             return self.render_form(request, schema, submitted, record_id=record_id, status=503, request_key=submitted.get("idempotency_key"), issues=[{"path": "", "message": "The save outcome could not be confirmed. Input and the original request key remain below. Retry the unchanged request before editing to retrieve its server result."}])
         except ServiceError as error:
             if isinstance(error, ResourceNotFound):
-                return self.render_form(request, schema, submitted, record_id=record_id, status=404,
-                    request_key=kwargs["idempotency_key"], read_references=False,
-                    issues=[{"path": "", "message": "A referenced record could not be used. Missing and restricted records use the same response. Your input and original request key remain below; no save was confirmed."}])
+                return service_failure(self, request, error)
             if getattr(error, "http_status", None) in (401, 403):
                 return service_failure(self, request, error)
             status = getattr(error, "http_status", 409)
@@ -845,14 +856,7 @@ class RecordEditorPage(ConnectedPage):
                 raise
             issues = [{**issue, "path": prefix + issue["path"] if prefix and not issue["path"].startswith(prefix + "/") else issue["path"]} for issue in error.issues]
             return self.render_form(request, schema, submitted, record_id=record_id, issues=issues, status=400)
-        saved = json.loads(stored.body)
-        if operation == "create_family":
-            submitted["/context/case/family_version_id"] = saved["family_version_id"]
-            submitted["/idea_family_binding/family_version_id"] = saved["family_version_id"]
-        elif operation == "create_case":
-            submitted["/investigation_version_id"] = saved["investigation_version_id"]
-        else:
-            response = HttpResponseRedirect(browser_url(target, result_identity(target, saved), saved["version"]))
-            response.status_code = 303
-            return response
-        return self.render_form(request, schema, submitted, record_id=record_id, notice=f"{RESOURCES[target]['label']} version {saved['version']} saved and selected. Hypothesis input remains unsaved.")
+        if operation in ('create_family', 'create_case'):
+            return self.render_form(request, schema, submitted, record_id=record_id, status=stored.status,
+                                    read_references=False, notice='Saved. Nothing was selected. Hypothesis input remains unsaved.')
+        return TemplateResponse(request._request, 'rms/research_record_saved.html', status=stored.status)

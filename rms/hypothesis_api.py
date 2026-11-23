@@ -110,7 +110,7 @@ class ResearchRecordView(APIView):
             raise exceptions.MethodNotAllowed("POST")
         if self.resource == "idea-family-associations" and self.action != "correction":
             raise exceptions.MethodNotAllowed("POST")
-        kwargs = {"actor": request.user, "idempotency_key": request.headers.get("Idempotency-Key"), "payload": request.data}
+        kwargs = {"actor": request.user, "idempotency_key": request.headers.get("Idempotency-Key"), "payload": request.data, "scoped": True}
         if self.resource == "idea-family-associations":
             stored = context.correct_idea_family_association(**kwargs, association_id=record_id)
         else:
