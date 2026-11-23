@@ -99,7 +99,7 @@ SQL
 }
 
 before_evidence() {
-    snapshot "$1" all | rg -v '^(rms_runlifecycleevent|django_migrations|django_migrations_id_seq)\|'
+    snapshot "$1" all | grep -Ev '^(rms_runlifecycleevent|django_migrations|django_migrations_id_seq)\|'
     pg -At -U "$owner" -d "$1" -c "SELECT id, (to_jsonb(e) - 'partial_evidence_bytes' - 'partial_evidence_sha256')::text
         FROM public.rms_runlifecycleevent e ORDER BY id"
 }
@@ -117,13 +117,13 @@ check "$runtime" "$source_db" readiness 503
 snapshot "$source_db" baseline > "$out/after-0008.tsv"
 cmp "$out/before.tsv" "$out/after-0008.tsv"
 run=$(check "$runtime" "$source_db" register "$out/plan.json")
-snapshot "$source_db" all | rg '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-before.tsv"
+snapshot "$source_db" all | grep -E '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-before.tsv"
 manage migrate rms 0009 --noinput --verbosity 0
 grants "$source_db" 0009_run_results
 snapshot "$source_db" baseline > "$out/after-0009.tsv"
 # Registration legitimately adds an idempotency receipt; compare everything else.
-cmp <(rg -v '^rms_idempotencyrecord\|' "$out/before.tsv") <(rg -v '^rms_idempotencyrecord\|' "$out/after-0009.tsv")
-snapshot "$source_db" all | rg '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-after.tsv"
+cmp <(grep -Ev '^rms_idempotencyrecord\|' "$out/before.tsv") <(grep -Ev '^rms_idempotencyrecord\|' "$out/after-0009.tsv")
+snapshot "$source_db" all | grep -E '^rms_(runattempt|idempotencyrecord)\|' > "$out/registration-after.tsv"
 cmp "$out/registration-before.tsv" "$out/registration-after.tsv"
 historic_check "$runtime" "$source_db" results "$out/plan.json" "$run" "$owner" > "$out/replay.json"
 check "$runtime" "$source_db" readiness 503
