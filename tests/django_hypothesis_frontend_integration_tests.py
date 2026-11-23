@@ -78,8 +78,9 @@ class ConnectedFrontendTests(SimpleTestCase):
         result = StoredResponse(201, json.dumps(self.record).encode())
         with patch.object(hypothesis_services, "create_hypothesis", return_value=result) as save:
             response = self.submit(payload)
-        self.assertEqual(response.status_code, 303)
-        self.assertTrue(response["Location"].endswith("/versions/1"))
+        self.assertEqual(response.status_code, 201)
+        self.assertNotIn("Location", response)
+        self.assertNotIn(self.record["hypothesis_id"], self.render(response))
         kwargs = save.call_args.kwargs
         self.assertIs(kwargs["actor"], self.actor)
         self.assertEqual(kwargs["idempotency_key"], "invented-fixed-request-key")
@@ -108,7 +109,9 @@ class ConnectedFrontendTests(SimpleTestCase):
         payload["idea_family_binding"]["association_version_id"] = "IFAV-11111111-1111-4111-8111-111111111111"
         with patch.object(hypothesis_services, "correct_hypothesis", return_value=StoredResponse(200, json.dumps(self.record).encode())) as save:
             response = self.submit(payload, record_id=self.record["hypothesis_id"])
-        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Location", response)
+        self.assertNotIn(self.record["hypothesis_id"], self.render(response))
         actual = save.call_args.kwargs["payload"]
         self.assertEqual(set(actual["fields"]), set(self.schema["$defs"]["HypothesisFields"]["properties"]))
         self.assertEqual(actual["expected_latest_version"], 1)
@@ -119,20 +122,29 @@ class ConnectedFrontendTests(SimpleTestCase):
         with patch.object(hypothesis_services, "create_hypothesis", return_value=StoredResponse(201, json.dumps(self.record).encode())) as save:
             first = self.submit(self.create_payload())
             second = self.submit(self.create_payload())
-        self.assertEqual(first["Location"], second["Location"])
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        self.assertNotIn("Location", first)
+        self.assertNotIn("Location", second)
+        self.assertEqual(self.render(first), self.render(second))
         self.assertEqual(save.call_args_list[0], save.call_args_list[1])
         # Only request binding is verified; persistence deduplication is Backend/Test-owned.
 
-    def test_conflict_preserves_losing_input_and_context(self):
+    def test_conflict_preserves_authorized_revision_input_without_auxiliary_forms(self):
         payload = revision_snapshot("hypothesis", self.record)
         payload["fields"]["title"] = "  losing invented input  "
         payload["fields"]["claim"] = "</textarea><script>invented()</script>"
-        with patch.object(hypothesis_services, "correct_hypothesis", side_effect=StaleVersion):
+        with patch.object(hypothesis_services, "get_hypothesis", return_value=self.record), patch.object(
+            hypothesis_services, "correct_hypothesis", side_effect=StaleVersion,
+        ):
             response = self.submit(payload, record_id=self.record["hypothesis_id"], extra={"/context/case/prior_research_assessment/limitations": "Unsaved invented limits"})
         html = self.render(response)
         self.assertEqual(response.status_code, 409)
         self.assertIn("  losing invented input  ", html)
-        self.assertIn("Unsaved invented limits</textarea>", html)
+        self.assertNotIn("Unsaved invented limits", html)
+        self.assertIn("Inspect or create context separately", html)
+        for operation in ("lookup_classification", "adopt_classification", "create_family", "create_case"):
+            self.assertNotIn(f"value=\"{operation}\"", html)
         self.assertIn("&lt;script&gt;invented()&lt;/script&gt;", html)
         self.assertNotIn("<script>invented()", html)
         self.assertIn('target="_blank" rel="noopener"', html)
@@ -160,25 +172,27 @@ class ConnectedFrontendTests(SimpleTestCase):
             save.assert_not_called()
             accepted = self.submit(payload, extra={"confirm_first_family": "yes"})
         self.assertEqual(denied.status_code, 400)
-        self.assertEqual(accepted.status_code, 303)
+        self.assertEqual(accepted.status_code, 201)
 
-    def test_family_creation_selects_confirmed_version_without_losing_draft(self):
+    def test_embedded_family_save_does_not_select_version_or_lose_draft(self):
         data = flatten_input({"fields": self.family["fields"]}, "/context/family")
         with patch.object(research_context_services, "create_research_family", return_value=StoredResponse(201, json.dumps(self.family).encode())) as save:
             response = self.submit(self.create_payload(), operation="create_family", extra=data)
         html = self.render(response)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertIn("  Invented draft  ", html)
-        self.assertIn("Research family version 1 saved and selected. Hypothesis input remains unsaved.", html)
-        self.assertIn(self.family["family_version_id"], html)
+        self.assertIn("Saved. Nothing was selected. Hypothesis input remains unsaved.", html)
+        self.assertNotIn(self.family["family_version_id"], html)
         self.assertEqual(save.call_args.kwargs["payload"]["fields"]["name"], "Invented family")
 
     def test_case_creation_preserves_manual_review_and_draft_input(self):
         case_payload = {"family_version_id": self.family["family_version_id"], "fields": self.case["fields"], "prior_research_assessment": self.assessment_fields()}
         with patch.object(research_context_services, "create_investigation", return_value=StoredResponse(201, json.dumps(self.case).encode())) as save:
             response = self.submit(self.create_payload(), operation="create_case", extra=flatten_input(case_payload, "/context/case"))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("  Invented draft  ", self.render(response))
+        self.assertEqual(response.status_code, 201)
+        html = self.render(response)
+        self.assertIn("  Invented draft  ", html)
+        self.assertNotIn(self.case["investigation_id"], html)
         self.assertEqual(save.call_args.kwargs["payload"]["prior_research_assessment"]["record_links"], [])
         self.assertEqual(validate_request("InvestigationCreate", save.call_args.kwargs["payload"]), validate_request("InvestigationCreate", case_payload))
 
@@ -187,6 +201,60 @@ class ConnectedFrontendTests(SimpleTestCase):
         with patch.object(research_context_services, "create_investigation", side_effect=error):
             response = self.submit(self.create_payload(), operation="create_case", extra={"/context/case/prior_research_assessment/record_links": "[]"})
         self.assertIn('href="#draft-context-case-prior_research_assessment-limitations"', self.render(response))
+
+    def test_hypothesis_revision_rejects_all_auxiliary_posts_before_lookup_or_write(self):
+        record_id = self.record["hypothesis_id"]
+        for operation in ("lookup_classification", "adopt_classification", "create_family", "create_case"):
+            with self.subTest(operation=operation), patch("rms.navigation_views.shared_service") as service:
+                response = self.submit(self.create_payload(), record_id=record_id, operation=operation)
+                self.assertEqual(response.status_code, 404)
+                self.assertNotIn("Location", response)
+                self.assertIn("no-store", response["Cache-Control"])
+                self.assertNotIn(record_id, self.render(response))
+                service.assert_not_called()
+
+    def test_invalid_revision_does_not_render_without_exact_revision_access(self):
+        record_id = self.record["hypothesis_id"]
+        payload = revision_snapshot("hypothesis", self.record)
+        payload["idea_family_binding"] = {"mode": "create", "family_version_id": self.family["family_version_id"], "rationale": "Invented grouping"}
+        payload["fields"]["title"] = "Invented private draft"
+        current = {**self.record, "version": 2}
+        for reads in ([ResourceNotFound], [current, ResourceNotFound]):
+            with self.subTest(read_count=len(reads)), patch("rms.navigation_views.shared_service", side_effect=reads) as service:
+                response = self.submit(payload, record_id=record_id)
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(response["Cache-Control"], "private, no-store")
+                self.assertNotIn("Invented private draft", self.render(response))
+                self.assertEqual(service.call_count, len(reads))
+                self.assertEqual(service.call_args_list[0].kwargs, {"actor": self.actor, "hypothesis_id": record_id})
+                if len(reads) == 2:
+                    service.assert_called_with("hypothesis", "get", actor=self.actor, hypothesis_id=record_id, version=1)
+
+    @override_settings(MIDDLEWARE=["rms.rr14_scope.scope_response"])
+    def test_classification_lookup_and_adoption_deny_without_editor_or_reference_reads(self):
+        path = "/hypotheses/new"
+        client, _, token = self.fresh_editor_form(path)
+        bodies = []
+        for operation, method in (("lookup_classification", "lookup"), ("adopt_classification", "get")):
+            for association_id in ("IFA-11111111-1111-4111-8111-111111111111", "IFA-22222222-2222-4222-8222-222222222222"):
+                with self.subTest(operation=operation, association_id=association_id), patch(
+                    "rms.navigation_views.shared_service", side_effect=ResourceNotFound,
+                ) as service:
+                    form = {**flatten_input(self.create_payload()), "operation": operation,
+                            "classification_id": association_id, "classification_version": "1",
+                            "csrfmiddlewaretoken": token, "idempotency_key": "invented-private-key"}
+                    response = client.post(path, form, secure=True, HTTP_ORIGIN="https://testserver")
+                    self.assertEqual(response.status_code, 404)
+                    self.assertEqual(response["Cache-Control"], "private, no-store")
+                    self.assertNotIn("Location", response)
+                    self.assertNotIn(b"Invented draft", response.content)
+                    self.assertNotIn(association_id.encode(), response.content)
+                    self.assertNotIn(b"invented-private-key", response.content)
+                    kwargs = ({"association_id": association_id, "version": 1} if method == "get"
+                              else {"idea_version_id": self.create_payload()["originating_idea_version_id"]})
+                    service.assert_called_once_with("classification", method, actor=self.actor, **kwargs)
+                    bodies.append(response.content)
+        self.assertTrue(all(body == bodies[0] for body in bodies))
 
     def test_case_revision_retains_assessment_or_encodes_explicit_successor(self):
         payload = revision_snapshot("case", self.case)
@@ -223,7 +291,7 @@ class ConnectedFrontendTests(SimpleTestCase):
         request.COOKIES["csrftoken"] = seed.META["CSRF_COOKIE"]
         with patch.object(hypothesis_services, "create_hypothesis", return_value=StoredResponse(201, json.dumps(self.record).encode())) as save:
             response = RecordEditorPage.as_view()(request)
-        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.status_code, 201)
         save.assert_called_once()
 
     def fresh_editor_form(self, path="/hypotheses/new"):
@@ -254,11 +322,87 @@ class ConnectedFrontendTests(SimpleTestCase):
                 "operation": "save", "idempotency_key": "invented-fresh-csrf-key"}
         with patch.object(hypothesis_services, "create_hypothesis", return_value=StoredResponse(201, json.dumps(self.record).encode())) as save:
             response = client.post(path, data, secure=True, HTTP_ORIGIN="https://private.example.invalid:4443")
-        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.status_code, 201)
         save.assert_called_once()
         self.assertEqual(save.call_args.kwargs["idempotency_key"], data["idempotency_key"])
         self.assertEqual(validate_request("HypothesisCreate", save.call_args.kwargs["payload"]),
                          validate_request("HypothesisCreate", self.create_payload()))
+
+    @override_settings(MIDDLEWARE=["rms.rr14_scope.scope_response"])
+    def test_native_create_form_candidates_preserve_csrf_and_scope_response(self):
+        case_payload = {"family_version_id": self.family["family_version_id"], "fields": self.case["fields"],
+                        "prior_research_assessment": self.assessment_fields()}
+        for path, payload, module, operation, definition, record, identities in (
+            ("/investigations/new", case_payload, research_context_services, "create_investigation",
+             "InvestigationCreate", self.case, (self.case["investigation_id"], self.case["investigation_version_id"])),
+            ("/hypotheses/new", self.create_payload(), hypothesis_services, "create_hypothesis", "HypothesisCreate",
+             self.record, (self.record["hypothesis_id"], self.record["hypothesis_version_id"])),
+        ):
+            with self.subTest(path=path):
+                client, _, token = self.fresh_editor_form(path)
+                form = {**flatten_input(payload), "operation": "save", "idempotency_key": "invented-native-create"}
+                headers = {"secure": True, "HTTP_ORIGIN": "https://testserver"}
+                private = json.dumps(record).encode()
+                with patch.object(
+                    module, operation, side_effect=[StoredResponse(201, private), ResourceNotFound],
+                ) as save:
+                    self.assertEqual(client.post(path, form, **headers).status_code, 403)
+                    save.assert_not_called()
+                    form["csrfmiddlewaretoken"] = token
+                    saved = client.post(path, form, **headers)
+                    denied = client.post(path, form, **headers)
+                self.assertEqual(saved.status_code, 201)
+                self.assertEqual(denied.status_code, 404)
+                for response in (saved, denied):
+                    self.assertNotIn("Location", response)
+                    self.assertIn("no-store", response["Cache-Control"])
+                    for identity in identities:
+                        self.assertNotIn(identity.encode(), response.content)
+                self.assertEqual(save.call_args_list[0], save.call_args_list[1])
+                self.assertTrue(save.call_args.kwargs["scoped"])
+                self.assertEqual(validate_request(definition, save.call_args.kwargs["payload"]),
+                                 validate_request(definition, payload))
+
+    @override_settings(MIDDLEWARE=["rms.rr14_scope.scope_response"])
+    def test_native_revision_candidates_forward_exact_target_and_withhold_receipts(self):
+        classified = self.record["research_context"]["idea_family_association"]
+        classified["version_id"] = "IFAV-11111111-1111-4111-8111-111111111111"
+        for kind, route, record, identity, id_key, module, get_name, save_name, definition in (
+            ("family", "research-families", self.family, self.family["family_id"], "family_id", research_context_services,
+             "get_research_family", "correct_research_family", "FamilyCorrection"),
+            ("case", "investigations", self.case, self.case["investigation_id"], "investigation_id", research_context_services,
+             "get_investigation", "correct_investigation", "InvestigationCorrection"),
+            ("hypothesis", "hypotheses", self.record, self.record["hypothesis_id"], "hypothesis_id", hypothesis_services,
+             "get_hypothesis", "correct_hypothesis", "HypothesisCorrection"),
+            ("classification", "idea-family-associations", classified, classified["stable_id"], "association_id", research_context_services,
+             "get_idea_family_association", "correct_idea_family_association", "IdeaFamilyCorrection"),
+        ):
+            with self.subTest(kind=kind), patch.object(module, get_name, return_value=record), patch(
+                "rms.navigation_views.exact_idea", return_value=None,
+            ), patch.object(module, save_name, side_effect=[StoredResponse(201, json.dumps(record).encode()), ResourceNotFound]) as save:
+                path = f"/{route}/{identity}/revise"
+                client, _, token = self.fresh_editor_form(path)
+                payload = revision_snapshot(kind, record)
+                payload["correction_reason"] = "Invented native correction"
+                form = {**flatten_input(payload), "operation": "save", "idempotency_key": "invented-revision"}
+                headers = {"secure": True, "HTTP_ORIGIN": "https://testserver"}
+                self.assertEqual(client.post(path, form, **headers).status_code, 403)
+                save.assert_not_called()
+                form["csrfmiddlewaretoken"] = token
+                saved = client.post(path, form, **headers)
+                revoked = client.post(path, form, **headers)
+                self.assertEqual(saved.status_code, 201)
+                self.assertEqual(revoked.status_code, 404)
+                for response in (saved, revoked):
+                    self.assertNotIn("Location", response)
+                    self.assertEqual(response["Cache-Control"], "private, no-store")
+                    self.assertNotIn(identity.encode(), response.content)
+                    self.assertNotIn(b"Invented native correction", response.content)
+                self.assertEqual(save.call_args_list[0], save.call_args_list[1])
+                self.assertTrue(save.call_args.kwargs["scoped"])
+                self.assertEqual(save.call_args.kwargs[id_key], identity)
+                self.assertEqual(validate_request(definition, save.call_args.kwargs["payload"]),
+                                 validate_request(definition, payload))
 
     @override_settings(MIDDLEWARE=[])
     def test_fresh_shared_editor_forms_issue_cookie(self):
@@ -434,8 +578,8 @@ class ConnectedFrontendTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('method="post" data-record-form', html)
         self.assertIn('name="csrfmiddlewaretoken"', html)
-        self.assertIn("Create and select family", html)
-        self.assertIn("Create and select case", html)
+        self.assertIn("Save family", html)
+        self.assertIn("Save case", html)
         self.assertIn(self.case["investigation_version_id"], html)
         self.assertIn("Choose explicitly — no default", html)
         self.assertNotIn('value="create" selected', html)

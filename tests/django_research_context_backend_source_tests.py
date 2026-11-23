@@ -140,8 +140,7 @@ class ContextSourceTests(DatabaseFreeCase):
              patch("rms.hypothesis_services.latest", return_value=(hyp.record, hyp)), \
              patch("rms.hypothesis_services.resolve_context", return_value=(self.idea, self.case, self.classification)), \
              patch("rms.hypothesis_services.edge", side_effect=lambda item, kind: origin if kind == "IdeaHypothesis" else case_edge), \
-             patch("rms.hypothesis_services.hypothesis_read", return_value={"version": 1}), \
              patch("rms.hypothesis_services.append") as append:
             result = services.correct_hypothesis(actor=actor(), hypothesis_id=hyp.record.public_id, idempotency_key="invented", payload=payload)
-        self.assertEqual(result, (200, {"version": 1}))
+        self.assertEqual(result, (200, hyp))
         append.assert_not_called()

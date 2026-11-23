@@ -13,7 +13,7 @@ from .hypothesis_models import AUTHORITY_REFERENCE, ResearchVersion
 from .hypothesis_validation import HypothesisValidationError, validate_request
 from .models import IdempotencyRecord, IdeaVersion, SourceVersion
 from .permissions import has_rms_read_access, has_rms_write_access
-from .rr14_scope import ReadScope
+from .rr14_scope import ReadScope, authoring_scope, read_one
 from .services import (
     IdempotencyConflict, ResourceNotFound, ServiceError, StoredResponse,
     _lock_idempotency_key, _replay_or_conflict, canonical_json_bytes,
@@ -143,29 +143,71 @@ def check_expected(record, payload):
         raise StaleVersion
 
 
-def execute_write(*, actor, idempotency_key, payload, request_name, path, operation):
+def execute_write(*, actor, idempotency_key, payload, request_name, path, operation,
+                  render, model, guard, check_saved, scoped=False, mark_created=False):
     require_actor(actor, write=True)
+    scope = authoring_scope(actor, required=scoped)
+    if scope is not None and not scope.available:
+        raise ResourceNotFound
     if not isinstance(idempotency_key, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", idempotency_key):
         field_error("/Idempotency-Key", "invalid_format")
     normalized = validate_request(request_name, payload)
-    # Actor scopes the storage key; actor/method/route/canonical original payload
-    # bind reuse. Replays preserve the exact originally serialized bytes/status.
     actor_id = str(actor.pk)
     key = "HN:" + hashlib.sha256(canonical_json_bytes([actor_id, idempotency_key])).hexdigest()
     digest = hashlib.sha256(canonical_json_bytes({"actor": actor_id, "method": "POST", "path": path, "payload": payload})).hexdigest()
     with transaction.atomic():
         lock_lineage()
+        if scope is not None:
+            guard(scope, normalized)
         _lock_idempotency_key(key)
-        replay = _replay_or_conflict(key, digest)
-        if replay is not None:
-            return replay
-        status, representation = operation(normalized)
-        body = canonical_json_bytes(representation)
+        if scope is None:
+            replay = _replay_or_conflict(key, digest)
+            if replay is not None:
+                return replay
+        else:
+            receipt = IdempotencyRecord.objects.filter(key=key).first()
+            if receipt is not None:
+                if receipt.request_sha256 != digest:
+                    raise IdempotencyConflict
+                result = saved_version(scope, receipt, path, model)
+                check_saved(scope, result)
+                return StoredResponse(receipt.response_status, canonical_json_bytes({'saved': True}))
+        status, item = operation(normalized)
+        identity = item.record.public_id
+        if scope is not None:
+            if mark_created:
+                identity = 'scoped:' + identity
+            body = canonical_json_bytes({'version_id': item.public_id})
+        else:
+            body = canonical_json_bytes(render(item))
         IdempotencyRecord.objects.create(
             key=key, request_method="POST", request_path=path, request_sha256=digest,
-            response_status=status, response_identity=representation["stable_id"], response_bytes=body,
+            response_status=status, response_identity=identity, response_bytes=body,
         )
-        return StoredResponse(status, body)
+        return StoredResponse(status, body if scope is None else canonical_json_bytes({'saved': True}))
+
+
+def saved_version(scope, receipt, path, model):
+    if receipt.request_path != path or receipt.request_method != 'POST' or receipt.response_status not in (200, 201):
+        raise ResourceNotFound
+    try:
+        binding = json.loads(bytes(receipt.response_bytes))
+        version_id = binding['version_id']
+        if not isinstance(version_id, str) or not version_id or len(version_id) > 128:
+            raise ValueError
+    except (ValueError, TypeError, KeyError, RecursionError) as error:
+        raise ResourceNotFound from error
+    identity = receipt.response_identity.removeprefix('scoped:')
+    if binding.get('stable_id', identity) != identity:
+        raise ResourceNotFound
+    if path.endswith('/corrections') and path.split('/')[-2] != identity:
+        raise ResourceNotFound
+    return read_one(scope.versions(model.objects.all()), record__public_id=identity, public_id=version_id)
+
+
+def require_version(queryset, item):
+    if not queryset.filter(pk=item.pk).exists():
+        raise ResourceNotFound
 
 
 def change_paths(before, after, prefix=""):

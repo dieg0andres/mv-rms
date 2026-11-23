@@ -102,7 +102,8 @@ class APIBoundaryTests(DatabaseFreeCase):
             request = self.factory.get("/api/v1/hypotheses")
         if user is not None:
             force_authenticate(request, user=user)
-        return view(request)
+        with patch('rms.research_context_common.authoring_scope', return_value=SimpleNamespace(available=True)):
+            return view(request)
 
     def test_anonymous_api_preserves_basic_challenge(self):
         response = self.invoke()
@@ -159,13 +160,16 @@ class SharedRequestBoundaryTests(DatabaseFreeCase):
             check_expected(SimpleNamespace(latest_version=2), {"expected_latest_version": 1})
 
     def execute(self, user, payload, *, replay=None):
-        operation = Mock(return_value=(200, {"stable_id": "HYP-invented"}))
+        item = SimpleNamespace(record=SimpleNamespace(public_id="HYP-invented"))
+        operation = Mock(return_value=(200, item))
         with patch("rms.research_context_common.transaction.atomic", return_value=nullcontext()), \
              patch("rms.research_context_common.lock_lineage"), \
              patch("rms.research_context_common._lock_idempotency_key"), \
              patch("rms.research_context_common._replay_or_conflict", return_value=replay) as replay_lookup, \
              patch("rms.research_context_common.IdempotencyRecord.objects.create") as store:
-            result = execute_write(actor=user, idempotency_key="invented-key", payload=payload, request_name="HypothesisCreate", path="/api/v1/hypotheses", operation=operation)
+            result = execute_write(actor=user, idempotency_key="invented-key", payload=payload, request_name="HypothesisCreate", path="/api/v1/hypotheses",
+                                   operation=operation, render=lambda item: {"stable_id": item.record.public_id},
+                                   model=HypothesisVersion, guard=Mock(), check_saved=Mock())
         return result, replay_lookup.call_args.args, operation, store
 
     def test_actor_scope_and_canonical_payload_bind_request(self):
@@ -185,7 +189,7 @@ class SharedRequestBoundaryTests(DatabaseFreeCase):
         self.assertEqual(store.call_args.kwargs["response_status"], 200)
         self.assertEqual(payload, original)
 
-    def test_replay_returns_original_bytes_status_without_operation(self):
+    def test_offline_replay_returns_original_bytes_status_without_operation(self):
         saved = StoredResponse(201, b'{"stable_id":"HYP-original","version":1}')
         result, _, operation, store = self.execute(actor(), create_payload(), replay=saved)
         self.assertIs(result, saved)

@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 
 from django.conf import settings
-from django.db.models import Exists, F, OuterRef, Q
+from django.db.models import Exists, F, OuterRef, Q, Value
+from django.db.models.functions import Concat
 from django.http import HttpResponseNotAllowed
 from django.utils.cache import add_never_cache_headers
 
@@ -14,6 +15,7 @@ from .hypothesis_models import (
     PriorResearchAssessmentVersion, ResearchAssociation, ResearchFamilyVersion,
 )
 from .permissions import has_rms_read_access
+from .models import IdempotencyRecord
 from .services import ResourceNotFound
 from .test_plan_models import AUTHORITY_REFERENCE as PLAN_AUTHORITY
 from .test_plan_models import TestPlanAssociation, TestPlanVersion
@@ -27,13 +29,7 @@ _PRIVATE_JSON_RESOURCES = frozenset({
     'prior-research-assessments', 'idea-family-associations',
 })
 
-_HELD_DESIGN_WRITES = frozenset({
-    'hn-hypotheses-collection', 'hn-hypotheses-correction',
-    'hn-investigations-collection', 'hn-investigations-correction',
-    'hn-research-families-collection', 'hn-research-families-correction', 'hn-idea-family-correction',
-    'rms-hypothesis-create', 'rms-hypothesis-revise', 'rms-case-create', 'rms-case-revise',
-    'rms-family-create', 'rms-family-revise', 'rms-classification-revise',
-})
+_HELD_BROWSER_WRITES = frozenset()
 
 
 def _load():
@@ -51,11 +47,12 @@ def _load():
         if document['format'] != 'rr14-disposable-synthetic-v1' or not isinstance(document['principals'], dict):
             return {}
         for grant in document['principals'].values():
-            if not isinstance(grant, dict) or set(grant) != {'username', 'cases', 'plans'}:
+            required = {'username', 'cases', 'plans'}
+            if not isinstance(grant, dict) or not required <= set(grant) <= required | {'family_versions', 'hypotheses'}:
                 return {}
             if not isinstance(grant['username'], str):
                 return {}
-            for identities in (grant['cases'], grant['plans']):
+            for identities in (grant.get(field, []) for field in ('cases', 'plans', 'family_versions', 'hypotheses')):
                 if not isinstance(identities, list) or not all(isinstance(item, str) and item for item in identities):
                     return {}
         return document['principals']
@@ -85,11 +82,11 @@ def scope_response(get_response):
         finally:
             _snapshot.reset(token)
 
-    def hold_unscoped_write_receipts(request, view, args, kwargs):
-        if request.method not in {'GET', 'HEAD', 'OPTIONS'} and request.resolver_match.url_name in _HELD_DESIGN_WRITES:
+    def hold_unverified_browser_writes(request, view, args, kwargs):
+        if request.method not in {'GET', 'HEAD', 'OPTIONS'} and request.resolver_match.url_name in _HELD_BROWSER_WRITES:
             return HttpResponseNotAllowed(['GET', 'HEAD', 'OPTIONS'])
 
-    middleware.process_view = hold_unscoped_write_receipts
+    middleware.process_view = hold_unverified_browser_writes
     return middleware
 
 
@@ -107,6 +104,8 @@ class ReadScope:
         self.available = bool(grant) and grant['username'] == actor.get_username()
         self.case_ids = grant['cases'] if self.available else ()
         self.plan_ids = grant['plans'] if self.available else ()
+        self.family_version_ids = grant.get('family_versions', ()) if self.available else ()
+        self.hypothesis_ids = grant.get('hypotheses', ()) if self.available else ()
 
     def cases(self):
         return InvestigationVersion.objects.filter(
@@ -121,10 +120,12 @@ class ReadScope:
         )
 
     def hypotheses(self):
+        authored = IdempotencyRecord.objects.filter(request_path='/api/v1/hypotheses',
+            response_identity=Concat(Value('scoped:'), OuterRef('record__public_id')), key__startswith='HN:')
         return HypothesisVersion.objects.filter(
             Exists(self._case_edges('HypothesisInvestigation').filter(hypothesis_version=OuterRef('pk'))),
             record__synthetic=True, classification='synthetic', authority_reference=AUTHORITY_REFERENCE,
-        )
+        ).filter(~Exists(authored) | Q(record__public_id__in=self.hypothesis_ids))
 
     def plans(self):
         parent = TestPlanAssociation.objects.filter(
@@ -136,15 +137,25 @@ class ReadScope:
         )
 
     def families(self):
+        return self._family_versions().filter(
+            Q(public_id__in=self.family_version_ids) | self._case_family_predicate(),
+        )
+
+    def _case_family_predicate(self):
+        return Exists(self._case_edges('InvestigationFamily').filter(family_version=OuterRef('pk')))
+
+    def _family_versions(self):
         return ResearchFamilyVersion.objects.filter(
-            Exists(self._case_edges('InvestigationFamily').filter(family_version=OuterRef('pk'))),
             record__synthetic=True, classification='synthetic', authority_reference=AUTHORITY_REFERENCE,
         )
+
+    def case_families(self):
+        return self._family_versions().filter(self._case_family_predicate())
 
     def assessments(self):
         restricted_links = ResearchAssociation.objects.filter(kind='AssessmentRecord', assessment_version=OuterRef('pk')).filter(
             Q(investigation_version__isnull=False) & ~Q(investigation_version__in=self.cases()) |
-            Q(family_version__isnull=False) & ~Q(family_version__in=self.families()),
+            Q(family_version__isnull=False) & ~Q(family_version__in=self.case_families()),
         )
         return PriorResearchAssessmentVersion.objects.filter(
             Exists(self._case_edges('PriorResearchInvestigation').filter(assessment_version=OuterRef('pk'))),
@@ -155,7 +166,7 @@ class ReadScope:
     def classifications(self):
         return ResearchAssociation.objects.filter(
             kind='IdeaFamily', classification='synthetic', authority_reference=AUTHORITY_REFERENCE,
-            family_version__in=self.families(),
+            family_version__in=self.case_families(),
         )
 
     def versions(self, queryset):

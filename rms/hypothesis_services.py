@@ -12,9 +12,12 @@ from .hypothesis_validation import draft_completeness
 from .models import IdeaVersion
 from .research_context_common import (
     append, change_paths, check_expected, endpoint, envelope, execute_write,
-    field_error, latest, paginated, record_links, require_actor, resolve, visible,
+    field_error, latest, paginated, record_links, require_actor, require_version, resolve, visible,
 )
-from .research_context_services import _scoped_history, association, association_read, edge
+from .research_context_services import (
+    _scoped_history, association, association_read, check_case_context,
+    check_classification_context, correction_target, edge,
+)
 from .rr14_scope import ReadScope, read_one
 
 
@@ -156,18 +159,46 @@ def hypothesis_read(item, *, scope=None):
     }
 
 
-def create_hypothesis(*, actor, idempotency_key, payload):
+def guard_hypothesis_context(scope, proposal):
+    resolve(IdeaVersion, proposal['originating_idea_version_id'])
+    case = read_one(scope.cases(), public_id=proposal['investigation_version_id'])
+    check_case_context(scope, case)
+    binding = proposal['idea_family_binding']
+    if binding['mode'] == 'existing':
+        classified = read_one(scope.classifications(), public_id=binding['association_version_id'])
+        check_classification_context(scope, classified)
+    else:
+        read_one(scope.case_families(), public_id=binding['family_version_id'])
+
+
+def check_hypothesis_context(scope, item):
+    origin = edge(item, 'IdeaHypothesis')
+    resolve(IdeaVersion, origin.idea_version.idea_version_id)
+    classified = origin.idea_family_version
+    require_version(scope.classifications(), classified)
+    check_classification_context(scope, classified)
+    case = edge(item, 'HypothesisInvestigation').investigation_version
+    require_version(scope.cases(), case)
+    check_case_context(scope, case)
+
+
+def create_hypothesis(*, actor, idempotency_key, payload, scoped=False):
     def operation(p):
         idea, case, classified = resolve_context(p)
         record = Hypothesis.objects.create()
         item = append(HypothesisVersion, actor=actor, record=record, fields=p["fields"])
         bind_context(actor=actor, payload=p, idea=idea, case=case, classified=classified, item=item)
         record_initial_impacts(item, actor=actor)
-        return 201, hypothesis_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCreate", path="/api/v1/hypotheses", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCreate", path="/api/v1/hypotheses", operation=operation,
+                         model=HypothesisVersion, render=hypothesis_read, guard=guard_hypothesis_context, check_saved=check_hypothesis_context, scoped=scoped, mark_created=True)
 
 
-def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
+def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload, scoped=False):
+    def guard(scope, proposal):
+        correction_target(scope, Hypothesis, hypothesis_id, proposal['expected_latest_version'], check_hypothesis_context)
+        guard_hypothesis_context(scope, proposal)
+
     def operation(p):
         record, old = latest(Hypothesis, hypothesis_id, lock=True)
         check_expected(record, p)
@@ -184,13 +215,14 @@ def correct_hypothesis(*, actor, hypothesis_id, idempotency_key, payload):
             if before != after:
                 changed.append("/" + key)
         if not changed:
-            return 200, hypothesis_read(old)
+            return 200, old
         item = append(HypothesisVersion, actor=actor, record=record, predecessor=old, fields=p["fields"],
                       correction_reason=p["correction_reason"], changed_fields=sorted(changed))
         bind_context(actor=actor, payload=p, idea=idea, case=case, classified=classified, item=item, predecessor=old)
         record_initial_impacts(item, actor=actor)
-        return 201, hypothesis_read(item)
-    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCorrection", path=f"/api/v1/hypotheses/{hypothesis_id}/corrections", operation=operation)
+        return 201, item
+    return execute_write(actor=actor, idempotency_key=idempotency_key, payload=payload, request_name="HypothesisCorrection", path=f"/api/v1/hypotheses/{hypothesis_id}/corrections", operation=operation,
+                         model=HypothesisVersion, render=hypothesis_read, guard=guard, check_saved=check_hypothesis_context, scoped=scoped)
 
 
 def get_hypothesis(*, actor, hypothesis_id, version=None):
