@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from staging.release_identity import ASSETS, LEGACY_COMMIT, LEGACY_TREE, validate_release, verified_asset, version_page_requested
+from staging.release_identity import ASSETS, RUN_WORKFLOW_ASSETS, LEGACY_COMMIT, LEGACY_TREE, validate_release, verified_asset, version_page_requested
 
 
 class ReleaseIdentityTests(unittest.TestCase):
@@ -42,6 +42,24 @@ class ReleaseIdentityTests(unittest.TestCase):
             validate_release(self.root, self.metadata)
         with self.assertRaises(ValueError):
             verified_asset("/static/rms/record_form.js", self.release, self.metadata)
+
+    def test_runs_assets_are_verified_and_typed_only_for_package_version_three(self):
+        for url, mime in RUN_WORKFLOW_ASSETS.items():
+            path = self.release / url.lstrip("/")
+            path.write_bytes(b"Invented Runs asset")
+            self.metadata["file_sha256"][url.lstrip("/")] = sha256(path.read_bytes()).hexdigest()
+            self.assertIsNone(verified_asset(url, self.release, self.metadata))
+        self.metadata["package_version"] = 3
+        self.assertEqual(validate_release(self.root, self.metadata), self.release)
+        self.assertFalse(version_page_requested("/", self.metadata))
+        for url, mime in RUN_WORKFLOW_ASSETS.items():
+            self.assertEqual(verified_asset(url, self.release, self.metadata), (b"Invented Runs asset", mime))
+        path.write_bytes(b"Tampered Runs asset")
+        with self.assertRaisesRegex(ValueError, "Static identity mismatch"):
+            verified_asset(url, self.release, self.metadata)
+        del self.metadata["file_sha256"][url.lstrip("/")]
+        with self.assertRaisesRegex(ValueError, "Integrated product input missing"):
+            validate_release(self.root, self.metadata)
 
     def test_missing_routes_asset_inventory_or_path_escape_is_rejected(self):
         del self.metadata["file_sha256"]["rms_project/urls.py"]

@@ -3,6 +3,8 @@
 <h1>Strategy Specification and Test Plan</h1>{% if save_notice %}<p class="notice" role="status">{{ save_notice }}</p>{% endif %}
 <h2>{{ record.fields.title }}</h2><p>{% if historical %}Exact historical definition{% else %}Current definition{% endif %} · Version {{ record.version }} · <code>{{ record.plan_version_id }}</code> · {{ record.classification }}</p>
 <p><a href="{{ latest_url }}">Current definition</a> · <a href="{{ history_url }}">History</a> · <a href="{{ checks_url }}?plan_version_id={{ record.plan_version_id }}">Checks for this exact version</a>{% if can_edit %} · <a href="{{ revision_url }}">Revise plan</a>{% endif %}</p>
+{% if stage_gate_url %}<p><a href="{{ stage_gate_url }}">Synthetic stage gates for this exact version</a></p>{% endif %}
+<p><a href="{% url 'rms-run-attempts' record.plan_id record.plan_version_id %}">Runs and Results for this exact version</a></p>
 <p>Saved {{ record.created_at }} by {{ record.created_by }}. Definition digest: <code>{{ record.config_digest }}</code></p>
 <section><h2>Pinned lineage</h2><ul>{% for link in lineage %}<li><a href="{{ link.url }}">{{ link.label }}</a> · <code>{{ link.version_id }}</code></li>{% endfor %}</ul><h3>Intended Hypothesis benchmark — separate from evaluation benchmark</h3><pre>{{ record.hypothesis.fields.intended_benchmark_name|default:"Not supplied" }}
 {{ record.hypothesis.fields.intended_benchmark_definition|default:"Not supplied" }}</pre><p>Inherited Hypothesis completeness: {{ record.hypothesis.draft_completeness|default:"Unknown" }}</p></section>

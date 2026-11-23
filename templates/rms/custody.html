@@ -1,0 +1,10 @@
+{% extends "rms/base.html" %}
+{% block title %}Synthetic result custody{% endblock %}
+{% block content %}
+<h1>Synthetic result custody</h1>
+<p><a href="{{ result_url }}">Back to the exact result version</a></p>
+<p>Local invented fixtures only. Recorded status is historical, not current permission or independent custody.</p>
+<ol>{% for event in history %}<li>{{ event.operation|capfirst }} · {{ event.state }} · <code>{{ event.id }}</code></li>{% empty %}<li>No custody event recorded.</li>{% endfor %}</ol>
+{% if form %}<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Record custody event</button></form>{% endif %}
+{% if export_url %}<p><a href="{{ export_url }}">Download the permitted local fixture export</a></p>{% endif %}
+{% endblock %}

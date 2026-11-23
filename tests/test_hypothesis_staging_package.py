@@ -82,6 +82,17 @@ class PackageTests(unittest.TestCase):
         inventory = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
         self.assertEqual(metadata["source_manifest_sha256"], sha256(inventory).hexdigest())
 
+    def test_runs_package_requires_and_hashes_both_workflow_assets(self):
+        with patch.object(self.builder, "git", side_effect=self.git):
+            with self.assertRaisesRegex(ValueError, "Integrated product input missing"):
+                self.builder.build(self.output, "a" * 40, "b" * 40, manifest_path=None, package_version=3)
+            for url in release_identity.RUN_WORKFLOW_ASSETS:
+                self.files[url.lstrip("/")] = b"Invented Runs asset"
+            metadata = self.builder.build(self.output, "a" * 40, "b" * 40, manifest_path=None, package_version=3)
+        self.assertEqual(metadata["package_version"], 3)
+        for url in release_identity.RUN_WORKFLOW_ASSETS:
+            self.assertEqual(metadata["file_sha256"][url.lstrip("/")], sha256(b"Invented Runs asset").hexdigest())
+
     def test_moving_or_partial_git_refs_are_rejected_before_git(self):
         with patch.object(self.builder, "git") as git, self.assertRaises(ValueError):
             self.builder.build(self.output, "HEAD", "b" * 40)

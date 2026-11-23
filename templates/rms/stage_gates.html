@@ -1,0 +1,21 @@
+{% extends "rms/base.html" %}
+{% block title %}Synthetic Stage Gates — RMS{% endblock %}
+{% block content %}
+<h1>Synthetic Stage Gates</h1>
+<p>Invented fixtures only. This history does not authorize a real release or start any work.</p>
+<p>Exact Test Plan: <code>{{ history.plan_version_id }}</code>. Last recorded state: {{ history.recorded_state }}.</p>
+<h2>Recorded events and impacts</h2>
+<ol>{% for event in history.events %}
+  <li>{{ event.operation }} — {{ event.recorded_at }} — <code>{{ event.event_id }}</code>
+    {% if event.predecessor_event_id %}<p>Previous event: <code>{{ event.predecessor_event_id }}</code></p>{% endif %}
+    <p>Screened intake: <code>{{ event.intake_version_id }}</code></p>
+    {% if event.authority %}<p>Invented binding: <code>{{ event.authority.reference }}</code> revision {{ event.authority.revision }} · <code>{{ event.authority.digest }}</code></p>{% endif %}
+    {% if event.impact_reason %}<p>Impact: {{ event.impact_reason }}</p>{% endif %}
+  </li>
+{% empty %}<li>No events recorded.</li>{% endfor %}</ol>
+{% if form %}
+  <h2>Record a fixture event</h2>
+  <p>For freeze or release, enter the exact reference, revision and digest from the supplied test fixture. For invalidation, enter an invented reason.</p>
+  <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Record fixture event</button></form>
+{% endif %}
+{% endblock %}

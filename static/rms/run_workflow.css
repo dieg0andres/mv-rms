@@ -1,0 +1,30 @@
+.run-record {
+  overflow-wrap: anywhere;
+}
+
+.run-record summary {
+  cursor: pointer;
+}
+
+.run-record summary:focus-visible,
+.run-record [data-run-error-summary]:focus {
+  outline: 3px solid #005ea8;
+  outline-offset: 2px;
+}
+
+.run-record .run-reported-text {
+  white-space: pre-wrap;
+}
+
+.run-record .run-form input,
+.run-record .run-form select,
+.run-record .run-form textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.run-record .run-form button {
+  font: inherit;
+  padding: .4rem .8rem;
+}
