@@ -8,13 +8,14 @@ from uuid import uuid4
 
 from django.contrib.auth.models import Group, User
 from django.db import DatabaseError, connection, connections, transaction
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TestCase, override_settings
 from django.utils.timezone import now
 
 from rms.models import IdempotencyRecord, RunDecision, RunLesson, RunResultVersion, RunReview
 from rms.research_context_common import StaleVersion
 from rms.run_assurance_policy import design_records, grant_key, provenance_key
 from rms.run_assurance_services import publish_review
+from tests.committed_database import CommittedDatabaseTestCase
 from tests.django_run_result_tests import Workflow
 
 
@@ -357,8 +358,7 @@ class AssuranceRetryTests(AssuranceWorkflow, TestCase):
             self.publish('reviews', 'independent', self.review_payload())
 
 
-class AssuranceConcurrencyTests(AssuranceWorkflow, TransactionTestCase):
-    available_apps = ['django.contrib.auth', 'django.contrib.contenttypes']
+class AssuranceConcurrencyTests(AssuranceWorkflow, CommittedDatabaseTestCase):
 
     def test_postgres_serializes_duplicate_then_competing_corrections(self):
         self.setup_assurance('concurrency')

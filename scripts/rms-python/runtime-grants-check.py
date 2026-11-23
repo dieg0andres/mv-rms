@@ -115,6 +115,44 @@ class Smoke(Workflow, unittest.TestCase):
         artifact = base64.b64decode(self.client.get(receipt['url'] + '/artifact').json()['content_base64'])
         self.assertEqual(hashlib.sha256(artifact).hexdigest(), receipt['artifact_sha256'])
 
+    def event_evidence(self):
+        self.suffix = 'event-recovery-fixture'
+        run = self.register()
+        route = f'{self.root}/{run}'
+        def observation(data, state, predecessor):
+            return {'expected_event_id': predecessor, 'state': state, 'reason': 'Invented recovery observation',
+                    'partial_evidence': {'content_base64': base64.b64encode(data).decode('ascii'),
+                                         'sha256': hashlib.sha256(data).hexdigest(), 'synthetic_confirmed': True}}
+        unknown = self.post(route + '/events', 'unknown-observation',
+                            observation(b'invented partial log', 'unknown', None)).json()
+        retry = {'expected_event_id': unknown['event_id'], 'external_reference': 'synthetic:recovery-retry',
+                 'reason': 'Invented unchanged-envelope retry'}
+        self.post(route + '/retry', 'blocked-before-reconciliation', retry, 409)
+        reconciled = self.post(route + '/reconciliations', 'documented-reconciliation',
+                               observation(b'invented verification report', 'failed', unknown['event_id'])).json()
+        retry['expected_event_id'] = reconciled['event_id']
+        successor = self.post(route + '/retry', 'permitted-after-reconciliation', retry).json()
+        self.assertEqual(successor['retry_of_run_id'], run)
+        self.login('founder_viewer')
+        records = []
+        for row in (unknown, reconciled):
+            path = f"{route}/events/{row['event_id']}/evidence"
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            report = response.json()
+            self.assertEqual(hashlib.sha256(base64.b64decode(report['content_base64'])).hexdigest(),
+                             row['partial_evidence']['sha256'])
+            records.append({'path': path, 'report': report})
+        print(json.dumps({'route': route, 'run': self.client.get(route).json(), 'evidence': records}))
+
+    def verify_event_evidence(self, receipt):
+        self.login('founder_viewer')
+        self.assertEqual(self.client.get(receipt['route']).json(), receipt['run'])
+        for record in receipt['evidence']:
+            self.assertEqual(self.client.get(record['path']).json(), record['report'])
+        self.login('outsider')
+        self.assertEqual(self.client.get(receipt['evidence'][0]['path']).status_code, 403)
+
 
 class AssuranceSmoke(AssuranceWorkflow, Smoke):
     def as_actor(self, actor):
@@ -253,5 +291,12 @@ elif mode == 'restore':
     smoke.use_plan(args[0])
     smoke.verify_restore(args[1])
     guards(args[2])
+elif mode == 'event_evidence':
+    smoke = Smoke()
+    smoke.use_plan(args[0])
+    smoke.event_evidence()
+elif mode == 'event_evidence_restore':
+    with open(args[0]) as handle:
+        Smoke().verify_event_evidence(json.load(handle))
 else:
     raise ValueError('Unknown smoke mode')
