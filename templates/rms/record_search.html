@@ -1,0 +1,37 @@
+{% extends "rms/base.html" %}
+{% block title %}Search records · Research Management System{% endblock %}
+{% block content %}
+<header class="page-intro">
+  <div><h1>Search records</h1><p>Find a saved source, idea, research case, family, hypothesis, or test plan.</p></div>
+</header>
+<form id="record-search" method="post" role="search" aria-label="Research records">
+  {% csrf_token %}
+  <div class="search-fields">
+    <div class="field">{{ form.term.label_tag }}{{ form.term }}{{ form.term.errors }}</div>
+    <div class="field">{{ form.collection.label_tag }}{{ form.collection }}{{ form.collection.errors }}</div>
+  </div>
+  <div class="actions">
+    <label>{{ form.include_history }} Include earlier versions</label>
+    <button type="submit" name="page" value="1">Search</button>
+  </div>
+  {{ form.page.errors }}
+</form>
+{% if unavailable %}<p class="warning" role="status">Search is temporarily unavailable. Try again.</p>{% endif %}
+{% if searched %}
+  <section class="panel search-results" aria-labelledby="results-title">
+    <h2 id="results-title">Search results</h2>
+    {% if results %}
+      <ul class="latest-list">
+      {% for row in results %}
+        <li><div><small>{{ row.collection }}</small><a href="{{ row.url }}">{{ row.result_title|default:row.exact_id }}</a><small>{{ row.stable_id }}</small></div><span class="version-label">v{{ row.version }}</span></li>
+      {% endfor %}
+      </ul>
+    {% else %}<p>No matching versions on this page.</p>{% endif %}
+    {% if previous or following %}<nav class="actions" aria-label="Search result pages">
+      {% if previous %}<button type="submit" form="record-search" name="page" value="{{ previous }}">Previous page</button>{% endif %}
+      <span>Page {{ page }}</span>
+      {% if following %}<button type="submit" form="record-search" name="page" value="{{ following }}">Next page</button>{% endif %}
+    </nav>{% endif %}
+  </section>
+{% endif %}
+{% endblock %}

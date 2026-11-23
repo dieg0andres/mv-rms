@@ -54,6 +54,15 @@
       {% endif %}
     </section>
   </div>
+  {% if latest_case %}
+    <section class="panel search-results" aria-labelledby="case-handoff-title">
+      <h2 id="case-handoff-title">Latest research case</h2>
+      <h3><a href="{{ latest_case.url }}">{{ latest_case.title }}</a></h3>
+      {% include "rms/includes/case_handoff.html" with fields=latest_case.fields %}
+      {% if latest_case.recorded %}<p>Updated <time datetime="{{ latest_case.recorded|date:'c' }}">{{ latest_case.recorded|date:"M j, Y H:i T" }}</time> · {{ latest_case.recorded|timesince }} ago</p>{% endif %}
+      <a href="/research-context#collection-case">View research cases</a>
+    </section>
+  {% endif %}
 {% else %}
   <h1>{{ heading }}</h1>
   {% if heading == "Research context" %}
