@@ -1,0 +1,7 @@
+<dl>
+  <dt>Source</dt><dd>{{ watermark.source }}</dd>
+  <dt>Source version</dt><dd>{{ watermark.version }}</dd>
+  <dt>Policy version</dt><dd>{{ watermark.policy_version }}</dd>
+  <dt>As of</dt><dd><time datetime="{{ watermark.as_of|date:'c' }}">{{ watermark.as_of|date:'Y-m-d H:i T' }}</time></dd>
+  <dt>Freshness</dt><dd>{{ watermark.freshness|capfirst }}</dd>
+</dl>

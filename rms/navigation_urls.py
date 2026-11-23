@@ -3,6 +3,7 @@
 from django.urls import path
 from .search_views import RecordSearchPage
 
+from .dashboard_views import FounderDashboardPage
 from .navigation_views import (
     HypothesisDraftPreviewPage, NavigationPage, RecordDetailPage,
     RecordEditorPage, RecordHistoryPage, ClassificationLookupPage, RESOURCES,
@@ -11,6 +12,7 @@ from .navigation_views import (
 
 urlpatterns = [
     path("", NavigationPage.as_view(section="home"), name="rms-home"),
+    path("founder-dashboard", FounderDashboardPage.as_view(), name="rms-founder-dashboard"),
     path("search", RecordSearchPage.as_view(), name="rms-record-search"),
     path("sources", NavigationPage.as_view(section="sources"), name="rms-sources"),
     path("ideas", NavigationPage.as_view(section="ideas"), name="rms-ideas"),
