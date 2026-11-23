@@ -4,7 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from django.contrib.auth.models import Group, User
 from django.db import DatabaseError, close_old_connections, transaction
-from django.test import Client, TransactionTestCase
+from django.test import Client, TestCase
+from tests.committed_database import CommittedDatabaseTestCase
 
 from rms.models import IdempotencyRecord, Source, SourceManifest, SourceVersion
 
@@ -32,9 +33,7 @@ def source_fields():
     }
 
 
-class SourceApiTests(TransactionTestCase):
-    reset_sequences = True
-
+class SourceApiFixture:
     def setUp(self):
         super().setUp()
         editor_group, _ = Group.objects.get_or_create(name="editor")
@@ -86,6 +85,7 @@ class SourceApiTests(TransactionTestCase):
             HTTP_IDEMPOTENCY_KEY=key,
         )
 
+class SourceApiTests(SourceApiFixture, TestCase):
     def test_create_correct_detail_history_and_manifest_preserve_original(self):
         created = self.create()
         corrected = self.correct()
@@ -213,6 +213,14 @@ class SourceApiTests(TransactionTestCase):
             )
         self.assertEqual(SourceManifest.objects.count(), 1)
 
+    def test_readiness_requires_authentication_and_reports_migration_head(self):
+        self.assertEqual(Client().get("/api/v1/readiness").status_code, 401)
+        self.assertEqual(
+            self.viewer_client().get("/api/v1/readiness").json(), {"status": "ready"}
+        )
+
+
+class SourceCorrectionConcurrencyTests(SourceApiFixture, CommittedDatabaseTestCase):
     def test_two_concurrent_corrections_accept_exactly_one(self):
         self.create()
 
@@ -235,9 +243,3 @@ class SourceApiTests(TransactionTestCase):
         self.assertEqual(SourceManifest.objects.count(), 2)
         self.assertEqual(IdempotencyRecord.objects.count(), 2)
         self.assertEqual(Source.objects.get().latest_version, 2)
-
-    def test_readiness_requires_authentication_and_reports_migration_head(self):
-        self.assertEqual(Client().get("/api/v1/readiness").status_code, 401)
-        self.assertEqual(
-            self.viewer_client().get("/api/v1/readiness").json(), {"status": "ready"}
-        )

@@ -5,12 +5,12 @@ account/database/browser acceptance or research credit.
 """
 
 from contextlib import ExitStack
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 import hashlib
 import json
 import os
 from pathlib import Path
-import subprocess
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -401,17 +401,19 @@ class SelectionResultsTests(DatabaseDeniedCase):
 
 class InterfaceCompatibilityTests(DatabaseDeniedCase):
     def test_successor_adds_only_selection_and_keeps_exact_contract(self):
-        old = json.loads(subprocess.check_output(["git", "show", "ac5b0291:rms/hypothesis_schema.json"]))
         self.assertEqual(SCHEMA["x-interface-version"], "1.2")
         self.assertEqual(SCHEMA["$id"], "urn:mv-rms:RMS-HN-API-1:1.2")
         self.assertEqual(SCHEMA["x-schema-version"], "1.0")
-        self.assertEqual(SCHEMA["x-authority"], old["x-authority"])
-        self.assertEqual(SCHEMA["x-endpoints"][:24], old["x-endpoints"])
         self.assertEqual(len(SCHEMA["x-endpoints"]), 26)
-        for name, definition in old["$defs"].items():
-            if name == "Error":
-                definition["properties"]["error"]["properties"]["code"]["enum"].append("selection_unavailable")
-            self.assertEqual(SCHEMA["$defs"][name], definition, name)
+        # Fingerprinted from the archived 1.1 schema with the byte checksum
+        # in docs/RMS-HN-API-1.md. Fresh clones need no private Git objects.
+        prior_defs = deepcopy(SCHEMA["$defs"])
+        for added in ("SelectionQuery", "SourceSelection", "IdeaSelection", "SourceSelectionList", "IdeaSelectionList"):
+            del prior_defs[added]
+        prior_defs["Error"]["properties"]["error"]["properties"]["code"]["enum"].remove("selection_unavailable")
+        prior_contract = {"x-authority": SCHEMA["x-authority"], "x-endpoints": SCHEMA["x-endpoints"][:24], "$defs": prior_defs}
+        canonical = json.dumps(prior_contract, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(), "b0ded5b90e4a4a2fc5ce99754221094b2971171765ec0dd623594a9b5807f5c2")
         contract = Path("docs/RMS_HYPOTHESIS_DESIGN_CONTRACT_V1_0.md").read_bytes()
         self.assertEqual(len(contract), 58395)
         self.assertEqual(hashlib.sha256(contract).hexdigest(), "f9a7ebe54e329d1a994b7f37e5fd5bc62413c215e0f58acae1c8c7d4f604b0c9")

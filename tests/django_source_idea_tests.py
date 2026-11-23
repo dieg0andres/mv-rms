@@ -3,7 +3,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from django.contrib.auth.models import Group, User
 from django.db import DatabaseError, close_old_connections, transaction
-from django.test import Client, TransactionTestCase
+from django.test import Client, TestCase
+from tests.committed_database import CommittedDatabaseTestCase
 
 from rms.models import (
     IdempotencyRecord,
@@ -16,7 +17,7 @@ from rms.models import (
 )
 
 
-class SourceIdeaContractTests(TransactionTestCase):
+class SourceIdeaFixture:
     source_id = "fictional-contract-source"
     content_v1 = b"fictional source bytes version one"
     content_v2 = b"fictional source bytes version two"
@@ -121,6 +122,7 @@ class SourceIdeaContractTests(TransactionTestCase):
             HTTP_IDEMPOTENCY_KEY=key,
         )
 
+class SourceIdeaContractTests(SourceIdeaFixture, TestCase):
     def test_source_metadata_timezones_correction_and_historical_manifest(self):
         created = self.create_source()
         self.assertEqual(created.status_code, 201)
@@ -325,6 +327,7 @@ class SourceIdeaContractTests(TransactionTestCase):
             missing_read.json()["error"]["message"],
         )
 
+class IdeaCorrectionConcurrencyTests(SourceIdeaFixture, CommittedDatabaseTestCase):
     def test_two_concurrent_idea_corrections_accept_exactly_one(self):
         source_version_id = self.create_source().json()["latest_source_version_id"]
         idea_id = self.create_idea(source_version_id).json()["idea_id"]

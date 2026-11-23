@@ -320,7 +320,8 @@ class ConnectedFrontendTests(SimpleTestCase):
         self.assertNotIn("Invented private schema path", html)
         save.assert_not_called()
 
-    def test_family_case_and_assessment_detail_use_exact_shared_readers(self):
+    @patch("rms.test_plan_views.plan_service", return_value={"results": []})
+    def test_family_case_and_assessment_detail_use_exact_shared_readers(self, linked_plans):
         assessment = self.case["prior_research_assessment"]
         for kind, name, record, identity in (("family", "get_research_family", self.family, self.family["family_id"]), ("case", "get_investigation", self.case, self.case["investigation_id"]), ("assessment", "get_prior_research_assessment", assessment, assessment["assessment_id"])):
             with self.subTest(kind=kind), patch.object(research_context_services, name, return_value=record) as read:
@@ -375,7 +376,8 @@ class ConnectedFrontendTests(SimpleTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertNotIn(self.record["hypothesis_id"], self.render(response))
 
-    def test_exact_detail_links_pinned_versions_and_viewer_has_no_edit(self):
+    @patch("rms.test_plan_views.plan_service", return_value={"results": []})
+    def test_exact_detail_links_pinned_versions_and_viewer_has_no_edit(self, linked_plans):
         viewer = invented_actor("founder_viewer")
         with patch.object(hypothesis_services, "get_hypothesis", return_value=self.record) as read:
             response = RecordDetailPage.as_view()(self.request(actor=viewer), record_id=self.record["hypothesis_id"], version=1)

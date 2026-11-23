@@ -1,11 +1,11 @@
 import base64
 from datetime import UTC, datetime
 from django.contrib.auth.models import Group, User
-from django.test import Client, TransactionTestCase
+from django.test import Client, TestCase
 from rms.models import SourceManifest
 from rms.services import create_source, correct_source
 
-class SourceHistoryPageTests(TransactionTestCase):
+class SourceHistoryPageTests(TestCase):
     source_id = "synthetic-page-source-001"
     v1 = b"invented Source version one"
     v2 = b"invented Source version two correction"
