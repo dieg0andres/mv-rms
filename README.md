@@ -27,6 +27,12 @@ On the supported Linux development workspace, follow the [Python and PostgreSQL 
 node --test tests/*.test.js
 ```
 
+Run the full Django regression suite against a disposable PostgreSQL 17 development cluster. The test login needs permission to create its own test databases. The two source and idea concurrency tests use separate, newly migrated databases so concurrent requests commit normally while history guards stay active.
+
+```sh
+.venv/bin/python manage.py test tests --pattern='django*tests.py' --noinput
+```
+
 Database-backed acceptance uses the designated test facility. Preserve historical records and existing users. See the [Hypothesis contract](docs/RMS_HYPOTHESIS_DESIGN_CONTRACT_V1_0.md), [Test Plan contract](docs/RMS_STRATEGY_SPECIFICATION_AND_TEST_PLAN_DESIGN_CONTRACT_V1_0.md), and [Test Plan API](docs/RMS-TP-API-1.md) for interfaces and scope.
 
 ## Building an application release

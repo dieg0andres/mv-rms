@@ -3,13 +3,13 @@ import json
 from datetime import UTC, datetime
 
 from django.contrib.auth.models import Group, User
-from django.test import Client, TransactionTestCase
+from django.test import Client, TestCase
 
 from rms.models import Idea, SourceVersion
 from rms.services import create_idea, create_source, correct_idea, correct_source
 
 
-class RmsSiFrontendPageTests(TransactionTestCase):
+class RmsSiFrontendPageTests(TestCase):
     source_id = "fictional-integrated-source"
     source_bytes = b"invented integration Source bytes"
     contribution = "The exact fictional v1 publication claim contributes context."
