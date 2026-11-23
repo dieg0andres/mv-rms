@@ -315,3 +315,5 @@ from .test_plan_models import (  # noqa: E402,F401
 from .intake_models import (  # noqa: E402,F401
     IntakeHypothesisBinding, IntakeSourceAssessment, ResearchIntake, ResearchIntakeVersion,
 )
+
+from .stage_gate_models import SyntheticGateEvent  # noqa: E402,F401
